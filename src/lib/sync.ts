@@ -3,7 +3,13 @@ import { PrismaClient as PrismaMysqlClient } from '@/generated/prisma-mysql/clie
 import { PrismaMariaDb } from '@prisma/adapter-mariadb';
 import mariadb from 'mariadb';
 
-const dbUrl = new URL(process.env.MYSQL_DATABASE_URL || 'mysql://root:password@localhost:3306/multazam_sync');
+let dbUrl: URL;
+try {
+  dbUrl = new URL(process.env.MYSQL_DATABASE_URL || 'mysql://root:password@localhost:3306/multazam_sync');
+} catch (error) {
+  console.warn("WARNING: MYSQL_DATABASE_URL is invalid. Falling back to default.");
+  dbUrl = new URL('mysql://root:password@localhost:3306/multazam_sync');
+}
 const pool = mariadb.createPool({
   host: dbUrl.hostname,
   port: Number(dbUrl.port) || 3306,
