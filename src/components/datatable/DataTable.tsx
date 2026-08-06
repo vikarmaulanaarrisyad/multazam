@@ -7,6 +7,7 @@ import {
   getCoreRowModel,
   useReactTable,
   PaginationState,
+  OnChangeFn,
 } from "@tanstack/react-table"
 
 import {
@@ -23,7 +24,7 @@ interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
   data: TData[]
   pageCount: number
-  onPaginationChange: (pagination: PaginationState) => void
+  onPaginationChange: OnChangeFn<PaginationState>
   pagination: PaginationState
   isLoading?: boolean
 }

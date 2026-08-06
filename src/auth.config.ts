@@ -8,7 +8,7 @@ export const authConfig = {
     authorized({ auth, request: { nextUrl } }) {
       const isLoggedIn = !!auth?.user;
       const isApiRoute = nextUrl.pathname.startsWith('/api');
-      const isAuthRoute = nextUrl.pathname.startsWith('/login');
+      const isAuthRoute = nextUrl.pathname === '/login' || nextUrl.pathname === '/sales/login';
       
       if (isApiRoute) return true;
       
@@ -24,7 +24,10 @@ export const authConfig = {
       }
 
       if (!isLoggedIn) {
-        return false; // Redirect to login
+        if (nextUrl.pathname.startsWith('/sales') && nextUrl.pathname !== '/sales/login') {
+          return Response.redirect(new URL('/sales/login', nextUrl));
+        }
+        return false; // Redirect to default login
       }
 
       // Role based routing protection
@@ -35,7 +38,7 @@ export const authConfig = {
       if (nextUrl.pathname.startsWith('/admin') && role !== 'ADMIN' && role !== 'SUPER_ADMIN') {
         return false;
       }
-      if (nextUrl.pathname.startsWith('/sales') && role !== 'SALES' && role !== 'SUPER_ADMIN' && role !== 'ADMIN') {
+      if (nextUrl.pathname.startsWith('/sales') && !isAuthRoute && role !== 'SALES' && role !== 'SUPER_ADMIN' && role !== 'ADMIN') {
         return false;
       }
 
