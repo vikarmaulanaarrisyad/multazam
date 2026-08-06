@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { TrendingUp, Mail, Lock, Eye, EyeOff, ArrowRight, Fingerprint, PackageSearch } from 'lucide-react';
 import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 export default function SalesLoginPage() {
   const [showPassword, setShowPassword] = useState(false);
@@ -121,7 +122,7 @@ export default function SalesLoginPage() {
                 </button>
               </div>
               <div className="flex justify-end mt-1">
-                <a className="text-sm font-medium text-primary hover:text-primary/80 transition-colors duration-200" href="#">Lupa Password?</a>
+                <Link className="text-sm font-medium text-primary hover:text-primary/80 transition-colors duration-200" href="/forgot-password">Lupa Password?</Link>
               </div>
             </div>
 

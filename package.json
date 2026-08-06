@@ -4,14 +4,16 @@
   "private": true,
   "scripts": {
     "dev": "next dev --webpack",
-    "build": "next build --webpack",
+    "build": "prisma generate && prisma generate --schema=prisma-mysql/schema.prisma && next build --webpack",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "next lint",
+    "postinstall": "prisma generate && prisma generate --schema=prisma-mysql/schema.prisma"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.3",
     "@base-ui/react": "^1.7.0",
     "@ducanh2912/next-pwa": "^10.2.9",
+    "@prisma/adapter-mariadb": "^7.9.1",
     "@prisma/adapter-pg": "^7.9.1",
     "@prisma/client": "^7.9.1",
     "@tanstack/react-table": "^8.21.3",
@@ -21,8 +23,10 @@
     "dotenv": "^17.4.2",
     "leaflet": "^1.9.4",
     "lucide-react": "^1.29.0",
+    "mariadb": "^3.5.3",
     "next": "16.3.0",
     "next-auth": "^5.0.0-beta.32",
+    "nodemailer": "^8.0.11",
     "pg": "^8.22.0",
     "react": "19.2.8",
     "react-dom": "19.2.8",
@@ -37,12 +41,17 @@
     "@types/bcrypt": "^6.0.0",
     "@types/leaflet": "^1.9.22",
     "@types/node": "^20",
+    "@types/nodemailer": "^8.0.1",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.3.0",
     "prisma": "^7.9.1",
     "tailwindcss": "^4",
+    "tsx": "^4.23.9",
     "typescript": "^5"
+  },
+  "prisma": {
+    "seed": "npx tsx prisma/seed.ts"
   }
 }

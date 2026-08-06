@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { PackageSearch, ShieldCheck, Zap, User, Lock, Eye, EyeOff, ArrowRight } from 'lucide-react';
 import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
@@ -143,7 +144,7 @@ export default function LoginPage() {
                   <div>
                     <div className="flex justify-between items-center mb-1.5">
                       <label className="block text-sm font-semibold text-slate-900" htmlFor="password">Kata Sandi</label>
-                      <a className="text-xs font-medium text-primary hover:text-primary/80 transition-colors" href="#">Lupa Kata Sandi?</a>
+                      <Link className="text-xs font-medium text-primary hover:text-primary/80 transition-colors" href="/forgot-password">Lupa Kata Sandi?</Link>
                     </div>
                     <div className="relative">
                       <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
