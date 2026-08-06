@@ -4,7 +4,16 @@ import { productService } from '@/services/product.service';
 import { revalidatePath } from 'next/cache';
 
 export async function getProductsPaginated(page: number = 1, limit: number = 10, search?: string) {
-  return await productService.getPaginatedProducts(page, limit, search);
+  const result = await productService.getPaginatedProducts(page, limit, search);
+  if (result.success && result.data) {
+    // Serialize Prisma Decimal to string to pass safely to Client Components
+    const serializedData = result.data.map((p: any) => ({
+      ...p,
+      price: p.price ? p.price.toString() : '0'
+    }));
+    return { ...result, data: serializedData };
+  }
+  return result;
 }
 
 export async function createProductAction(dataInput: { 

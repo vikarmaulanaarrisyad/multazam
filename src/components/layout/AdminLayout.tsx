@@ -14,11 +14,11 @@ export function AdminLayout({ children, role, userName, userEmail, userImage }: 
   return (
     <div className="min-h-screen bg-slate-50">
       {/* Static sidebar for desktop */}
-      <div className="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-72 lg:flex-col">
+      <div className="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-64 lg:flex-col">
         <AdminSidebar role={role} />
       </div>
 
-      <div className="lg:pl-72">
+      <div className="lg:pl-64">
         <AdminHeader 
 
           role={role} 
