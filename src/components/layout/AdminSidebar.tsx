@@ -12,6 +12,7 @@ import {
   DatabaseZap,
   Settings,
   Ruler,
+  ArrowRightLeft,
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -53,6 +54,12 @@ export function AdminSidebar({ role, className, onNavigate }: SidebarProps) {
       title: 'Transaksi',
       href: `${basePath}/transactions`,
       icon: ShoppingCart,
+      visible: true,
+    },
+    {
+      title: 'Riwayat Stok',
+      href: `${basePath}/stock-movements`,
+      icon: ArrowRightLeft,
       visible: true,
     },
     {

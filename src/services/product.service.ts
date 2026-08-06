@@ -1,6 +1,7 @@
 import { productRepository } from '@/repositories/product.repository';
 import { categoryRepository } from '@/repositories/category.repository';
 import { unitRepository } from '@/repositories/unit.repository';
+import { stockMovementRepository } from '@/repositories/stock-movement.repository';
 import { productSchema } from '@/validations/product.validation';
 import { ProductWithRelations } from '@/types/product.type';
 import * as xlsx from 'xlsx';
@@ -76,7 +77,20 @@ export const productService = {
         unitId: validatedData.data.unitId || null,
       };
 
-      await productRepository.create(createData);
+      const product = await productRepository.create(createData);
+      
+      if (product.stock > 0) {
+        await stockMovementRepository.create({
+          productId: product.id,
+          type: 'IN',
+          quantity: product.stock,
+          balanceBefore: 0,
+          balanceAfter: product.stock,
+          reference: 'Stok Awal',
+          notes: 'Produk baru ditambahkan',
+        });
+      }
+
       return { success: true, message: 'Produk berhasil ditambahkan.' };
     } catch (error) {
       console.error('Create product error:', error);
@@ -230,6 +244,11 @@ export const productService = {
         return { success: false, message: validatedData.error.issues[0].message };
       }
 
+      const existingProduct = await productRepository.findById(id);
+      if (!existingProduct) {
+        return { success: false, message: 'Produk tidak ditemukan.' };
+      }
+
       let code = validatedData.data.code?.trim() || '';
       
       // Auto-generate code if empty
@@ -260,7 +279,21 @@ export const productService = {
         unitId: validatedData.data.unitId || null,
       };
 
-      await productRepository.update(id, updateData);
+      const updatedProduct = await productRepository.update(id, updateData);
+
+      const stockDiff = updatedProduct.stock - existingProduct.stock;
+      if (stockDiff !== 0) {
+        await stockMovementRepository.create({
+          productId: id,
+          type: stockDiff > 0 ? 'IN' : 'OUT',
+          quantity: Math.abs(stockDiff),
+          balanceBefore: existingProduct.stock,
+          balanceAfter: updatedProduct.stock,
+          reference: 'Update Manual',
+          notes: 'Update stok melalui form produk',
+        });
+      }
+
       return { success: true, message: 'Produk berhasil diubah.' };
     } catch (error) {
       console.error('Update product error:', error);

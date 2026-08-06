@@ -13,6 +13,12 @@ enum Role {
   SALES
 }
 
+enum MovementType {
+  IN
+  OUT
+  ADJUSTMENT
+}
+
 model User {
   id            String    @id @default(cuid())
   name          String?
@@ -96,6 +102,7 @@ model Product {
   updatedAt   DateTime @updatedAt
 
   transactionItems TransactionItem[]
+  stockMovements   StockMovement[]
 }
 
 model Transaction {
@@ -119,4 +126,18 @@ model TransactionItem {
   product       Product     @relation(fields: [productId], references: [id])
   quantity      Int
   price         Decimal     @db.Decimal(10, 2)
+}
+
+model StockMovement {
+  id            String       @id @default(cuid())
+  productId     String
+  product       Product      @relation(fields: [productId], references: [id], onDelete: Cascade)
+  type          MovementType
+  quantity      Int
+  balanceBefore Int
+  balanceAfter  Int
+  reference     String?
+  notes         String?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
 }
