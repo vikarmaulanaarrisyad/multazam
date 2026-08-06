@@ -17,6 +17,15 @@ export const metadata: Metadata = {
   title: "Sistem Inventori Multazam",
   description: "Aplikasi Manajemen Inventori Multazam",
   manifest: "/manifest.json",
+  themeColor: "#ffffff",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Multazam",
+  },
+  icons: {
+    apple: "/icon-192x192.png",
+  },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
