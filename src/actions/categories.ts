@@ -19,6 +19,14 @@ export async function createCategory(formData: FormData) {
   return result;
 }
 
+export async function importCategories(formData: FormData) {
+  const result = await categoryService.importCategories(formData);
+  if (result.success) {
+    revalidatePath('/admin/categories');
+  }
+  return result;
+}
+
 export async function updateCategory(id: string, formData: FormData) {
   const result = await categoryService.updateCategory(id, formData);
   if (result.success) {
@@ -29,6 +37,14 @@ export async function updateCategory(id: string, formData: FormData) {
 
 export async function deleteCategory(id: string) {
   const result = await categoryService.deleteCategory(id);
+  if (result.success) {
+    revalidatePath('/admin/categories');
+  }
+  return result;
+}
+
+export async function deleteManyCategories(ids: string[]) {
+  const result = await categoryService.deleteManyCategories(ids);
   if (result.success) {
     revalidatePath('/admin/categories');
   }

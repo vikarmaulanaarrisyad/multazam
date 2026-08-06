@@ -46,8 +46,11 @@ export default function LoginPage() {
       
       {/* Left Section: Visual / Branding */}
       <div className="hidden lg:flex lg:w-1/2 relative bg-slate-50 flex-col justify-between p-12 overflow-hidden group">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent z-0"></div>
-        
+        <div className="absolute inset-0 z-0">
+          <div className="absolute inset-0 bg-linear-to-br from-primary/10 via-white to-primary/5 rounded-[3rem]" />
+          <div className="absolute top-1/4 -right-10 w-72 h-72 bg-primary/20 rounded-full blur-3xl opacity-50 animate-pulse" />
+        </div>
+
         {/* Logo */}
         <div className="relative z-10 flex items-center gap-2 pointer-events-none mb-12">
           <PackageSearch className="text-primary w-8 h-8" />
@@ -135,7 +138,7 @@ export default function LoginPage() {
                   <User className="text-slate-400 w-5 h-5" />
                 </div>
                 <input 
-                  className="block w-full pl-11 pr-4 py-3 h-12 border border-slate-200 rounded-lg leading-5 bg-slate-50 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all sm:text-sm" 
+                  className="block w-full pl-11 pr-4 py-3 h-12 border border-slate-200 rounded-lg leading-5 bg-slate-50 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all sm:text-sm" 
                   id="email" 
                   name="email" 
                   placeholder="admin@multazam.com" 
@@ -157,7 +160,7 @@ export default function LoginPage() {
                   <Lock className="text-slate-400 w-5 h-5" />
                 </div>
                 <input 
-                  className="block w-full pl-11 pr-11 py-3 h-12 border border-slate-200 rounded-lg leading-5 bg-slate-50 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all sm:text-sm" 
+                  className="block w-full pl-11 pr-11 py-3 h-12 border border-slate-200 rounded-lg leading-5 bg-slate-50 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all sm:text-sm" 
                   id="password" 
                   name="password" 
                   placeholder="••••••••" 

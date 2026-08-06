@@ -8,6 +8,7 @@ import {
   useReactTable,
   PaginationState,
   OnChangeFn,
+  RowSelectionState,
 } from "@tanstack/react-table"
 import { Loader2 } from "lucide-react"
 
@@ -29,6 +30,8 @@ interface DataTableProps<TData, TValue> {
   pagination: PaginationState
   isLoading?: boolean
   toolbar?: React.ReactNode
+  rowSelection?: RowSelectionState
+  onRowSelectionChange?: OnChangeFn<RowSelectionState>
 }
 
 export function DataTable<TData, TValue>({
@@ -39,6 +42,8 @@ export function DataTable<TData, TValue>({
   pagination,
   isLoading,
   toolbar,
+  rowSelection,
+  onRowSelectionChange,
 }: DataTableProps<TData, TValue>) {
   const table = useReactTable({
     data,
@@ -46,10 +51,13 @@ export function DataTable<TData, TValue>({
     pageCount,
     state: {
       pagination,
+      ...(rowSelection !== undefined ? { rowSelection } : {})
     },
     onPaginationChange,
+    ...(onRowSelectionChange ? { onRowSelectionChange } : {}),
     getCoreRowModel: getCoreRowModel(),
     manualPagination: true,
+    getRowId: (row: any) => row.id || row.key || Math.random().toString(),
   })
 
   return (

@@ -1,14 +1,18 @@
 'use client';
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { Plus, Pencil, Trash2, Search as SearchIcon } from 'lucide-react';
+import { Plus, Pencil, Trash2, Search as SearchIcon, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { DataTable } from '@/components/datatable/DataTable';
-import { ColumnDef } from '@tanstack/react-table';
+import { ColumnDef, RowSelectionState } from '@tanstack/react-table';
 import { CategoryForm } from './category-form';
 import { DeleteDialog } from './delete-dialog';
-import { getCategoriesPaginated } from '@/actions/categories';
+import { ImportExcelDialog } from './import-excel-dialog';
+import { getCategoriesPaginated, deleteManyCategories } from '@/actions/categories';
+import { Checkbox } from '@/components/ui/checkbox';
+import { toast } from 'sonner';
+import { Loader2 } from 'lucide-react';
 
 export type CategoryType = {
   id: string;
@@ -24,7 +28,12 @@ export function CategoriesClient() {
   // Modals
   const [formOpen, setFormOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<{ id: string; name: string } | null>(null);
+
+  // Row Selection
+  const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
+  const [isDeletingMany, setIsDeletingMany] = useState(false);
 
   // Pagination & Search State
   const [{ pageIndex, pageSize }, setPagination] = useState({ pageIndex: 0, pageSize: 10 });
@@ -68,6 +77,10 @@ export function CategoriesClient() {
     setDeleteOpen(open);
   };
 
+  const handleImportChange = (open: boolean) => {
+    setImportOpen(open);
+  };
+
   const handleAdd = () => {
     setSelectedCategory(null);
     setFormOpen(true);
@@ -83,9 +96,49 @@ export function CategoriesClient() {
     setDeleteOpen(true);
   };
 
+  const handleBulkDelete = async () => {
+    const selectedIds = Object.keys(rowSelection);
+    if (selectedIds.length === 0) return;
+    
+    setIsDeletingMany(true);
+    try {
+      const response = await deleteManyCategories(selectedIds);
+      if (response.success) {
+        toast.success(response.message);
+        setRowSelection({});
+        fetchData();
+      } else {
+        toast.error(response.message);
+      }
+    } catch (error) {
+      toast.error('Terjadi kesalahan saat menghapus data.');
+    } finally {
+      setIsDeletingMany(false);
+    }
+  };
+
   // Define Columns
   const columns = useMemo<ColumnDef<CategoryType>[]>(
     () => [
+      {
+        id: 'select',
+        header: ({ table }) => (
+          <Checkbox
+            checked={table.getIsAllPageRowsSelected()}
+            onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+            aria-label="Select all"
+          />
+        ),
+        cell: ({ row }) => (
+          <Checkbox
+            checked={row.getIsSelected()}
+            onCheckedChange={(value) => row.toggleSelected(!!value)}
+            aria-label="Select row"
+          />
+        ),
+        enableSorting: false,
+        enableHiding: false,
+      },
       {
         id: 'no',
         header: 'No',
@@ -144,10 +197,16 @@ export function CategoriesClient() {
           <h1 className="text-2xl font-bold text-slate-900">Kategori Produk</h1>
           <p className="text-sm text-slate-500">Kelola kategori untuk mengorganisir produk Anda.</p>
         </div>
-        <Button onClick={handleAdd} className="flex items-center gap-2">
-          <Plus className="h-4 w-4" />
-          Tambah Kategori
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={() => setImportOpen(true)} className="flex items-center gap-2">
+            <Upload className="h-4 w-4" />
+            Import Excel
+          </Button>
+          <Button onClick={handleAdd} className="flex items-center gap-2">
+            <Plus className="h-4 w-4" />
+            Tambah Kategori
+          </Button>
+        </div>
       </div>
 
       <DataTable 
@@ -157,17 +216,36 @@ export function CategoriesClient() {
         pagination={{ pageIndex, pageSize }}
         onPaginationChange={setPagination}
         isLoading={loading}
+        rowSelection={rowSelection}
+        onRowSelectionChange={setRowSelection}
         toolbar={
-          <div className="flex items-center gap-2 max-w-sm">
-            <div className="relative flex-1">
-              <SearchIcon className="absolute left-2.5 top-2.5 h-4 w-4 text-slate-400" />
-              <Input
-                placeholder="Cari kategori..."
-                className="pl-9 bg-white"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
+          <div className="flex items-center justify-between w-full">
+            <div className="flex items-center gap-2 max-w-sm w-full">
+              <div className="relative flex-1">
+                <SearchIcon className="absolute left-2.5 top-2.5 h-4 w-4 text-slate-400" />
+                <Input
+                  placeholder="Cari kategori..."
+                  className="pl-9 bg-white"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
             </div>
+            {Object.keys(rowSelection).length > 0 && (
+              <Button 
+                variant="destructive" 
+                size="sm" 
+                onClick={handleBulkDelete}
+                disabled={isDeletingMany}
+              >
+                {isDeletingMany ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <Trash2 className="mr-2 h-4 w-4" />
+                )}
+                Hapus {Object.keys(rowSelection).length} Terpilih
+              </Button>
+            )}
           </div>
         }
       />
@@ -183,6 +261,12 @@ export function CategoriesClient() {
         open={deleteOpen} 
         onOpenChange={handleDeleteChange} 
         category={selectedCategory} 
+        onSuccess={fetchData}
+      />
+
+      <ImportExcelDialog
+        open={importOpen}
+        onOpenChange={handleImportChange}
         onSuccess={fetchData}
       />
     </div>

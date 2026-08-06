@@ -15,6 +15,12 @@ export const categoryRepository = {
     });
   },
 
+  async findAllNames(): Promise<{ name: string }[]> {
+    return prisma.category.findMany({
+      select: { name: true }
+    });
+  },
+
   async findPaginated(skip: number, take: number, search?: string): Promise<[CategoryWithProductCount[], number]> {
     const where = search ? {
       name: {
@@ -71,6 +77,14 @@ export const categoryRepository = {
     });
   },
 
+  async createMany(data: CategoryInput[]): Promise<number> {
+    const result = await prisma.category.createMany({
+      data: data.map(d => ({ name: d.name })),
+      skipDuplicates: true,
+    });
+    return result.count;
+  },
+
   async update(id: string, data: CategoryInput): Promise<CategoryType> {
     return prisma.category.update({
       where: { id },
@@ -82,5 +96,12 @@ export const categoryRepository = {
     return prisma.category.delete({
       where: { id },
     });
+  },
+
+  async deleteMany(ids: string[]): Promise<number> {
+    const result = await prisma.category.deleteMany({
+      where: { id: { in: ids } }
+    });
+    return result.count;
   }
 };
