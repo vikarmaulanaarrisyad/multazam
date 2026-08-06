@@ -8,11 +8,15 @@ import {
   Package,
   Tags,
   ShoppingCart,
+  Boxes,
   Users,
+  BarChart3,
+  LogOut,
   DatabaseZap,
   Settings,
   Ruler,
   ArrowRightLeft,
+  Truck,
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -54,6 +58,18 @@ export function AdminSidebar({ role, className, onNavigate }: SidebarProps) {
       title: 'Transaksi',
       href: `${basePath}/transactions`,
       icon: ShoppingCart,
+      visible: true,
+    },
+    {
+      title: 'Pembelian (Restock)',
+      href: `${basePath}/purchases`,
+      icon: ShoppingCart,
+      visible: true,
+    },
+    {
+      title: 'Data Supplier',
+      href: `${basePath}/suppliers`,
+      icon: Truck,
       visible: true,
     },
     {

@@ -76,3 +76,18 @@ export type TransactionItem = Prisma.TransactionItemModel
  * 
  */
 export type StockMovement = Prisma.StockMovementModel
+/**
+ * Model Supplier
+ * 
+ */
+export type Supplier = Prisma.SupplierModel
+/**
+ * Model Purchase
+ * 
+ */
+export type Purchase = Prisma.PurchaseModel
+/**
+ * Model PurchaseItem
+ * 
+ */
+export type PurchaseItem = Prisma.PurchaseItemModel

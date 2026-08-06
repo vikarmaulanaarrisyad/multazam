@@ -16,6 +16,18 @@ export async function getProductsPaginated(page: number = 1, limit: number = 10,
   return result;
 }
 
+export async function getAllProducts() {
+  const result = await productService.getAllProducts();
+  if (result.success && result.data) {
+    const serializedData = result.data.map((p: any) => ({
+      ...p,
+      price: p.price ? p.price.toString() : '0'
+    }));
+    return { ...result, data: serializedData };
+  }
+  return result;
+}
+
 export async function createProductAction(dataInput: { 
   code?: string;
   name: string;

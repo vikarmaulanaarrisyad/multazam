@@ -14,6 +14,18 @@ function generateSKU(name: string) {
 }
 
 export const productService = {
+  async getAllProducts(): Promise<{ success: boolean; data?: ProductWithRelations[]; message?: string }> {
+    try {
+      const data = await productRepository.findAll();
+      // Use map to serialize if necessary, but actually productRepository returns ProductWithRelations
+      // and we just return it here. The Server Action does the serialization.
+      return { success: true, data };
+    } catch (error) {
+      console.error('Failed to get all products:', error);
+      return { success: false, message: 'Gagal memuat semua produk.' };
+    }
+  },
+
   async getPaginatedProducts(
     page: number, 
     limit: number, 

@@ -2,6 +2,16 @@ import prisma from '@/lib/prisma';
 import { ProductInput, ProductType, ProductWithRelations } from '@/types/product.type';
 
 export const productRepository = {
+  async findAll(): Promise<ProductWithRelations[]> {
+    return prisma.product.findMany({
+      orderBy: { name: 'asc' },
+      include: {
+        category: true,
+        unit: true,
+      }
+    });
+  },
+
   async findPaginated(skip: number, take: number, search?: string): Promise<[ProductWithRelations[], number]> {
     const where = search ? {
       OR: [

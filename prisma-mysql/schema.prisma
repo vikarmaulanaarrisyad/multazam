@@ -31,6 +31,7 @@ model User {
   updatedAt     DateTime  @updatedAt
 
   transactions  Transaction[]
+  purchases     Purchase[]
 }
 
 model Unit {
@@ -65,6 +66,7 @@ model Product {
 
   transactionItems TransactionItem[]
   stockMovements   StockMovement[]
+  purchaseItems    PurchaseItem[]
 }
 
 model Transaction {
@@ -102,4 +104,43 @@ model StockMovement {
   notes         String?
   createdAt     DateTime     @default(now())
   updatedAt     DateTime     @updatedAt
+}
+
+model Supplier {
+  id          String     @id
+  code        String     @unique
+  name        String
+  email       String?
+  phone       String?
+  address     String?    @db.Text
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  purchases   Purchase[]
+}
+
+model Purchase {
+  id            String         @id
+  invoiceNumber String         @unique
+  supplierId    String
+  supplier      Supplier       @relation(fields: [supplierId], references: [id])
+  userId        String
+  user          User           @relation(fields: [userId], references: [id])
+  totalAmount   Decimal        @db.Decimal(10, 2)
+  status        String         @default("PENDING")
+  notes         String?        @db.Text
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  items         PurchaseItem[]
+}
+
+model PurchaseItem {
+  id          String   @id
+  purchaseId  String
+  purchase    Purchase @relation(fields: [purchaseId], references: [id], onDelete: Cascade)
+  productId   String
+  product     Product  @relation(fields: [productId], references: [id])
+  quantity    Int
+  price       Decimal  @db.Decimal(10, 2)
 }
