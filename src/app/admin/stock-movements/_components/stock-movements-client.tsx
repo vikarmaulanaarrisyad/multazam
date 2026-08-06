@@ -22,6 +22,9 @@ export function StockMovementsClient({ initialData, metadata }: StockMovementsCl
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [searchTerm, setSearchTerm] = useState(searchParams.get('search') || '');
+  
+  const page = parseInt(searchParams.get('page') || '1');
+  const limit = parseInt(searchParams.get('limit') || '10');
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,6 +35,14 @@ export function StockMovementsClient({ initialData, metadata }: StockMovementsCl
     } else {
       params.delete('search');
     }
+    router.push(`${pathname}?${params.toString()}`);
+  };
+
+  const handlePaginationChange = (updater: any) => {
+    const newState = typeof updater === 'function' ? updater({ pageIndex: page - 1, pageSize: limit }) : updater;
+    const params = new URLSearchParams(searchParams);
+    params.set('page', (newState.pageIndex + 1).toString());
+    params.set('limit', newState.pageSize.toString());
     router.push(`${pathname}?${params.toString()}`);
   };
 
@@ -107,6 +118,8 @@ export function StockMovementsClient({ initialData, metadata }: StockMovementsCl
           columns={columns}
           data={initialData}
           pageCount={metadata.pageCount}
+          pagination={{ pageIndex: page - 1, pageSize: limit }}
+          onPaginationChange={handlePaginationChange}
         />
       </div>
     </div>
