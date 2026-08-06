@@ -1,9 +1,9 @@
 import prisma from '@/lib/prisma';
-import { CategoryInput, CategoryType, CategoryWithProductCount } from '@/types/category.type';
+import { UnitInput, UnitType, UnitWithProductCount } from '@/types/unit.type';
 
-export const categoryRepository = {
-  async findAllWithProductCount(): Promise<CategoryWithProductCount[]> {
-    return prisma.category.findMany({
+export const unitRepository = {
+  async findAllWithProductCount(): Promise<UnitWithProductCount[]> {
+    return prisma.unit.findMany({
       include: {
         _count: {
           select: { products: true },
@@ -16,18 +16,18 @@ export const categoryRepository = {
   },
 
   async findAllNames(): Promise<{ name: string }[]> {
-    return prisma.category.findMany({
+    return prisma.unit.findMany({
       select: { name: true }
     });
   },
 
   async findAllIdAndNames(): Promise<{ id: string; name: string }[]> {
-    return prisma.category.findMany({
+    return prisma.unit.findMany({
       select: { id: true, name: true }
     });
   },
 
-  async findPaginated(skip: number, take: number, search?: string): Promise<[CategoryWithProductCount[], number]> {
+  async findPaginated(skip: number, take: number, search?: string): Promise<[UnitWithProductCount[], number]> {
     const where = search ? {
       name: {
         contains: search,
@@ -36,7 +36,7 @@ export const categoryRepository = {
     } : {};
 
     const [data, total] = await prisma.$transaction([
-      prisma.category.findMany({
+      prisma.unit.findMany({
         where,
         skip,
         take,
@@ -45,14 +45,14 @@ export const categoryRepository = {
         },
         orderBy: { createdAt: 'desc' },
       }),
-      prisma.category.count({ where }),
+      prisma.unit.count({ where }),
     ]);
 
     return [data, total];
   },
 
-  async findById(id: string): Promise<CategoryWithProductCount | null> {
-    return prisma.category.findUnique({
+  async findById(id: string): Promise<UnitWithProductCount | null> {
+    return prisma.unit.findUnique({
       where: { id },
       include: {
         _count: {
@@ -62,14 +62,14 @@ export const categoryRepository = {
     });
   },
 
-  async findByName(name: string): Promise<CategoryType | null> {
-    return prisma.category.findFirst({
+  async findByName(name: string): Promise<UnitType | null> {
+    return prisma.unit.findFirst({
       where: { name: { equals: name, mode: 'insensitive' } },
     });
   },
 
-  async findByNameExcludingId(name: string, excludeId: string): Promise<CategoryType | null> {
-    return prisma.category.findFirst({
+  async findByNameExcludingId(name: string, excludeId: string): Promise<UnitType | null> {
+    return prisma.unit.findFirst({
       where: { 
         name: { equals: name, mode: 'insensitive' },
         NOT: { id: excludeId },
@@ -77,35 +77,35 @@ export const categoryRepository = {
     });
   },
 
-  async create(data: CategoryInput): Promise<CategoryType> {
-    return prisma.category.create({
+  async create(data: UnitInput): Promise<UnitType> {
+    return prisma.unit.create({
       data: { name: data.name },
     });
   },
 
-  async createMany(data: CategoryInput[]): Promise<number> {
-    const result = await prisma.category.createMany({
+  async createMany(data: UnitInput[]): Promise<number> {
+    const result = await prisma.unit.createMany({
       data: data.map(d => ({ name: d.name })),
       skipDuplicates: true,
     });
     return result.count;
   },
 
-  async update(id: string, data: CategoryInput): Promise<CategoryType> {
-    return prisma.category.update({
+  async update(id: string, data: UnitInput): Promise<UnitType> {
+    return prisma.unit.update({
       where: { id },
       data: { name: data.name },
     });
   },
 
-  async deleteById(id: string): Promise<CategoryType> {
-    return prisma.category.delete({
+  async deleteById(id: string): Promise<UnitType> {
+    return prisma.unit.delete({
       where: { id },
     });
   },
 
   async deleteMany(ids: string[]): Promise<number> {
-    const result = await prisma.category.deleteMany({
+    const result = await prisma.unit.deleteMany({
       where: { id: { in: ids } }
     });
     return result.count;

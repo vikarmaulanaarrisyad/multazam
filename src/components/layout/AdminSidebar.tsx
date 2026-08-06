@@ -11,6 +11,7 @@ import {
   Users,
   DatabaseZap,
   Settings,
+  Ruler,
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -40,6 +41,12 @@ export function AdminSidebar({ role, className, onNavigate }: SidebarProps) {
       title: 'Kategori',
       href: `${basePath}/categories`,
       icon: Tags,
+      visible: true,
+    },
+    {
+      title: 'Satuan',
+      href: `${basePath}/units`,
+      icon: Ruler,
       visible: true,
     },
     {

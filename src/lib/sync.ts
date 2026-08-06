@@ -11,7 +11,7 @@ const pool = mariadb.createPool({
   password: dbUrl.password,
   database: dbUrl.pathname.slice(1),
 });
-const adapter = new PrismaMariaDb(pool);
+const adapter = new PrismaMariaDb(pool as any);
 const prismaMysql = new PrismaMysqlClient({ adapter });
 
 export async function syncPostgresToMysql() {

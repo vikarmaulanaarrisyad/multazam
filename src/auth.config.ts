@@ -30,6 +30,13 @@ export const authConfig = {
         return false; // Redirect to default login
       }
 
+      if (nextUrl.pathname === '/') {
+        const role = auth.user.role;
+        if (role === 'SUPER_ADMIN') return Response.redirect(new URL('/super-admin', nextUrl));
+        if (role === 'ADMIN') return Response.redirect(new URL('/admin', nextUrl));
+        if (role === 'SALES') return Response.redirect(new URL('/sales', nextUrl));
+      }
+
       // Role based routing protection
       const role = auth.user.role;
       if (nextUrl.pathname.startsWith('/super-admin') && role !== 'SUPER_ADMIN') {

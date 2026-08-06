@@ -398,6 +398,7 @@ type FieldRefInputType<Model, FieldType> = Model extends never ? never : FieldRe
 
 export const ModelName = {
   User: 'User',
+  Unit: 'Unit',
   Category: 'Category',
   Product: 'Product',
   Transaction: 'Transaction',
@@ -417,7 +418,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "category" | "product" | "transaction" | "transactionItem"
+    modelProps: "user" | "unit" | "category" | "product" | "transaction" | "transactionItem"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -484,6 +485,72 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         count: {
           args: Prisma.UserCountArgs<ExtArgs>
           result: runtime.Types.Utils.Optional<Prisma.UserCountAggregateOutputType> | number
+        }
+      }
+    }
+    Unit: {
+      payload: Prisma.$UnitPayload<ExtArgs>
+      fields: Prisma.UnitFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.UnitFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UnitPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.UnitFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UnitPayload>
+        }
+        findFirst: {
+          args: Prisma.UnitFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UnitPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.UnitFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UnitPayload>
+        }
+        findMany: {
+          args: Prisma.UnitFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UnitPayload>[]
+        }
+        create: {
+          args: Prisma.UnitCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UnitPayload>
+        }
+        createMany: {
+          args: Prisma.UnitCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        delete: {
+          args: Prisma.UnitDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UnitPayload>
+        }
+        update: {
+          args: Prisma.UnitUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UnitPayload>
+        }
+        deleteMany: {
+          args: Prisma.UnitDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.UnitUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        upsert: {
+          args: Prisma.UnitUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UnitPayload>
+        }
+        aggregate: {
+          args: Prisma.UnitAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateUnit>
+        }
+        groupBy: {
+          args: Prisma.UnitGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.UnitGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.UnitCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.UnitCountAggregateOutputType> | number
         }
       }
     }
@@ -805,6 +872,16 @@ export const UserScalarFieldEnum = {
 export type UserScalarFieldEnum = (typeof UserScalarFieldEnum)[keyof typeof UserScalarFieldEnum]
 
 
+export const UnitScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type UnitScalarFieldEnum = (typeof UnitScalarFieldEnum)[keyof typeof UnitScalarFieldEnum]
+
+
 export const CategoryScalarFieldEnum = {
   id: 'id',
   name: 'name',
@@ -823,6 +900,7 @@ export const ProductScalarFieldEnum = {
   price: 'price',
   stock: 'stock',
   categoryId: 'categoryId',
+  unitId: 'unitId',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
@@ -881,6 +959,14 @@ export const UserOrderByRelevanceFieldEnum = {
 export type UserOrderByRelevanceFieldEnum = (typeof UserOrderByRelevanceFieldEnum)[keyof typeof UserOrderByRelevanceFieldEnum]
 
 
+export const UnitOrderByRelevanceFieldEnum = {
+  id: 'id',
+  name: 'name'
+} as const
+
+export type UnitOrderByRelevanceFieldEnum = (typeof UnitOrderByRelevanceFieldEnum)[keyof typeof UnitOrderByRelevanceFieldEnum]
+
+
 export const CategoryOrderByRelevanceFieldEnum = {
   id: 'id',
   name: 'name'
@@ -894,7 +980,8 @@ export const ProductOrderByRelevanceFieldEnum = {
   code: 'code',
   name: 'name',
   description: 'description',
-  categoryId: 'categoryId'
+  categoryId: 'categoryId',
+  unitId: 'unitId'
 } as const
 
 export type ProductOrderByRelevanceFieldEnum = (typeof ProductOrderByRelevanceFieldEnum)[keyof typeof ProductOrderByRelevanceFieldEnum]
@@ -1118,6 +1205,7 @@ export interface PrismaClientOptionsWithAdapter extends PrismaClientBaseOptions 
 export type PrismaClientOptions = PrismaClientOptionsWithAccelerateUrl | PrismaClientOptionsWithAdapter
 export type GlobalOmitConfig = {
   user?: Prisma.UserOmit
+  unit?: Prisma.UnitOmit
   category?: Prisma.CategoryOmit
   product?: Prisma.ProductOmit
   transaction?: Prisma.TransactionOmit
