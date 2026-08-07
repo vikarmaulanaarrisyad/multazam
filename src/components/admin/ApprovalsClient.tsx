@@ -288,32 +288,38 @@ export function ApprovalsClient({ transactions }: { transactions: ApprovalTransa
                     <div className="flex justify-between"><span className="text-slate-500">Pelanggan:</span> <span className="font-semibold text-slate-900">{selectedTx.customerName || '-'}</span></div>
                     <div className="flex justify-between"><span className="text-slate-500">Sales:</span> <span className="font-semibold text-slate-900">{selectedTx.user.name || '-'}</span></div>
                     <div className="flex justify-between"><span className="text-slate-500">Tenggat Waktu:</span> <span className="font-semibold text-slate-900">{selectedTx.dueDate ? new Date(selectedTx.dueDate).toLocaleDateString('id-ID') : '-'}</span></div>
-                    
-                    {selectedTx.latitude && selectedTx.longitude && (
-                      <div className="flex justify-between items-center bg-blue-50 p-2 rounded-lg mt-1 border border-blue-100">
-                        <span className="text-blue-700 text-xs font-bold">Lokasi Input Sales:</span>
-                        <a 
-                          href={`https://maps.google.com/?q=${selectedTx.latitude},${selectedTx.longitude}`} 
-                          target="_blank" 
-                          rel="noreferrer"
-                          className="text-xs bg-blue-600 text-white px-3 py-1.5 rounded hover:bg-blue-700 transition-colors shadow-sm font-semibold flex items-center gap-1"
-                        >
-                          Buka Google Maps
-                        </a>
-                      </div>
-                    )}
-
                     <div className="flex flex-col mt-2 pt-2 border-t border-slate-200 gap-1">
                       <span className="text-slate-500">Alamat Pengiriman:</span>
                       <span className="font-semibold text-slate-900 text-xs bg-white p-2 rounded border border-slate-100">{selectedTx.shippingAddress || 'Tidak ada data'}</span>
                     </div>
                   </div>
                 </div>
-                <div className="p-4 bg-amber-50 rounded-xl border border-amber-100">
-                  <div className="text-xs font-bold text-amber-500 uppercase tracking-wider mb-2">Justifikasi Sales</div>
-                  <p className="text-sm text-amber-900 leading-relaxed font-medium">
-                    "{selectedTx.notes || 'Tidak ada catatan.'}"
-                  </p>
+                <div className="flex flex-col gap-4">
+                  <div className="p-4 bg-amber-50 rounded-xl border border-amber-100">
+                    <div className="text-xs font-bold text-amber-500 uppercase tracking-wider mb-2">Justifikasi Sales</div>
+                    <p className="text-sm text-amber-900 leading-relaxed font-medium">
+                      "{selectedTx.notes || 'Tidak ada catatan.'}"
+                    </p>
+                  </div>
+                  
+                  {selectedTx.latitude && selectedTx.longitude && (
+                    <div className="flex-1 bg-slate-100 rounded-xl border border-slate-200 overflow-hidden shadow-inner min-h-[120px] relative group">
+                      <div className="absolute top-2 right-2 bg-white/90 backdrop-blur-sm px-2 py-1 rounded text-[10px] font-bold text-slate-700 shadow-sm z-10">
+                        Lokasi Input Sales
+                      </div>
+                      <iframe 
+                        width="100%" 
+                        height="100%" 
+                        style={{ border: 0 }}
+                        loading="lazy"
+                        allowFullScreen
+                        src={`https://www.openstreetmap.org/export/embed.html?bbox=${(selectedTx.longitude || 0) - 0.005},${(selectedTx.latitude || 0) - 0.005},${(selectedTx.longitude || 0) + 0.005},${(selectedTx.latitude || 0) + 0.005}&layer=mapnik&marker=${selectedTx.latitude},${selectedTx.longitude}`}
+                      ></iframe>
+                      <div className="absolute bottom-1 right-1 bg-white/80 backdrop-blur-sm px-1.5 py-0.5 rounded text-[8px] text-slate-500">
+                        <a href={`https://www.openstreetmap.org/?mlat=${selectedTx.latitude}&mlon=${selectedTx.longitude}#map=16/${selectedTx.latitude}/${selectedTx.longitude}`} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline">Lihat Peta Penuh</a>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
 

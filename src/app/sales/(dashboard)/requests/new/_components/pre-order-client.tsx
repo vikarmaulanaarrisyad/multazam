@@ -430,10 +430,10 @@ export function PreOrderClient() {
                 </div>
               </div>
 
-              {/* Sticky Submit Footer */}
-              <div className="fixed bottom-20 left-0 right-0 px-4 z-40 pb-safe">
+              {/* Submit Footer */}
+              <div className="mt-4 pb-4">
                 <div className={cn(
-                  "rounded-2xl shadow-xl p-4 flex flex-col gap-3 text-white border",
+                  "rounded-2xl shadow-sm p-4 flex flex-col gap-3 text-white border",
                   isPriceProposal ? "bg-amber-600 border-amber-700" : "bg-slate-900 border-slate-700"
                 )}>
                   {isPriceProposal && (
@@ -467,9 +467,6 @@ export function PreOrderClient() {
                   </button>
                 </div>
               </div>
-              
-              {/* Spacer for sticky footer */}
-              <div className="h-24"></div>
             </form>
           </>
         )}
