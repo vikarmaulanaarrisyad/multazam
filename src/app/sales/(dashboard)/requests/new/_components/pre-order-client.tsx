@@ -118,6 +118,25 @@ export function PreOrderClient() {
     setIsSubmitting(true);
     setError(null);
     
+    let lat: number | undefined;
+    let lng: number | undefined;
+
+    try {
+      if ('geolocation' in navigator) {
+        const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+          navigator.geolocation.getCurrentPosition(resolve, reject, { enableHighAccuracy: true, timeout: 10000 });
+        });
+        lat = position.coords.latitude;
+        lng = position.coords.longitude;
+      } else {
+        throw new Error("Geolocation tidak didukung browser ini");
+      }
+    } catch (err: any) {
+      setIsSubmitting(false);
+      setError("Izin lokasi diperlukan untuk mengirim pengajuan. Harap aktifkan GPS dan izinkan browser mengakses lokasi.");
+      return;
+    }
+    
     try {
       const result = await createPreOrder({
         customerName: formData.customerName,
@@ -126,6 +145,8 @@ export function PreOrderClient() {
         shippingCost: formData.shippingCost ? Number(formData.shippingCost.replace(/\D/g, '')) : undefined,
         dueDate: new Date(formData.dueDate),
         notes: formData.notes,
+        latitude: lat,
+        longitude: lng,
         items: cartItems.map(item => ({
           productId: item.product.id,
           quantity: item.quantity,
@@ -163,7 +184,7 @@ export function PreOrderClient() {
   const isPriceProposal = totalVariance < 0;
 
   if (isLoading) {
-    return <div className="p-8 text-center text-slate-500">Loading cart...</div>;
+    return <div className="p-8 text-center text-slate-500">Memuat keranjang...</div>;
   }
 
   return (
@@ -179,7 +200,7 @@ export function PreOrderClient() {
         <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center">
           <Tag className="text-blue-700 w-4 h-4" />
         </div>
-        <span className="text-lg font-bold text-slate-900 tracking-tight">Pending Requests</span>
+        <span className="text-lg font-bold text-slate-900 tracking-tight">Buat Pengajuan</span>
       </div>
 
       <div className="px-4 py-6 flex flex-col gap-6">
@@ -189,9 +210,9 @@ export function PreOrderClient() {
             <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mb-4">
               <CheckCircle2 className="text-emerald-600 w-8 h-8" />
             </div>
-            <h2 className="text-2xl font-bold text-slate-900 mb-2">Request Submitted!</h2>
+            <h2 className="text-2xl font-bold text-slate-900 mb-2">Pengajuan Berhasil!</h2>
             <p className="text-slate-500 text-sm mb-8">
-              Your pre-order request has been sent for approval. You can track its status in the Requests tab.
+              Pengajuan pre-order Anda telah dikirim untuk persetujuan. Anda dapat melacak statusnya di menu Pengajuan.
             </p>
             <button 
               onClick={() => router.push('/sales/requests')}
@@ -204,12 +225,12 @@ export function PreOrderClient() {
           <>
             <div className={cn("rounded-xl p-4 border", isPriceProposal ? "bg-amber-50 border-amber-100" : "bg-blue-50 border-blue-100")}>
               <h2 className="text-lg font-bold text-slate-900 mb-1">
-                {isPriceProposal ? "Pengajuan Harga Khusus" : "New Pre-Order Request"}
+                {isPriceProposal ? "Pengajuan Harga Khusus" : "Pengajuan Pre-Order Baru"}
               </h2>
               <p className="text-sm text-slate-600">
                 {isPriceProposal 
                   ? "Anda sedang mengajukan harga khusus. Formulir ini akan diteruskan ke Admin untuk persetujuan." 
-                  : "Fill in the details below to submit a new pre-order for a customer."}
+                  : "Isi detail di bawah ini untuk mengirimkan pre-order baru untuk pelanggan."}
               </p>
             </div>
 
@@ -225,29 +246,31 @@ export function PreOrderClient() {
               <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100">
                 <h3 className="text-sm font-bold text-blue-700 mb-4 flex items-center gap-2 uppercase tracking-wider">
                   <UserCircle className="w-5 h-5" />
-                  Customer Details
+                  Detail Pelanggan
                 </h3>
                 <div className="flex flex-col gap-4">
                   <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-bold text-slate-500" htmlFor="customerName">Customer Name</label>
+                    <label className="text-xs font-bold text-slate-500" htmlFor="customerName">Nama Pelanggan</label>
                     <input 
                       id="customerName"
                       type="text" 
                       required
-                      placeholder="Enter customer name"
+                      placeholder="Masukkan nama pelanggan"
                       value={formData.customerName}
                       onChange={e => setFormData({...formData, customerName: e.target.value})}
                       className="w-full h-11 px-3 rounded-lg bg-slate-50 border-slate-200 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all border"
                     />
                   </div>
                   <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-bold text-slate-500" htmlFor="contactNumber">Contact Number</label>
+                    <label className="text-xs font-bold text-slate-500" htmlFor="contactNumber">Nomor Telepon</label>
                     <input 
                       id="contactNumber"
                       type="tel" 
                       required
                       placeholder="e.g. +62 812..."
                       value={formData.customerPhone}
+                      onChange={e => setFormData({...formData, customerPhone: e.target.value})}
+                      className="w-full h-11 px-3 rounded-lg bg-slate-50 border-slate-200 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all border"
                     />
                   </div>
                 </div>
@@ -294,7 +317,7 @@ export function PreOrderClient() {
               <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100">
                 <h3 className="text-sm font-bold text-blue-700 mb-4 flex items-center gap-2 uppercase tracking-wider">
                   <Package className="w-5 h-5" />
-                  Product Selection
+                  Pilihan Produk
                 </h3>
                 <div className="flex flex-col gap-3">
                   {cartItems.map((item, index) => (
@@ -307,7 +330,7 @@ export function PreOrderClient() {
                           <span className="text-[11px] font-medium text-slate-500">SKU: {item.product.code}</span>
                         </div>
                         <div className="flex flex-col items-end gap-0.5 shrink-0">
-                          <span className="text-[10px] font-bold text-slate-400 uppercase">Original Price</span>
+                          <span className="text-[10px] font-bold text-slate-400 uppercase">Harga Asli</span>
                           <span className={cn(
                             "text-sm font-bold text-slate-900",
                             item.requestedPrice && item.requestedPrice < Number(item.product.price) && "line-through opacity-50 text-xs"
@@ -318,7 +341,7 @@ export function PreOrderClient() {
                       </div>
                       
                       <div className="flex items-center justify-between mt-1 pl-2">
-                        <span className="text-xs font-bold text-slate-500">Quantity:</span>
+                        <span className="text-xs font-bold text-slate-500">Jumlah:</span>
                         <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-full p-1 shadow-sm">
                           <button 
                             type="button"
@@ -345,7 +368,7 @@ export function PreOrderClient() {
                       </div>
 
                       <div className="mt-1 bg-white border border-slate-200 rounded-lg p-2 flex items-center justify-between gap-3 transition-colors focus-within:ring-1 focus-within:ring-blue-300 shadow-sm ml-2">
-                        <label className="text-[11px] font-bold text-slate-600 pl-1 whitespace-nowrap">Req. Price</label>
+                        <label className="text-[11px] font-bold text-slate-600 pl-1 whitespace-nowrap">Harga Pengajuan</label>
                         <div className="flex items-center gap-1.5 w-32">
                           <span className="text-xs font-bold text-slate-400">Rp</span>
                           <input 
@@ -376,7 +399,7 @@ export function PreOrderClient() {
               <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100">
                 <h3 className="text-sm font-bold text-blue-700 mb-4 flex items-center gap-2 uppercase tracking-wider">
                   <Package className="w-5 h-5" />
-                  Payment & Timeline
+                  Pembayaran & Waktu
                 </h3>
                 <div className="flex flex-col gap-4">
                   <div className="flex flex-col gap-1.5">
@@ -392,13 +415,13 @@ export function PreOrderClient() {
                   </div>
                   <div className="flex flex-col gap-1.5">
                     <label className="text-xs font-bold text-slate-500" htmlFor="notes">
-                      {isPriceProposal ? "Justification (Wajib)" : "Special Instructions (Optional)"}
+                      {isPriceProposal ? "Alasan (Wajib)" : "Catatan Tambahan (Opsional)"}
                     </label>
                     <textarea 
                       id="notes"
                       rows={3}
                       required={isPriceProposal}
-                      placeholder={isPriceProposal ? "Alasan mengapa mengajukan harga ini..." : "Add any notes for the warehouse..."}
+                      placeholder={isPriceProposal ? "Alasan mengapa mengajukan harga ini..." : "Tambahkan catatan tambahan jika ada..."}
                       value={formData.notes}
                       onChange={e => setFormData({...formData, notes: e.target.value})}
                       className="w-full p-3 rounded-lg bg-slate-50 border-slate-200 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all border resize-none"
@@ -415,13 +438,13 @@ export function PreOrderClient() {
                 )}>
                   {isPriceProposal && (
                     <div className="flex justify-between items-center pb-2 border-b border-white/20">
-                      <span className="text-xs text-white/80 font-medium">Original Total:</span>
+                      <span className="text-xs text-white/80 font-medium">Total Asli:</span>
                       <span className="text-sm font-bold opacity-80 line-through">{formatCurrency(totalOriginal)}</span>
                     </div>
                   )}
                   <div className="flex justify-between items-center">
                     <span className="text-xs text-white/90 font-medium">
-                      {isPriceProposal ? "Requested Value:" : "Total Estimated Value:"}
+                      {isPriceProposal ? "Nilai Diajukan:" : "Total Nilai Estimasi:"}
                     </span>
                     <span className="text-lg font-bold text-white">{formatCurrency(totalRequested)}</span>
                   </div>
@@ -438,7 +461,7 @@ export function PreOrderClient() {
                     ) : (
                       <>
                         <Send className="w-4 h-4" />
-                        {isPriceProposal ? "Ajukan Persetujuan Harga" : "Submit Pre-Order"}
+                        {isPriceProposal ? "Ajukan Persetujuan Harga" : "Kirim Pre-Order"}
                       </>
                     )}
                   </button>

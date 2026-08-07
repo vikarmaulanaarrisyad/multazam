@@ -28,6 +28,8 @@ export interface ApprovalTransaction {
   adminNotes: string | null;
   status: string;
   createdAt: Date;
+  latitude?: number | null;
+  longitude?: number | null;
   user: { name: string | null };
   items: ApprovalItem[];
 }
@@ -286,6 +288,21 @@ export function ApprovalsClient({ transactions }: { transactions: ApprovalTransa
                     <div className="flex justify-between"><span className="text-slate-500">Pelanggan:</span> <span className="font-semibold text-slate-900">{selectedTx.customerName || '-'}</span></div>
                     <div className="flex justify-between"><span className="text-slate-500">Sales:</span> <span className="font-semibold text-slate-900">{selectedTx.user.name || '-'}</span></div>
                     <div className="flex justify-between"><span className="text-slate-500">Tenggat Waktu:</span> <span className="font-semibold text-slate-900">{selectedTx.dueDate ? new Date(selectedTx.dueDate).toLocaleDateString('id-ID') : '-'}</span></div>
+                    
+                    {selectedTx.latitude && selectedTx.longitude && (
+                      <div className="flex justify-between items-center bg-blue-50 p-2 rounded-lg mt-1 border border-blue-100">
+                        <span className="text-blue-700 text-xs font-bold">Lokasi Input Sales:</span>
+                        <a 
+                          href={`https://maps.google.com/?q=${selectedTx.latitude},${selectedTx.longitude}`} 
+                          target="_blank" 
+                          rel="noreferrer"
+                          className="text-xs bg-blue-600 text-white px-3 py-1.5 rounded hover:bg-blue-700 transition-colors shadow-sm font-semibold flex items-center gap-1"
+                        >
+                          Buka Google Maps
+                        </a>
+                      </div>
+                    )}
+
                     <div className="flex flex-col mt-2 pt-2 border-t border-slate-200 gap-1">
                       <span className="text-slate-500">Alamat Pengiriman:</span>
                       <span className="font-semibold text-slate-900 text-xs bg-white p-2 rounded border border-slate-100">{selectedTx.shippingAddress || 'Tidak ada data'}</span>

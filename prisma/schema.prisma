@@ -121,6 +121,8 @@ model Transaction {
   dueDate         DateTime?
   notes         String?  @db.Text
   adminNotes    String?  @db.Text
+  latitude      Float?
+  longitude     Float?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 

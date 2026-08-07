@@ -48,6 +48,8 @@ export default async function AdminApprovalsPage() {
     adminNotes: tx.adminNotes,
     status: tx.status,
     createdAt: tx.createdAt,
+    latitude: tx.latitude,
+    longitude: tx.longitude,
     user: {
       name: tx.user?.name || null
     },

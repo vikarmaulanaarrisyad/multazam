@@ -11,6 +11,8 @@ export interface PreOrderData {
   shippingCost?: number;
   dueDate: Date;
   notes?: string;
+  latitude?: number;
+  longitude?: number;
   items: {
     productId: string;
     quantity: number;
@@ -58,6 +60,8 @@ export async function createPreOrder(data: PreOrderData) {
           shippingCost: data.shippingCost || null,
           dueDate: data.dueDate,
           notes: data.notes,
+          latitude: data.latitude,
+          longitude: data.longitude,
           items: {
             create: data.items.map(item => ({
               productId: item.productId,

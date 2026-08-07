@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Search, ScanBarcode, Plus, Minus, ShoppingCart } from 'lucide-react';
 import { Product, Category, Unit } from '@/generated/prisma/client';
@@ -22,6 +22,26 @@ export function SalesProductsClient({ initialProducts, categories }: SalesProduc
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [cart, setCart] = useState<Record<string, number>>({});
+
+  useEffect(() => {
+    const stored = sessionStorage.getItem('preOrderCart');
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed)) {
+          const initialCart: Record<string, number> = {};
+          parsed.forEach((item: any) => {
+            if (item.product && item.product.id) {
+              initialCart[item.product.id] = item.quantity;
+            }
+          });
+          setCart(initialCart);
+        }
+      } catch (e) {
+        console.error('Failed to parse existing cart', e);
+      }
+    }
+  }, []);
 
   const updateCart = (productId: string, change: number, maxStock: number) => {
     setCart(prev => {
@@ -48,10 +68,20 @@ export function SalesProductsClient({ initialProducts, categories }: SalesProduc
   const cartItemsCount = Object.values(cart).reduce((a, b) => a + b, 0);
 
   const handleCheckout = () => {
-    // Map cart object to array of { product, quantity } to pass to next page
+    const stored = sessionStorage.getItem('preOrderCart');
+    let existingItems: any[] = [];
+    if (stored) {
+      try { existingItems = JSON.parse(stored); } catch (e) {}
+    }
+
     const cartItems = Object.entries(cart).map(([id, quantity]) => {
       const product = initialProducts.find(p => p.id === id);
-      return { product, quantity };
+      const existing = existingItems.find((item: any) => item.product && item.product.id === id);
+      return { 
+        product, 
+        quantity,
+        requestedPrice: existing ? existing.requestedPrice : undefined
+      };
     }).filter(item => item.product !== undefined);
     
     sessionStorage.setItem('preOrderCart', JSON.stringify(cartItems));
@@ -83,7 +113,7 @@ export function SalesProductsClient({ initialProducts, categories }: SalesProduc
             <Search className="w-5 h-5 mr-2" />
             <input 
               className="bg-transparent border-none outline-none w-full text-sm text-slate-900" 
-              placeholder="Search SKU or product..." 
+              placeholder="Cari SKU atau nama produk..." 
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -105,7 +135,7 @@ export function SalesProductsClient({ initialProducts, categories }: SalesProduc
                 : "bg-slate-100 text-slate-700 hover:bg-slate-200"
             )}
           >
-            All Products
+            Semua Produk
           </button>
           {categories.map(category => (
             <button 
@@ -142,7 +172,7 @@ export function SalesProductsClient({ initialProducts, categories }: SalesProduc
             >
               {isLowStock && (
                 <div className="absolute top-2 right-2 bg-red-100 text-red-700 font-bold text-[10px] px-2 py-1 rounded-full z-10 border border-red-200">
-                  Low Stock
+                  Stok Menipis
                 </div>
               )}
               
@@ -166,7 +196,7 @@ export function SalesProductsClient({ initialProducts, categories }: SalesProduc
                       "w-1.5 h-1.5 rounded-full",
                       isOutOfStock ? "bg-slate-400" : isLowStock ? "bg-red-500" : "bg-green-500"
                     )}></div>
-                    <span>{product.stock} in stock</span>
+                    <span>Stok {product.stock}</span>
                   </div>
                   
                   <div className="flex items-center justify-between mt-1 h-8">
@@ -215,7 +245,7 @@ export function SalesProductsClient({ initialProducts, categories }: SalesProduc
       
       {filteredProducts.length === 0 && (
         <div className="flex flex-col items-center justify-center h-40 text-slate-400">
-          <p>No products found.</p>
+          <p>Produk tidak ditemukan.</p>
         </div>
       )}
 
@@ -224,7 +254,7 @@ export function SalesProductsClient({ initialProducts, categories }: SalesProduc
         <div className="fixed bottom-20 left-0 right-0 px-4 z-40 pb-safe">
           <div className="bg-slate-900 rounded-2xl shadow-xl p-3 px-4 flex items-center justify-between text-white border border-slate-700">
             <div className="flex flex-col">
-              <span className="text-[11px] text-slate-300 font-medium">{cartItemsCount} Items in Cart</span>
+              <span className="text-[11px] text-slate-300 font-medium">{cartItemsCount} Produk di Keranjang</span>
               <span className="text-sm font-bold">{formatCurrency(cartTotal)}</span>
             </div>
             <button 
