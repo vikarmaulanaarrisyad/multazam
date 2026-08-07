@@ -70,7 +70,7 @@ export function PwaInstallPrompt() {
   if (!showPrompt) return null;
 
   return (
-    <div className="fixed bottom-20 left-4 right-4 z-[60] animate-in slide-in-from-bottom-10 fade-in duration-500 ease-out pb-safe">
+    <div className="fixed bottom-20 left-4 right-4 md:bottom-6 md:right-6 md:left-auto md:w-96 z-[60] animate-in slide-in-from-bottom-10 fade-in duration-500 ease-out pb-safe md:pb-0">
       <div className="bg-white rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-slate-100 p-4 relative overflow-hidden group">
         <div className="absolute top-0 left-0 w-1.5 h-full bg-blue-600"></div>
         

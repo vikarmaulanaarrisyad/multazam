@@ -298,7 +298,7 @@ export function ApprovalsClient({ transactions }: { transactions: ApprovalTransa
                   <div className="p-4 bg-amber-50 rounded-xl border border-amber-100">
                     <div className="text-xs font-bold text-amber-500 uppercase tracking-wider mb-2">Justifikasi Sales</div>
                     <p className="text-sm text-amber-900 leading-relaxed font-medium">
-                      "{selectedTx.notes || 'Tidak ada catatan.'}"
+                      &quot;{selectedTx.notes || 'Tidak ada catatan.'}&quot;
                     </p>
                   </div>
                   

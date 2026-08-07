@@ -354,7 +354,7 @@ export function TransactionsClient({ transactions }: { transactions: Transaction
                   <div className="p-4 bg-blue-50 rounded-xl border border-blue-100">
                     <div className="text-xs font-bold text-blue-500 uppercase tracking-wider mb-2">Catatan Sales</div>
                     <p className="text-sm text-blue-900 leading-relaxed font-medium">
-                      "{selectedTx.notes || 'Tidak ada catatan.'}"
+                      &quot;{selectedTx.notes || 'Tidak ada catatan.'}&quot;
                     </p>
                   </div>
                   

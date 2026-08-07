@@ -3,7 +3,6 @@ import Link from 'next/link';
 import { Home, Package, ClipboardList, User, Bell, Tags } from 'lucide-react';
 import { auth } from '@/auth';
 import { LogoutButton } from './_components/logout-button';
-import { PwaInstallPrompt } from '@/components/pwa-install-prompt';
 
 export default async function SalesDashboardLayout({ children }: { children: React.ReactNode }) {
   const session = await auth();
@@ -69,9 +68,6 @@ export default async function SalesDashboardLayout({ children }: { children: Rea
           </div>
           <span className="text-[10px] font-medium">Profile</span>
         </Link>
-      </nav>
-      
-      <PwaInstallPrompt />
     </div>
   );
 }
