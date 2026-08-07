@@ -11,15 +11,15 @@ export default async function SalesDashboardLayout({ children }: { children: Rea
   return (
     <div className="flex flex-col w-full h-screen bg-slate-50 relative overflow-hidden font-sans">
       {/* Header / Greeting */}
-      <header className="px-4 py-4 pt-safe bg-white flex flex-col gap-2 shadow-sm z-10 relative border-b border-slate-200">
+      <header className="px-4 py-3 pt-safe bg-white flex flex-col shadow-sm z-10 relative border-b border-slate-200">
         <div className="flex justify-between items-center">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center shadow-sm relative overflow-hidden text-primary">
-              <User className="w-6 h-6" />
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shadow-sm relative overflow-hidden text-primary">
+              <User className="w-5 h-5" />
             </div>
-            <div>
-              <h1 className="text-lg font-bold text-slate-900 tracking-tight">Selamat pagi, {session?.user?.name || 'Sales'}</h1>
-              <p className="text-sm text-slate-500">Sales Representative • Jakarta</p>
+            <div className="flex flex-col justify-center">
+              <h1 className="text-base font-bold text-slate-900 tracking-tight leading-tight">Halo, {session?.user?.name?.split(' ')[0] || 'Sales'}!</h1>
+              <p className="text-[11px] font-medium text-slate-500 leading-tight mt-0.5">Sales Rep • Jakarta</p>
             </div>
           </div>
           <div className="flex items-center gap-1">
