@@ -339,7 +339,7 @@ export default function RequestsClient({ requests }: { requests: RequestItem[] }
 
               <div>
                 <div className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Daftar Produk</div>
-                <div className="border border-slate-100 rounded-xl overflow-hidden divide-y divide-slate-100 bg-white">
+                <div className="border border-slate-100 rounded-xl overflow-hidden divide-y bg-white">
                   {selectedRequest.items.map(item => (
                     <div key={item.id} className="p-3">
                       <div className="font-bold text-slate-900 text-sm mb-1">{item.productName}</div>
@@ -390,7 +390,7 @@ export default function RequestsClient({ requests }: { requests: RequestItem[] }
               {selectedRequest.paymentHistories && selectedRequest.paymentHistories.length > 0 && (
                 <div>
                   <div className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Riwayat Pembayaran</div>
-                  <div className="border border-slate-100 rounded-xl overflow-hidden divide-y divide-slate-100 bg-white">
+                  <div className="border border-slate-100 rounded-xl overflow-hidden divide-y bg-white">
                     {selectedRequest.paymentHistories.map((ph, idx) => (
                       <div key={ph.id} className="p-3 flex justify-between items-center">
                         <div>
@@ -459,7 +459,7 @@ export default function RequestsClient({ requests }: { requests: RequestItem[] }
                   <button 
                     onClick={(e) => handleCompleteOrder(e, selectedRequest)}
                     disabled={isSubmitting}
-                    className="w-full flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 active:bg-green-800 text-white p-3.5 rounded-xl font-bold shadow-lg shadow-green-600/20 transition-all disabled:opacity-70"
+                    className="w-full flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white p-3.5 rounded-xl font-bold shadow-lg shadow-green-600/20 transition-all disabled:opacity-70"
                   >
                     {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : <PackageCheck className="w-5 h-5" />}
                     Tandai Pesanan Selesai

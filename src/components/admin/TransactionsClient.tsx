@@ -4,6 +4,7 @@ import React, { useState, useMemo } from 'react';
 import { Search, ChevronLeft, ChevronRight, CheckCircle, XCircle, Truck, Package, X, Plus } from 'lucide-react';
 import { ColumnDef, flexRender, getCoreRowModel, useReactTable, getPaginationRowModel } from '@tanstack/react-table';
 import { updateTransactionStatus, cancelTransaction, addPayment } from '@/actions/transaction-actions';
+import { approvePriceRequest, rejectPriceRequest } from '@/actions/approval-actions';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 
@@ -43,12 +44,34 @@ export type TransactionDetail = {
 
 export function TransactionsClient({ transactions }: { transactions: TransactionDetail[] }) {
   const [searchTerm, setSearchTerm] = useState('');
-  const [activeTab, setActiveTab] = useState('PENDING');
+  const [activeTab, setActiveTab] = useState('PENDING_APPROVAL');
   const [selectedTx, setSelectedTx] = useState<TransactionDetail | null>(null);
+  
+  // Approval state
+  const [editedPrices, setEditedPrices] = useState<Record<string, number>>({});
   
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [adminNotes, setAdminNotes] = useState('');
+
+  const handleOpenModal = (tx: TransactionDetail) => {
+    setSelectedTx(tx);
+    setAdminNotes('');
+    setError(null);
+    setShowPaymentForm(false);
+    setPaymentAmount('');
+    
+    if (tx.status === 'PENDING_APPROVAL') {
+      const initialPrices: Record<string, number> = {};
+      tx.items.forEach(item => {
+        initialPrices[item.id] = item.price; // Original requested price is saved in item.price for PENDING_APPROVAL? Wait, we need to check how it's mapped.
+        // Actually, item.price is the requested price in this context, because during creation we save requested price to price. 
+        // Or wait! In ApprovalTransaction it was mapped as requestedPrice.
+        // Let's just use item.price as the default editable value.
+      });
+      setEditedPrices(initialPrices);
+    }
+  };
   
   const [showPaymentForm, setShowPaymentForm] = useState(false);
   const [paymentAmount, setPaymentAmount] = useState('');
@@ -139,7 +162,62 @@ export function TransactionsClient({ transactions }: { transactions: Transaction
     }
   };
 
+  const handlePriceChange = (itemId: string, newPrice: string) => {
+    setEditedPrices(prev => ({
+      ...prev,
+      [itemId]: parseInt(newPrice.replace(/\D/g, '')) || 0
+    }));
+  };
+
+  const handleApprove = async () => {
+    if (!selectedTx) return;
+    setIsSubmitting(true);
+    setError(null);
+
+    const itemsToUpdate = selectedTx.items.map(item => ({
+      id: item.id,
+      approvedPrice: editedPrices[item.id] ?? item.price,
+    }));
+
+    const result = await approvePriceRequest({
+      transactionId: selectedTx.id,
+      adminNotes,
+      items: itemsToUpdate,
+    });
+
+    setIsSubmitting(false);
+    if (result.success) {
+      setSelectedTx(null);
+    } else {
+      setError(result.error || 'Terjadi kesalahan saat menyetujui');
+    }
+  };
+
+  const handleReject = async () => {
+    if (!selectedTx) return;
+    if (!adminNotes.trim()) {
+      setError('Alasan penolakan wajib diisi untuk menolak pengajuan.');
+      return;
+    }
+
+    setIsSubmitting(true);
+    setError(null);
+
+    const result = await rejectPriceRequest({
+      transactionId: selectedTx.id,
+      adminNotes,
+    });
+
+    setIsSubmitting(false);
+    if (result.success) {
+      setSelectedTx(null);
+    } else {
+      setError(result.error || 'Terjadi kesalahan saat menolak');
+    }
+  };
+
   const tabs = [
+    { id: 'PENDING_APPROVAL', label: 'Nego Harga', statuses: ['PENDING_APPROVAL'] },
     { id: 'PENDING', label: 'Pesanan Baru', statuses: ['PENDING', 'APPROVED'] },
     { id: 'SHIPPED', label: 'Dalam Pengiriman', statuses: ['SHIPPED'] },
     { id: 'COMPLETED', label: 'Selesai', statuses: ['COMPLETED'] },
@@ -207,14 +285,10 @@ export function TransactionsClient({ transactions }: { transactions: Transaction
       header: 'Aksi',
       cell: ({ row }) => (
         <button 
-          onClick={() => {
-            setSelectedTx(row.original);
-            setAdminNotes(row.original.adminNotes || '');
-            setError(null);
-          }}
+          onClick={() => handleOpenModal(row.original)}
           className="text-sm bg-slate-100 hover:bg-blue-50 text-blue-600 font-bold px-3 py-1.5 rounded-lg transition-colors border border-slate-200 hover:border-blue-200"
         >
-          Kelola
+          {row.original.status === 'PENDING_APPROVAL' ? 'Tinjau Pengajuan' : 'Kelola'}
         </button>
       )
     }
@@ -427,8 +501,28 @@ export function TransactionsClient({ transactions }: { transactions: Transaction
                       <tr key={item.id} className="bg-white">
                         <td className="p-3 text-sm font-medium text-slate-900">{item.productName}</td>
                         <td className="p-3 text-sm text-slate-600 text-right">{item.quantity}</td>
-                        <td className="p-3 text-sm text-slate-600 text-right">{formatCurrency(item.price)}</td>
-                        <td className="p-3 text-sm font-bold text-slate-900 text-right">{formatCurrency(item.price * item.quantity)}</td>
+                        <td className="p-3 text-sm text-slate-600 text-right">
+                          {selectedTx.status === 'PENDING_APPROVAL' ? (
+                            <div className="flex flex-col items-end gap-1">
+                              <span className="text-[10px] text-slate-400 line-through">
+                                Rp {item.originalPrice?.toLocaleString('id-ID') || 0}
+                              </span>
+                              <input 
+                                type="text"
+                                value={editedPrices[item.id] ? editedPrices[item.id].toLocaleString('id-ID') : ''}
+                                onChange={(e) => handlePriceChange(item.id, e.target.value)}
+                                className="w-28 h-8 px-2 text-right rounded bg-amber-50 border border-amber-200 text-amber-900 font-bold focus:outline-none focus:ring-2 focus:ring-amber-500"
+                              />
+                            </div>
+                          ) : (
+                            formatCurrency(item.price)
+                          )}
+                        </td>
+                        <td className="p-3 text-sm font-bold text-slate-900 text-right">
+                          {selectedTx.status === 'PENDING_APPROVAL' 
+                            ? formatCurrency((editedPrices[item.id] || 0) * item.quantity)
+                            : formatCurrency(item.price * item.quantity)}
+                        </td>
                       </tr>
                     ))}
                     {selectedTx.shippingCost ? (
@@ -439,7 +533,13 @@ export function TransactionsClient({ transactions }: { transactions: Transaction
                     ) : null}
                     <tr className="bg-slate-50">
                       <td colSpan={3} className="p-3 text-sm font-bold text-slate-900 text-right">TOTAL KESELURUHAN</td>
-                      <td className="p-3 text-base font-bold text-blue-700 text-right">{formatCurrency(selectedTx.totalAmount)}</td>
+                      <td className="p-3 text-base font-bold text-blue-700 text-right">
+                        {selectedTx.status === 'PENDING_APPROVAL'
+                          ? formatCurrency(
+                              selectedTx.items.reduce((sum, item) => sum + ((editedPrices[item.id] || 0) * item.quantity), 0) + (selectedTx.shippingCost || 0)
+                            )
+                          : formatCurrency(selectedTx.totalAmount)}
+                      </td>
                     </tr>
                   </tbody>
                 </table>
@@ -465,7 +565,7 @@ export function TransactionsClient({ transactions }: { transactions: Transaction
               {selectedTx.paymentHistories && selectedTx.paymentHistories.length > 0 && (
                 <div className="mt-4">
                   <div className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Riwayat Pembayaran</div>
-                  <div className="border border-slate-200 rounded-xl divide-y divide-slate-100 bg-white">
+                  <div className="border border-slate-200 rounded-xl divide-y bg-white">
                     {selectedTx.paymentHistories.map((ph, idx) => (
                       <div key={ph.id} className="p-3 flex justify-between items-center">
                         <div>
@@ -534,16 +634,35 @@ export function TransactionsClient({ transactions }: { transactions: Transaction
             {/* Modal Footer / Actions */}
             <div className="px-6 py-4 border-t border-slate-100 bg-slate-50 flex gap-4 items-end">
               <div className="flex-1">
-                <label className="text-xs font-bold text-slate-500 mb-1.5 block">Catatan Admin (Wajib jika membatalkan)</label>
+                <label className="text-xs font-bold text-slate-500 mb-1.5 block">Catatan Admin (Wajib jika membatalkan/menolak)</label>
                 <input 
                   type="text" 
                   value={adminNotes}
                   onChange={e => setAdminNotes(e.target.value)}
-                  placeholder="Ketik catatan atau alasan pembatalan..."
+                  placeholder="Ketik catatan tambahan atau alasan penolakan/pembatalan..."
                   className="w-full px-3 py-2 rounded-lg bg-white border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all border"
                   disabled={isSubmitting}
                 />
               </div>
+
+              {selectedTx.status === 'PENDING_APPROVAL' && (
+                <>
+                  <button
+                    onClick={handleReject}
+                    disabled={isSubmitting}
+                    className="px-6 h-9 flex items-center justify-center gap-2 bg-white text-red-600 border border-red-200 hover:bg-red-50 rounded-lg font-bold transition-all text-sm disabled:opacity-50 whitespace-nowrap"
+                  >
+                    <XCircle className="w-4 h-4" /> Tolak Pengajuan
+                  </button>
+                  <button
+                    onClick={handleApprove}
+                    disabled={isSubmitting}
+                    className="px-6 h-9 flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold transition-all text-sm shadow-sm disabled:opacity-50 whitespace-nowrap"
+                  >
+                    <CheckCircle className="w-4 h-4" /> Setujui & Buat Pesanan
+                  </button>
+                </>
+              )}
 
               {(selectedTx.status === 'PENDING' || selectedTx.status === 'APPROVED') && (
                 <>

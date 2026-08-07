@@ -44,12 +44,7 @@ export function AdminSidebar({ role, className, onNavigate }: SidebarProps) {
       icon: Package,
       visible: true,
     },
-    {
-      title: 'Persetujuan Harga',
-      href: `${basePath}/approvals`,
-      icon: ClipboardCheck,
-      visible: true,
-    },
+
     {
       title: 'Kategori',
       href: `${basePath}/categories`,
@@ -63,7 +58,7 @@ export function AdminSidebar({ role, className, onNavigate }: SidebarProps) {
       visible: true,
     },
     {
-      title: 'Daftar Pre-Order',
+      title: 'Daftar Pesanan',
       href: `${basePath}/transactions`,
       icon: ShoppingCart,
       visible: true,
