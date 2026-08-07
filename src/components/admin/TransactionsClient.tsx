@@ -1,9 +1,10 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import { Search, ChevronLeft, ChevronRight, CheckCircle, XCircle, Truck, Package, X } from 'lucide-react';
+import { Search, ChevronLeft, ChevronRight, CheckCircle, XCircle, Truck, Package, X, Plus } from 'lucide-react';
 import { ColumnDef, flexRender, getCoreRowModel, useReactTable, getPaginationRowModel } from '@tanstack/react-table';
-import { updateTransactionStatus, cancelTransaction } from '@/actions/transaction-actions';
+import { updateTransactionStatus, cancelTransaction, addPayment } from '@/actions/transaction-actions';
+import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 
 export type TransactionDetail = {
@@ -21,6 +22,8 @@ export type TransactionDetail = {
   latitude: number | null;
   longitude: number | null;
   totalAmount: number;
+  paidAmount: number;
+  paymentStatus: string;
   user: {
     name: string | null;
   };
@@ -30,6 +33,11 @@ export type TransactionDetail = {
     quantity: number;
     price: number;
     originalPrice: number;
+  }[];
+  paymentHistories: {
+    id: string;
+    amount: number;
+    createdAt: Date;
   }[];
 };
 
@@ -41,6 +49,30 @@ export function TransactionsClient({ transactions }: { transactions: Transaction
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [adminNotes, setAdminNotes] = useState('');
+  
+  const [showPaymentForm, setShowPaymentForm] = useState(false);
+  const [paymentAmount, setPaymentAmount] = useState('');
+
+  const handleAddPayment = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedTx || !paymentAmount) return;
+    
+    setIsSubmitting(true);
+    const res = await addPayment({
+      transactionId: selectedTx.id,
+      amount: Number(paymentAmount.replace(/\D/g, ''))
+    });
+    
+    if (res.success) {
+      toast.success('Pembayaran berhasil dicatat!');
+      setPaymentAmount('');
+      setShowPaymentForm(false);
+      setSelectedTx(null);
+    } else {
+      setError(res.error || 'Gagal mencatat pembayaran');
+    }
+    setIsSubmitting(false);
+  };
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(amount);
@@ -359,7 +391,7 @@ export function TransactionsClient({ transactions }: { transactions: Transaction
                   </div>
                   
                   {selectedTx.latitude && selectedTx.longitude && (
-                    <div className="flex-1 bg-slate-100 rounded-xl border border-slate-200 overflow-hidden shadow-inner min-h-[120px] relative group">
+                    <div className="flex-1 bg-slate-100 rounded-xl border border-slate-200 overflow-hidden shadow-inner min-h-30 relative group">
                       <div className="absolute top-2 right-2 bg-white/90 backdrop-blur-sm px-2 py-1 rounded text-[10px] font-bold text-slate-700 shadow-sm z-10">
                         Lokasi Input Sales
                       </div>
@@ -412,6 +444,90 @@ export function TransactionsClient({ transactions }: { transactions: Transaction
                   </tbody>
                 </table>
               </div>
+
+              {/* Payment Summary */}
+              <div className="mt-4 p-4 bg-slate-50 border border-slate-200 rounded-xl">
+                <div className="flex justify-between items-center text-sm font-semibold text-slate-700 mb-2">
+                  <span>Total Tagihan:</span>
+                  <span>{formatCurrency(selectedTx.totalAmount)}</span>
+                </div>
+                <div className="flex justify-between items-center text-sm font-semibold text-emerald-600 mb-2 border-b border-slate-200 pb-2">
+                  <span>Telah Dibayar:</span>
+                  <span>{formatCurrency(selectedTx.paidAmount)}</span>
+                </div>
+                <div className="flex justify-between items-center text-lg font-black text-amber-600">
+                  <span>Sisa Tagihan:</span>
+                  <span>{formatCurrency(Math.max(0, selectedTx.totalAmount - selectedTx.paidAmount))}</span>
+                </div>
+              </div>
+
+              {/* Payment Histories */}
+              {selectedTx.paymentHistories && selectedTx.paymentHistories.length > 0 && (
+                <div className="mt-4">
+                  <div className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Riwayat Pembayaran</div>
+                  <div className="border border-slate-200 rounded-xl divide-y divide-slate-100 bg-white">
+                    {selectedTx.paymentHistories.map((ph, idx) => (
+                      <div key={ph.id} className="p-3 flex justify-between items-center">
+                        <div>
+                          <div className="text-sm font-bold text-slate-800">Pembayaran #{idx + 1}</div>
+                          <div className="text-[11px] text-slate-500">
+                            {new Date(ph.createdAt).toLocaleString('id-ID')}
+                          </div>
+                        </div>
+                        <div className="text-sm font-bold text-emerald-600">
+                          + {formatCurrency(ph.amount)}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Add Payment Form */}
+              {selectedTx.status !== 'CANCELLED' && selectedTx.status !== 'REJECTED' && selectedTx.paymentStatus !== 'PAID' && (
+                <div className="mt-4">
+                  {!showPaymentForm ? (
+                    <button 
+                      onClick={() => setShowPaymentForm(true)}
+                      className="w-full flex items-center justify-center gap-2 bg-blue-50 text-blue-700 hover:bg-blue-100 p-3 rounded-xl font-bold transition-all border border-blue-200"
+                    >
+                      <Plus className="w-4 h-4" />
+                      Tambah Pembayaran
+                    </button>
+                  ) : (
+                    <form onSubmit={handleAddPayment} className="bg-blue-50 p-4 rounded-xl border border-blue-200">
+                      <label className="block text-xs font-bold text-blue-800 mb-2">Jumlah Pembayaran Baru (Rp)</label>
+                      <input 
+                        type="text" 
+                        autoFocus
+                        placeholder="Contoh: 500000"
+                        value={paymentAmount}
+                        onChange={e => {
+                          const val = e.target.value.replace(/\D/g, '');
+                          setPaymentAmount(val ? parseInt(val).toLocaleString('id-ID') : '');
+                        }}
+                        className="w-full h-10 px-3 rounded-lg bg-white border border-blue-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600 mb-3"
+                      />
+                      <div className="flex gap-2">
+                        <button 
+                          type="button"
+                          onClick={() => { setShowPaymentForm(false); setPaymentAmount(''); }}
+                          className="flex-1 py-2 rounded-lg bg-white border border-slate-300 text-slate-700 font-bold hover:bg-slate-50"
+                        >
+                          Batal
+                        </button>
+                        <button 
+                          type="submit"
+                          disabled={isSubmitting || !paymentAmount}
+                          className="flex-1 py-2 rounded-lg bg-blue-600 text-white font-bold hover:bg-blue-700 disabled:opacity-50 flex items-center justify-center"
+                        >
+                          {isSubmitting ? <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : 'Simpan'}
+                        </button>
+                      </div>
+                    </form>
+                  )}
+                </div>
+              )}
 
             </div>
 

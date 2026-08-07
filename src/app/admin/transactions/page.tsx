@@ -16,6 +16,9 @@ export default async function AdminTransactionsPage() {
         in: ['PENDING', 'APPROVED', 'SHIPPED', 'COMPLETED', 'CANCELLED', 'REJECTED']
       }
     },
+    orderBy: {
+      createdAt: 'desc',
+    },
     include: {
       user: {
         select: {
@@ -30,10 +33,10 @@ export default async function AdminTransactionsPage() {
             }
           }
         }
+      },
+      paymentHistories: {
+        orderBy: { createdAt: 'asc' }
       }
-    },
-    orderBy: {
-      createdAt: 'desc',
     }
   });
 
@@ -52,6 +55,8 @@ export default async function AdminTransactionsPage() {
     latitude: tx.latitude,
     longitude: tx.longitude,
     totalAmount: Number(tx.totalAmount),
+    paidAmount: Number(tx.paidAmount),
+    paymentStatus: tx.paymentStatus,
     user: {
       name: tx.user?.name || null
     },
@@ -61,6 +66,11 @@ export default async function AdminTransactionsPage() {
       quantity: item.quantity,
       price: Number(item.price),
       originalPrice: item.originalPrice ? Number(item.originalPrice) : Number(item.price),
+    })),
+    paymentHistories: tx.paymentHistories.map(ph => ({
+      id: ph.id,
+      amount: Number(ph.amount),
+      createdAt: ph.createdAt
     }))
   }));
 

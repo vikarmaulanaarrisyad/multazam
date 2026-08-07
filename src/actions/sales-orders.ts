@@ -9,6 +9,7 @@ export interface PreOrderData {
   customerPhone: string;
   shippingAddress?: string;
   shippingCost?: number;
+  dpAmount?: number;
   dueDate: Date;
   notes?: string;
   latitude?: number;
@@ -62,6 +63,8 @@ export async function createPreOrder(data: PreOrderData) {
           notes: data.notes,
           latitude: data.latitude,
           longitude: data.longitude,
+          paidAmount: data.dpAmount || 0,
+          paymentStatus: (data.dpAmount && data.dpAmount >= totalAmount) ? 'PAID' : (data.dpAmount && data.dpAmount > 0) ? 'PARTIAL' : 'UNPAID',
           items: {
             create: data.items.map(item => ({
               productId: item.productId,
@@ -72,6 +75,19 @@ export async function createPreOrder(data: PreOrderData) {
           }
         }
       });
+
+      // 1.5 Record DP in PaymentHistory if there's any
+      if (data.dpAmount && data.dpAmount > 0) {
+        await tx.paymentHistory.create({
+          data: {
+            transactionId: newTransaction.id,
+            amount: data.dpAmount,
+            paymentMethod: 'CASH', // default for DP via Sales App
+            notes: 'Uang Muka (DP) saat pembuatan pesanan',
+            userId: session.user.id
+          }
+        });
+      }
 
       // 2. Deduct stock for each item and record StockMovement (Option A logic)
       for (const item of data.items) {

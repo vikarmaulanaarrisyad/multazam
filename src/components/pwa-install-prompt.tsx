@@ -32,10 +32,9 @@ export function PwaInstallPrompt() {
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
 
-    // Fallback for iOS/Safari or browsers that don't support beforeinstallprompt yet
     // Show a generic install instruction after a few seconds if not standalone
     const timer = setTimeout(() => {
-      if (!isStandalone && !isDismissed && !deferredPrompt && /iPhone|iPad|iPod/.test(navigator.userAgent)) {
+      if (!isStandalone && !isDismissed && !deferredPrompt) {
         setShowPrompt(true);
       }
     }, 3000);
@@ -57,8 +56,8 @@ export function PwaInstallPrompt() {
       }
       setDeferredPrompt(null);
     } else {
-      // Fallback message for iOS (Add to Home Screen)
-      alert('Untuk menginstal di iOS (iPhone/iPad): \n\n1. Tap ikon "Share" (kotak dengan panah ke atas) di menu bawah Safari.\n2. Gulir ke bawah dan pilih "Add to Home Screen" (Tambahkan ke Layar Utama).');
+      // Fallback message for other browsers (iOS, Desktop Safari, etc)
+      alert('Cara Instal Aplikasi:\n\n📱 iOS (iPhone/iPad):\n1. Buka di Safari\n2. Tap ikon "Share" (kotak panah ke atas) di menu bawah\n3. Pilih "Add to Home Screen" (Tambahkan ke Layar Utama)\n\n💻 Desktop (Chrome/Edge):\n1. Klik ikon Install/Download di sebelah kanan kolom URL atas\n2. Atau klik menu (titik tiga) -> Install Aplikasi\n\n📱 Android:\n1. Buka di Chrome\n2. Klik menu (titik tiga) -> Tambahkan ke Layar Utama');
     }
   };
 
@@ -70,7 +69,7 @@ export function PwaInstallPrompt() {
   if (!showPrompt) return null;
 
   return (
-    <div className="fixed bottom-20 left-4 right-4 md:bottom-6 md:right-6 md:left-auto md:w-96 z-[60] animate-in slide-in-from-bottom-10 fade-in duration-500 ease-out pb-safe md:pb-0">
+    <div className="fixed bottom-20 left-4 right-4 md:bottom-6 md:right-6 md:left-auto md:w-96 z-60 animate-in slide-in-from-bottom-10 fade-in duration-500 ease-out pb-safe md:pb-0">
       <div className="bg-white rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-slate-100 p-4 relative overflow-hidden group">
         <div className="absolute top-0 left-0 w-1.5 h-full bg-blue-600"></div>
         

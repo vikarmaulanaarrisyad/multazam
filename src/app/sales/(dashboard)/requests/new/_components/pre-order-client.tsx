@@ -19,10 +19,11 @@ export function PreOrderClient() {
   const [formData, setFormData] = useState({
     customerName: '',
     customerPhone: '',
-    dueDate: '',
     shippingAddress: '',
     shippingCost: '',
+    dueDate: '',
     notes: '',
+    dpAmount: ''
   });
 
   useEffect(() => {
@@ -143,6 +144,7 @@ export function PreOrderClient() {
         customerPhone: formData.customerPhone,
         shippingAddress: formData.shippingAddress,
         shippingCost: formData.shippingCost ? Number(formData.shippingCost.replace(/\D/g, '')) : undefined,
+        dpAmount: formData.dpAmount ? Number(formData.dpAmount.replace(/\D/g, '')) : undefined,
         dueDate: new Date(formData.dueDate),
         notes: formData.notes,
         latitude: lat,
@@ -414,6 +416,23 @@ export function PreOrderClient() {
                     />
                   </div>
                   <div className="flex flex-col gap-1.5">
+                    <label className="text-xs font-bold text-slate-500" htmlFor="dpAmount">Uang Muka / DP (Opsional)</label>
+                    <div className="relative">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm font-bold">Rp</span>
+                      <input 
+                        id="dpAmount"
+                        type="text" 
+                        placeholder="0"
+                        value={formData.dpAmount}
+                        onChange={e => {
+                          const val = e.target.value.replace(/\D/g, '');
+                          setFormData({...formData, dpAmount: val ? parseInt(val).toLocaleString('id-ID') : ''});
+                        }}
+                        className="w-full h-11 pl-9 pr-3 rounded-lg bg-slate-50 border-slate-200 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all border"
+                      />
+                    </div>
+                  </div>
+                  <div className="flex flex-col gap-1.5">
                     <label className="text-xs font-bold text-slate-500" htmlFor="notes">
                       {isPriceProposal ? "Alasan (Wajib)" : "Catatan Tambahan (Opsional)"}
                     </label>
@@ -446,8 +465,28 @@ export function PreOrderClient() {
                     <span className="text-xs text-white/90 font-medium">
                       {isPriceProposal ? "Nilai Diajukan:" : "Total Nilai Estimasi:"}
                     </span>
-                    <span className="text-lg font-bold text-white">{formatCurrency(totalRequested)}</span>
+                    <span className="text-lg font-bold text-white">{formatCurrency(totalRequested + (formData.shippingCost ? Number(formData.shippingCost.replace(/\D/g, '')) : 0))}</span>
                   </div>
+                  {formData.dpAmount && (
+                    <>
+                      <div className="flex justify-between items-center border-t border-white/20 pt-2">
+                        <span className="text-xs text-emerald-300 font-bold uppercase tracking-wider">
+                          Uang Muka (DP):
+                        </span>
+                        <span className="text-sm font-bold text-emerald-300">
+                          - {formatCurrency(Number(formData.dpAmount.replace(/\D/g, '')))}
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center border-t border-white/20 pt-2">
+                        <span className="text-xs text-white/90 font-bold uppercase tracking-wider">
+                          Sisa Tagihan:
+                        </span>
+                        <span className="text-lg font-black text-amber-300">
+                          {formatCurrency((totalRequested + (formData.shippingCost ? Number(formData.shippingCost.replace(/\D/g, '')) : 0)) - Number(formData.dpAmount.replace(/\D/g, '')))}
+                        </span>
+                      </div>
+                    </>
+                  )}
                   <button 
                     type="submit"
                     disabled={isSubmitting}

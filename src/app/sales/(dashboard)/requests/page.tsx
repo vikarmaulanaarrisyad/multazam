@@ -32,6 +32,9 @@ export default async function RequestsPage() {
             select: { name: true }
           }
         }
+      },
+      paymentHistories: {
+        orderBy: { createdAt: 'asc' }
       }
     }
   });
@@ -43,6 +46,8 @@ export default async function RequestsPage() {
     customerName: t.customerName,
     dueDate: t.dueDate,
     totalAmount: Number(t.totalAmount),
+    paidAmount: Number(t.paidAmount),
+    paymentStatus: t.paymentStatus,
     shippingCost: t.shippingCost ? Number(t.shippingCost) : 0,
     status: t.status,
     adminNotes: t.adminNotes,
@@ -53,6 +58,11 @@ export default async function RequestsPage() {
       quantity: item.quantity,
       price: Number(item.price),
       originalPrice: item.originalPrice ? Number(item.originalPrice) : Number(item.price),
+    })),
+    paymentHistories: t.paymentHistories.map(ph => ({
+      id: ph.id,
+      amount: Number(ph.amount),
+      createdAt: ph.createdAt
     }))
   }));
 

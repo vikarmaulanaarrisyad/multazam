@@ -303,7 +303,7 @@ export function ApprovalsClient({ transactions }: { transactions: ApprovalTransa
                   </div>
                   
                   {selectedTx.latitude && selectedTx.longitude && (
-                    <div className="flex-1 bg-slate-100 rounded-xl border border-slate-200 overflow-hidden shadow-inner min-h-[120px] relative group">
+                    <div className="flex-1 bg-slate-100 rounded-xl border border-slate-200 overflow-hidden shadow-inner min-h-30 relative group">
                       <div className="absolute top-2 right-2 bg-white/90 backdrop-blur-sm px-2 py-1 rounded text-[10px] font-bold text-slate-700 shadow-sm z-10">
                         Lokasi Input Sales
                       </div>

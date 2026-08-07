@@ -128,3 +128,63 @@ export async function cancelTransaction(data: {
     return { success: false, error: error.message || 'Gagal membatalkan pesanan' };
   }
 }
+
+export async function addPayment(data: {
+  transactionId: string;
+  amount: number;
+  paymentMethod?: string;
+  notes?: string;
+}) {
+  try {
+    const session = await auth();
+    if (!session?.user?.id) {
+      return { success: false, error: 'Unauthorized' };
+    }
+
+    const tx = await prisma.transaction.findUnique({
+      where: { id: data.transactionId },
+      select: { totalAmount: true, paidAmount: true }
+    });
+
+    if (!tx) {
+      return { success: false, error: 'Pesanan tidak ditemukan' };
+    }
+
+    const newPaidAmount = Number(tx.paidAmount) + data.amount;
+    let paymentStatus = 'PARTIAL';
+    if (newPaidAmount >= Number(tx.totalAmount)) {
+      paymentStatus = 'PAID';
+    } else if (newPaidAmount <= 0) {
+      paymentStatus = 'UNPAID';
+    }
+
+    await prisma.$transaction(async (prismaTx) => {
+      await prismaTx.paymentHistory.create({
+        data: {
+          transactionId: data.transactionId,
+          amount: data.amount,
+          paymentMethod: data.paymentMethod || 'CASH',
+          notes: data.notes,
+          userId: session.user.id
+        }
+      });
+
+      await prismaTx.transaction.update({
+        where: { id: data.transactionId },
+        data: {
+          paidAmount: newPaidAmount,
+          paymentStatus: paymentStatus
+        }
+      });
+    });
+
+    revalidatePath('/admin/transactions');
+    revalidatePath('/super-admin/transactions');
+    revalidatePath('/sales/requests');
+
+    return { success: true };
+  } catch (error: any) {
+    console.error('Failed to add payment:', error);
+    return { success: false, error: error.message || 'Gagal menambahkan pembayaran' };
+  }
+}

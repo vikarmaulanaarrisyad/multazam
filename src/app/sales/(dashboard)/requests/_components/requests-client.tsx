@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import { Search, Filter, Clock, AlertTriangle, AlertCircle, Hourglass, MoreHorizontal, CheckCircle2, PackageCheck, Loader2 } from 'lucide-react';
-import { updateTransactionStatus } from '@/actions/transaction-actions';
+import { Search, Filter, Clock, AlertTriangle, AlertCircle, Hourglass, MoreHorizontal, CheckCircle2, PackageCheck, Loader2, Plus } from 'lucide-react';
+import { updateTransactionStatus, addPayment } from '@/actions/transaction-actions';
 import { toast } from 'sonner';
 
 interface RequestItem {
@@ -11,6 +11,8 @@ interface RequestItem {
   customerName: string | null;
   dueDate: Date | null;
   totalAmount: number;
+  paidAmount: number;
+  paymentStatus: string;
   shippingCost: number;
   status: string;
   adminNotes: string | null;
@@ -22,6 +24,11 @@ interface RequestItem {
     price: number;
     originalPrice: number;
   }[];
+  paymentHistories: {
+    id: string;
+    amount: number;
+    createdAt: Date;
+  }[];
 }
 
 export default function RequestsClient({ requests }: { requests: RequestItem[] }) {
@@ -29,6 +36,8 @@ export default function RequestsClient({ requests }: { requests: RequestItem[] }
   const [activeTab, setActiveTab] = useState('Semua');
   const [selectedRequest, setSelectedRequest] = useState<RequestItem | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [paymentAmount, setPaymentAmount] = useState('');
+  const [showPaymentForm, setShowPaymentForm] = useState(false);
 
   const handleCompleteOrder = async (e: React.MouseEvent, req: RequestItem) => {
     e.stopPropagation();
@@ -43,6 +52,28 @@ export default function RequestsClient({ requests }: { requests: RequestItem[] }
       setSelectedRequest(null);
     } else {
       toast.error(res.error || 'Gagal menyelesaikan pesanan');
+    }
+    setIsSubmitting(false);
+  };
+
+  const handleAddPayment = async (e: React.FormEvent, req: RequestItem) => {
+    e.preventDefault();
+    if (!paymentAmount) return;
+    
+    setIsSubmitting(true);
+    const res = await addPayment({
+      transactionId: req.id,
+      amount: Number(paymentAmount.replace(/\D/g, ''))
+    });
+    
+    if (res.success) {
+      toast.success('Pembayaran berhasil dicatat!');
+      setPaymentAmount('');
+      setShowPaymentForm(false);
+      // Let's close modal for simplicity, user can reopen to see updated data
+      setSelectedRequest(null);
+    } else {
+      toast.error(res.error || 'Gagal mencatat pembayaran');
     }
     setIsSubmitting(false);
   };
@@ -264,7 +295,7 @@ export default function RequestsClient({ requests }: { requests: RequestItem[] }
 
       {/* Detail Modal */}
       {selectedRequest && (
-        <div className="fixed inset-0 z-[100] flex flex-col justify-end bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-200" onClick={() => setSelectedRequest(null)}>
+        <div className="fixed inset-0 z-100 flex flex-col justify-end bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-200" onClick={() => setSelectedRequest(null)}>
           <div 
             className="bg-white rounded-t-3xl w-full max-h-[85vh] flex flex-col shadow-2xl animate-in slide-in-from-bottom duration-300" 
             onClick={e => e.stopPropagation()}
@@ -340,10 +371,88 @@ export default function RequestsClient({ requests }: { requests: RequestItem[] }
                   </div>
                 )}
                 <div className="flex justify-between items-center text-base pt-3 mt-3 border-t border-slate-200">
-                  <span className="text-slate-900 font-extrabold uppercase text-xs">Total Pembayaran</span>
+                  <span className="text-slate-900 font-extrabold uppercase text-xs">Total Tagihan</span>
                   <span className="font-black text-blue-700 text-lg">Rp {selectedRequest.totalAmount.toLocaleString('id-ID')}</span>
                 </div>
+
+                <div className="flex justify-between items-center text-sm border-t border-slate-200/60 pt-2 mt-2">
+                  <span className="text-slate-500 font-medium">Telah Dibayar</span>
+                  <span className="font-bold text-emerald-600">Rp {selectedRequest.paidAmount.toLocaleString('id-ID')}</span>
+                </div>
+                
+                <div className="flex justify-between items-center text-base pt-3 mt-3 border-t border-slate-200">
+                  <span className="text-slate-900 font-extrabold uppercase text-xs">Sisa Tagihan</span>
+                  <span className="font-black text-amber-600 text-lg">Rp {Math.max(0, selectedRequest.totalAmount - selectedRequest.paidAmount).toLocaleString('id-ID')}</span>
+                </div>
               </div>
+
+              {/* Riwayat Pembayaran */}
+              {selectedRequest.paymentHistories && selectedRequest.paymentHistories.length > 0 && (
+                <div>
+                  <div className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Riwayat Pembayaran</div>
+                  <div className="border border-slate-100 rounded-xl overflow-hidden divide-y divide-slate-100 bg-white">
+                    {selectedRequest.paymentHistories.map((ph, idx) => (
+                      <div key={ph.id} className="p-3 flex justify-between items-center">
+                        <div>
+                          <div className="text-sm font-bold text-slate-900">Pembayaran #{idx + 1}</div>
+                          <div className="text-[10px] text-slate-500 font-medium">
+                            {new Date(ph.createdAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                          </div>
+                        </div>
+                        <div className="text-sm font-bold text-emerald-600">
+                          + Rp {ph.amount.toLocaleString('id-ID')}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Form Tambah Pembayaran */}
+              {selectedRequest.status !== 'CANCELLED' && selectedRequest.status !== 'REJECTED' && selectedRequest.paymentStatus !== 'PAID' && (
+                <div className="pt-2">
+                  {!showPaymentForm ? (
+                    <button 
+                      onClick={() => setShowPaymentForm(true)}
+                      className="w-full flex items-center justify-center gap-2 bg-blue-50 text-blue-600 hover:bg-blue-100 p-3.5 rounded-xl font-bold transition-all"
+                    >
+                      <Plus className="w-5 h-5" />
+                      Tambah Pembayaran / Cicilan
+                    </button>
+                  ) : (
+                    <form onSubmit={(e) => handleAddPayment(e, selectedRequest)} className="bg-blue-50 p-4 rounded-xl border border-blue-100 flex flex-col gap-3">
+                      <label className="text-xs font-bold text-blue-800">Jumlah Pembayaran (Rp)</label>
+                      <input 
+                        type="text" 
+                        autoFocus
+                        placeholder="Contoh: 500000"
+                        value={paymentAmount}
+                        onChange={e => {
+                          const val = e.target.value.replace(/\D/g, '');
+                          setPaymentAmount(val ? parseInt(val).toLocaleString('id-ID') : '');
+                        }}
+                        className="w-full h-11 px-3 rounded-lg bg-white border border-blue-200 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                      />
+                      <div className="flex gap-2 mt-2">
+                        <button 
+                          type="button"
+                          onClick={() => { setShowPaymentForm(false); setPaymentAmount(''); }}
+                          className="flex-1 p-2.5 rounded-lg bg-white text-slate-600 font-bold hover:bg-slate-100 transition-colors border border-slate-200"
+                        >
+                          Batal
+                        </button>
+                        <button 
+                          type="submit"
+                          disabled={isSubmitting || !paymentAmount}
+                          className="flex-1 p-2.5 rounded-lg bg-blue-600 text-white font-bold hover:bg-blue-700 transition-colors disabled:opacity-50 flex justify-center items-center"
+                        >
+                          {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Simpan'}
+                        </button>
+                      </div>
+                    </form>
+                  )}
+                </div>
+              )}
 
               {selectedRequest.status === 'SHIPPED' && (
                 <div className="pt-2">
