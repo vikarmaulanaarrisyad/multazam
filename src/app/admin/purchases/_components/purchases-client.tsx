@@ -8,7 +8,7 @@ import { DataTable } from '@/components/datatable/DataTable';
 import { Input } from '@/components/ui/input';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Search, Plus, CheckCircle, XCircle, Eye } from 'lucide-react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
 import { toast } from 'sonner';
@@ -342,6 +342,9 @@ export function PurchasesClient({ initialData, metadata }: PurchasesClientProps)
               </div>
             </div>
           )}
+          <DialogFooter className="mt-6">
+            <Button variant="outline" onClick={() => setDetailsOpen(false)}>Tutup</Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
