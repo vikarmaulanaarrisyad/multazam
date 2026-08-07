@@ -266,7 +266,7 @@ export type SupplierScalarWhereWithAggregatesInput = {
 }
 
 export type SupplierCreateInput = {
-  id: string
+  id?: string
   code: string
   name: string
   email?: string | null
@@ -278,7 +278,7 @@ export type SupplierCreateInput = {
 }
 
 export type SupplierUncheckedCreateInput = {
-  id: string
+  id?: string
   code: string
   name: string
   email?: string | null
@@ -314,7 +314,7 @@ export type SupplierUncheckedUpdateInput = {
 }
 
 export type SupplierCreateManyInput = {
-  id: string
+  id?: string
   code: string
   name: string
   email?: string | null
@@ -405,7 +405,7 @@ export type SupplierUpdateOneRequiredWithoutPurchasesNestedInput = {
 }
 
 export type SupplierCreateWithoutPurchasesInput = {
-  id: string
+  id?: string
   code: string
   name: string
   email?: string | null
@@ -416,7 +416,7 @@ export type SupplierCreateWithoutPurchasesInput = {
 }
 
 export type SupplierUncheckedCreateWithoutPurchasesInput = {
-  id: string
+  id?: string
   code: string
   name: string
   email?: string | null

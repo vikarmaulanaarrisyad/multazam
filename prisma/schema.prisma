@@ -211,3 +211,12 @@ model PurchaseItem {
   quantity    Int
   price       Decimal  @db.Decimal(10, 2)
 }
+
+model Setting {
+  id             String  @id @default("1")
+  companyName    String  @default("MULTAZAM")
+  companyAddress String  @default("Jl. Contoh Alamat No. 123, Kota, Provinsi")
+  logoUrl        String?
+  logoPublicId   String?
+  updatedAt      DateTime @updatedAt
+}

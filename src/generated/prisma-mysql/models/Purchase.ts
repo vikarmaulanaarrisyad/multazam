@@ -320,7 +320,7 @@ export type PurchaseScalarWhereWithAggregatesInput = {
 }
 
 export type PurchaseCreateInput = {
-  id: string
+  id?: string
   invoiceNumber: string
   totalAmount: runtime.Decimal | runtime.DecimalJsLike | number | string
   status?: string
@@ -333,7 +333,7 @@ export type PurchaseCreateInput = {
 }
 
 export type PurchaseUncheckedCreateInput = {
-  id: string
+  id?: string
   invoiceNumber: string
   supplierId: string
   userId: string
@@ -372,7 +372,7 @@ export type PurchaseUncheckedUpdateInput = {
 }
 
 export type PurchaseCreateManyInput = {
-  id: string
+  id?: string
   invoiceNumber: string
   supplierId: string
   userId: string
@@ -569,7 +569,7 @@ export type PurchaseUpdateOneRequiredWithoutItemsNestedInput = {
 }
 
 export type PurchaseCreateWithoutUserInput = {
-  id: string
+  id?: string
   invoiceNumber: string
   totalAmount: runtime.Decimal | runtime.DecimalJsLike | number | string
   status?: string
@@ -581,7 +581,7 @@ export type PurchaseCreateWithoutUserInput = {
 }
 
 export type PurchaseUncheckedCreateWithoutUserInput = {
-  id: string
+  id?: string
   invoiceNumber: string
   supplierId: string
   totalAmount: runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -634,7 +634,7 @@ export type PurchaseScalarWhereInput = {
 }
 
 export type PurchaseCreateWithoutSupplierInput = {
-  id: string
+  id?: string
   invoiceNumber: string
   totalAmount: runtime.Decimal | runtime.DecimalJsLike | number | string
   status?: string
@@ -646,7 +646,7 @@ export type PurchaseCreateWithoutSupplierInput = {
 }
 
 export type PurchaseUncheckedCreateWithoutSupplierInput = {
-  id: string
+  id?: string
   invoiceNumber: string
   userId: string
   totalAmount: runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -684,7 +684,7 @@ export type PurchaseUpdateManyWithWhereWithoutSupplierInput = {
 }
 
 export type PurchaseCreateWithoutItemsInput = {
-  id: string
+  id?: string
   invoiceNumber: string
   totalAmount: runtime.Decimal | runtime.DecimalJsLike | number | string
   status?: string
@@ -696,7 +696,7 @@ export type PurchaseCreateWithoutItemsInput = {
 }
 
 export type PurchaseUncheckedCreateWithoutItemsInput = {
-  id: string
+  id?: string
   invoiceNumber: string
   supplierId: string
   userId: string
@@ -748,7 +748,7 @@ export type PurchaseUncheckedUpdateWithoutItemsInput = {
 }
 
 export type PurchaseCreateManyUserInput = {
-  id: string
+  id?: string
   invoiceNumber: string
   supplierId: string
   totalAmount: runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -794,7 +794,7 @@ export type PurchaseUncheckedUpdateManyWithoutUserInput = {
 }
 
 export type PurchaseCreateManySupplierInput = {
-  id: string
+  id?: string
   invoiceNumber: string
   userId: string
   totalAmount: runtime.Decimal | runtime.DecimalJsLike | number | string

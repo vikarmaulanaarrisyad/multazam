@@ -273,7 +273,7 @@ export type PurchaseItemScalarWhereWithAggregatesInput = {
 }
 
 export type PurchaseItemCreateInput = {
-  id: string
+  id?: string
   quantity: number
   price: runtime.Decimal | runtime.DecimalJsLike | number | string
   purchase: Prisma.PurchaseCreateNestedOneWithoutItemsInput
@@ -281,7 +281,7 @@ export type PurchaseItemCreateInput = {
 }
 
 export type PurchaseItemUncheckedCreateInput = {
-  id: string
+  id?: string
   purchaseId: string
   productId: string
   quantity: number
@@ -305,7 +305,7 @@ export type PurchaseItemUncheckedUpdateInput = {
 }
 
 export type PurchaseItemCreateManyInput = {
-  id: string
+  id?: string
   purchaseId: string
   productId: string
   quantity: number
@@ -461,14 +461,14 @@ export type PurchaseItemUncheckedUpdateManyWithoutPurchaseNestedInput = {
 }
 
 export type PurchaseItemCreateWithoutProductInput = {
-  id: string
+  id?: string
   quantity: number
   price: runtime.Decimal | runtime.DecimalJsLike | number | string
   purchase: Prisma.PurchaseCreateNestedOneWithoutItemsInput
 }
 
 export type PurchaseItemUncheckedCreateWithoutProductInput = {
-  id: string
+  id?: string
   purchaseId: string
   quantity: number
   price: runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -512,14 +512,14 @@ export type PurchaseItemScalarWhereInput = {
 }
 
 export type PurchaseItemCreateWithoutPurchaseInput = {
-  id: string
+  id?: string
   quantity: number
   price: runtime.Decimal | runtime.DecimalJsLike | number | string
   product: Prisma.ProductCreateNestedOneWithoutPurchaseItemsInput
 }
 
 export type PurchaseItemUncheckedCreateWithoutPurchaseInput = {
-  id: string
+  id?: string
   productId: string
   quantity: number
   price: runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -552,7 +552,7 @@ export type PurchaseItemUpdateManyWithWhereWithoutPurchaseInput = {
 }
 
 export type PurchaseItemCreateManyProductInput = {
-  id: string
+  id?: string
   purchaseId: string
   quantity: number
   price: runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -580,7 +580,7 @@ export type PurchaseItemUncheckedUpdateManyWithoutProductInput = {
 }
 
 export type PurchaseItemCreateManyPurchaseInput = {
-  id: string
+  id?: string
   productId: string
   quantity: number
   price: runtime.Decimal | runtime.DecimalJsLike | number | string

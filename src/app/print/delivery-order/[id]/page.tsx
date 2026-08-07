@@ -4,7 +4,7 @@ import { notFound } from 'next/navigation';
 import { PrintButton } from './_components/PrintButton';
 import { Suspense } from 'react';
 
-function SuratJalanCopy({ transaction, title, hideCutLine }: any) {
+function SuratJalanCopy({ transaction, title, hideCutLine, setting }: any) {
   const invoiceNumber = transaction.invoiceNumber;
   const date = new Date(transaction.createdAt).toLocaleDateString('id-ID', {
     year: 'numeric',
@@ -21,10 +21,15 @@ function SuratJalanCopy({ transaction, title, hideCutLine }: any) {
       <div>
         {/* Header */}
         <div className="flex justify-between items-start border-b-2 border-slate-900 pb-3 mb-4">
-          <div>
-            <h1 className="text-2xl font-extrabold text-slate-900 tracking-tighter">MULTAZAM</h1>
-            <p className="text-slate-600 font-medium text-[10px] mt-1">Sistem Penjualan & Inventori Terpercaya</p>
-            <p className="text-slate-500 text-[10px]">Jl. Contoh Alamat No. 123, Kota, Provinsi</p>
+          <div className="flex gap-4 items-center">
+            {setting?.logoUrl && (
+              <img src={setting.logoUrl} alt="Logo" className="h-12 w-auto object-contain" />
+            )}
+            <div>
+              <h1 className="text-2xl font-extrabold text-slate-900 tracking-tighter uppercase">{setting?.companyName || 'MULTAZAM'}</h1>
+              <p className="text-slate-600 font-medium text-[10px] mt-1">Sistem Penjualan & Inventori Terpercaya</p>
+              <p className="text-slate-500 text-[10px] max-w-[250px] whitespace-pre-wrap leading-tight mt-1">{setting?.companyAddress || 'Jl. Contoh Alamat No. 123, Kota, Provinsi'}</p>
+            </div>
           </div>
           <div className="text-right">
             <h2 className="text-xl font-bold text-slate-900 uppercase tracking-widest">Surat Jalan</h2>
@@ -154,6 +159,10 @@ export default async function PrintDeliveryOrderPage({ params }: { params: Promi
     }
   });
 
+  const setting = await prisma.setting.findUnique({
+    where: { id: "1" }
+  });
+
   if (!transaction) {
     notFound();
   }
@@ -167,10 +176,10 @@ export default async function PrintDeliveryOrderPage({ params }: { params: Promi
         </Suspense>
         
         {/* Salinan Untuk Driver / Arsip */}
-        <SuratJalanCopy transaction={transaction} title="Salinan Karyawan (Pengirim)" />
+        <SuratJalanCopy transaction={transaction} title="Salinan Karyawan (Pengirim)" setting={setting} />
         
         {/* Salinan Untuk Kardus / Pelanggan */}
-        <SuratJalanCopy transaction={transaction} title="Salinan Pelanggan (Tempel di Kardus)" hideCutLine={true} />
+        <SuratJalanCopy transaction={transaction} title="Salinan Pelanggan (Tempel di Kardus)" hideCutLine={true} setting={setting} />
       </div>
     </div>
   );

@@ -5,7 +5,7 @@ import bcrypt from 'bcrypt';
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 import { auth } from '@/auth';
-import { $Enums } from '@prisma/client';
+import { Role } from '@/generated/prisma/client';
 
 const UserSchema = z.object({
   name: z.string().min(3, 'Nama minimal 3 karakter').max(50),
@@ -67,7 +67,7 @@ export async function createUser(data: z.infer<typeof UserSchema>) {
         name: parsedData.name,
         email: parsedData.email,
         password: hashedPassword,
-        role: parsedData.role as $Enums.Role
+        role: parsedData.role as Role
       }
     });
 
@@ -76,7 +76,7 @@ export async function createUser(data: z.infer<typeof UserSchema>) {
   } catch (error: any) {
     console.error('Failed to create user:', error);
     if (error instanceof z.ZodError) {
-      return { success: false, error: (error as z.ZodError).errors[0].message };
+      return { success: false, error: error.issues[0].message };
     }
     return { success: false, error: error.message || 'Gagal menambahkan pengguna' };
   }
@@ -103,7 +103,7 @@ export async function updateUser(id: string, data: z.infer<typeof UserSchema>) {
     const updateData: any = {
       name: parsedData.name,
       email: parsedData.email,
-      role: parsedData.role as $Enums.Role
+      role: parsedData.role as Role
     };
 
     if (parsedData.password && parsedData.password.trim() !== '') {
@@ -120,7 +120,7 @@ export async function updateUser(id: string, data: z.infer<typeof UserSchema>) {
   } catch (error: any) {
     console.error('Failed to update user:', error);
     if (error instanceof z.ZodError) {
-      return { success: false, error: (error as z.ZodError).errors[0].message };
+      return { success: false, error: error.issues[0].message };
     }
     return { success: false, error: error.message || 'Gagal mengubah data pengguna' };
   }
