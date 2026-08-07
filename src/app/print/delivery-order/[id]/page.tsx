@@ -2,6 +2,7 @@ import React from 'react';
 import prisma from '@/lib/prisma';
 import { notFound } from 'next/navigation';
 import { PrintButton } from './_components/PrintButton';
+import { Suspense } from 'react';
 
 function SuratJalanCopy({ transaction, title, hideCutLine }: any) {
   const invoiceNumber = transaction.invoiceNumber;
@@ -16,7 +17,7 @@ function SuratJalanCopy({ transaction, title, hideCutLine }: any) {
   const totalKeseluruhan = totalItemAmount + shippingCost;
 
   return (
-    <div className={`w-full max-w-[210mm] bg-white p-6 print:p-0 mx-auto relative print:w-full flex flex-col justify-between ${!hideCutLine ? 'border-b-2 border-dashed border-slate-300 print:border-slate-400 pb-8 mb-8 print:pb-6 print:mb-6' : ''}`} style={{ minHeight: '160mm' }}>
+    <div className={`w-full bg-white p-6 print:p-0 relative flex flex-col justify-between ${!hideCutLine ? 'border-b-2 border-dashed border-slate-300 print:border-slate-400 pb-8 mb-8 print:pb-6 print:mb-6' : ''}`} style={{ minHeight: '160mm' }}>
       <div>
         {/* Header */}
         <div className="flex justify-between items-start border-b-2 border-slate-900 pb-3 mb-4">
@@ -158,10 +159,12 @@ export default async function PrintDeliveryOrderPage({ params }: { params: Promi
   }
 
   return (
-    <div className="min-h-screen bg-slate-100 print:bg-white flex flex-col items-center py-8 print:py-0">
-      <div id="print-container" className="w-full max-w-[210mm] bg-white shadow-lg print:shadow-none mx-auto relative print:w-full">
+    <div className="min-h-screen bg-white print:bg-white flex flex-col items-start py-0">
+      <div id="print-container" className="w-[210mm] shrink-0 bg-white relative print:w-[210mm]">
         {/* Floating Print Button (Hidden on Print) */}
-        <PrintButton invoiceNumber={transaction.invoiceNumber} />
+        <Suspense fallback={<div />}>
+          <PrintButton invoiceNumber={transaction.invoiceNumber} />
+        </Suspense>
         
         {/* Salinan Untuk Driver / Arsip */}
         <SuratJalanCopy transaction={transaction} title="Salinan Karyawan (Pengirim)" />

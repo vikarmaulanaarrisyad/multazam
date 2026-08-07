@@ -1,38 +1,43 @@
 'use client';
 
-import React, { useState } from 'react';
-import { Printer, FileDown, X } from 'lucide-react';
-import html2canvas from 'html2canvas';
+import React, { useEffect, useState, useRef } from 'react';
+import { Printer, FileDown } from 'lucide-react';
+import { toPng } from 'html-to-image';
 import { jsPDF } from 'jspdf';
+import { useSearchParams } from 'next/navigation';
 
 export function PrintButton({ invoiceNumber }: { invoiceNumber?: string }) {
-  const [showModal, setShowModal] = useState(false);
+  const searchParams = useSearchParams();
   const [isGenerating, setIsGenerating] = useState(false);
+  const actionTriggered = useRef(false);
 
   const handleDownloadPDF = async () => {
+    if (isGenerating) return;
     setIsGenerating(true);
     try {
-      // The print page has a main container we can target
       const element = document.getElementById('print-container');
-      if (!element) {
-        throw new Error('Container not found');
-      }
+      if (!element) throw new Error('Container not found');
 
-      // Hide the buttons for the screenshot
       const buttons = document.getElementById('print-buttons-container');
       if (buttons) buttons.style.display = 'none';
 
-      const canvas = await html2canvas(element, {
-        scale: 2,
-        useCORS: true,
-        logging: false,
-        backgroundColor: '#ffffff'
+      const dataUrl = await toPng(element, {
+        cacheBust: true,
+        backgroundColor: '#ffffff',
+        pixelRatio: 2,
+        filter: (node) => {
+          if (node.nodeType === 1) {
+            const htmlNode = node as HTMLElement;
+            if (htmlNode.classList && htmlNode.classList.contains('print:hidden')) {
+              return false;
+            }
+          }
+          return true;
+        }
       });
       
       if (buttons) buttons.style.display = 'flex';
 
-      const imgData = canvas.toDataURL('image/png');
-      // F4 size is roughly 210 x 330 mm
       const pdf = new jsPDF({
         orientation: 'portrait',
         unit: 'mm',
@@ -40,11 +45,22 @@ export function PrintButton({ invoiceNumber }: { invoiceNumber?: string }) {
       });
       
       const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+      const imgProps = pdf.getImageProperties(dataUrl);
+      const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
       
-      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+      pdf.addImage(dataUrl, 'PNG', 0, 0, pdfWidth, pdfHeight);
       pdf.save(`Surat_Jalan_${invoiceNumber || 'Document'}.pdf`);
-      setShowModal(false);
+      
+      // Navigate back after download if it was auto-triggered
+      if (searchParams.get('action') === 'download') {
+        if (searchParams.get('iframe') === 'true') {
+          window.parent.postMessage('print-action-done', '*');
+        } else {
+          setTimeout(() => {
+            window.history.back();
+          }, 1500);
+        }
+      }
     } catch (error) {
       console.error('Failed to generate PDF', error);
       alert('Gagal membuat PDF. Silakan coba lagi.');
@@ -53,72 +69,57 @@ export function PrintButton({ invoiceNumber }: { invoiceNumber?: string }) {
     }
   };
 
+  useEffect(() => {
+    if (actionTriggered.current) return;
+    
+    const action = searchParams.get('action');
+    if (action === 'print') {
+      actionTriggered.current = true;
+      setTimeout(() => {
+        window.focus();
+        window.print();
+        if (searchParams.get('iframe') === 'true') {
+          window.parent.postMessage('print-dialog-opened', '*');
+        } else {
+          // Go back after printing (when dialog closes)
+          window.history.back();
+        }
+      }, 500);
+    } else if (action === 'download') {
+      actionTriggered.current = true;
+      setTimeout(() => {
+        handleDownloadPDF();
+      }, 800); // Give it a bit more time to render
+    }
+  }, [searchParams]);
+
   return (
-    <>
-      <div id="print-buttons-container" className="absolute top-0 right-0 m-8 print:hidden flex items-center gap-4 z-10">
-        <button
-          onClick={() => window.history.back()}
-          className="flex items-center gap-2 px-4 py-3 bg-white text-slate-700 rounded-xl font-bold border border-slate-300 shadow-sm hover:bg-slate-50 transition-colors hover:scale-105 active:scale-95"
-        >
-          Kembali
-        </button>
-        <button
-          onClick={() => setShowModal(true)}
-          className="flex items-center gap-2 px-6 py-3 bg-slate-900 text-white rounded-xl font-bold shadow-xl hover:bg-slate-800 transition-colors hover:scale-105 active:scale-95"
-        >
-          <Printer className="w-5 h-5" /> Cetak Dokumen
-        </button>
-      </div>
-
-      {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm print:hidden">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full overflow-hidden animate-in zoom-in-95 duration-200">
-            <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
-              <h3 className="font-bold text-slate-800">Opsi Cetak Surat Jalan</h3>
-              <button 
-                onClick={() => !isGenerating && setShowModal(false)}
-                className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-200 rounded-full transition-colors disabled:opacity-50"
-                disabled={isGenerating}
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-            
-            <div className="p-6 space-y-4">
-              <button
-                onClick={() => {
-                  setShowModal(false);
-                  setTimeout(() => window.print(), 100);
-                }}
-                disabled={isGenerating}
-                className="w-full flex items-center p-4 gap-4 bg-white border-2 border-slate-200 rounded-xl hover:border-slate-800 hover:bg-slate-50 transition-all group disabled:opacity-50"
-              >
-                <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center group-hover:bg-slate-200 group-hover:text-slate-900 text-slate-500 transition-colors shrink-0">
-                  <Printer className="w-6 h-6" />
-                </div>
-                <div className="text-left">
-                  <div className="font-bold text-slate-900 text-sm">Cetak ke Printer</div>
-                  <div className="text-[11px] text-slate-500 font-medium">Print langsung menggunakan mesin cetak.</div>
-                </div>
-              </button>
-
-              <button
-                onClick={handleDownloadPDF}
-                disabled={isGenerating}
-                className="w-full flex items-center p-4 gap-4 bg-white border-2 border-slate-200 rounded-xl hover:border-blue-600 hover:bg-blue-50 transition-all group disabled:opacity-50 text-left"
-              >
-                <div className="w-12 h-12 bg-blue-50 rounded-full flex items-center justify-center group-hover:bg-blue-100 group-hover:text-blue-700 text-blue-500 transition-colors shrink-0">
-                  {isGenerating ? <div className="w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" /> : <FileDown className="w-6 h-6" />}
-                </div>
-                <div className="text-left">
-                  <div className="font-bold text-slate-900 text-sm">{isGenerating ? 'Menyiapkan PDF...' : 'Unduh File PDF'}</div>
-                  <div className="text-[11px] text-slate-500 font-medium">Simpan dokumen ini ke dalam perangkat Anda.</div>
-                </div>
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-    </>
+    <div id="print-buttons-container" className="absolute top-0 right-0 m-8 print:hidden flex items-center gap-4 z-10">
+      <button
+        onClick={() => window.history.back()}
+        className="flex items-center gap-2 px-4 py-3 bg-white text-slate-700 rounded-xl font-bold border border-slate-300 shadow-sm hover:bg-slate-50 transition-colors hover:scale-105 active:scale-95"
+      >
+        Kembali
+      </button>
+      <button
+        onClick={handleDownloadPDF}
+        disabled={isGenerating}
+        className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-xl font-bold shadow-lg hover:bg-blue-700 transition-colors hover:scale-105 active:scale-95 disabled:opacity-50"
+      >
+        {isGenerating ? (
+          <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+        ) : (
+          <FileDown className="w-5 h-5" />
+        )}
+        Unduh PDF
+      </button>
+      <button
+        onClick={() => window.print()}
+        disabled={isGenerating}
+        className="flex items-center gap-2 px-6 py-3 bg-slate-900 text-white rounded-xl font-bold shadow-xl hover:bg-slate-800 transition-colors hover:scale-105 active:scale-95 disabled:opacity-50"
+      >
+        <Printer className="w-5 h-5" /> Cetak ke Printer
+      </button>
+    </div>
   );
 }

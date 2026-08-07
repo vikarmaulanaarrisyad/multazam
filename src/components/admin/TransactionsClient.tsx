@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
-import { Search, ChevronLeft, ChevronRight, CheckCircle, XCircle, Truck, Package, X, Plus } from 'lucide-react';
+import React, { useState, useMemo, useEffect } from 'react';
+import { Search, ChevronLeft, ChevronRight, CheckCircle, XCircle, Truck, Package, X, Plus, Printer, FileDown } from 'lucide-react';
 import { ColumnDef, flexRender, getCoreRowModel, useReactTable, getPaginationRowModel } from '@tanstack/react-table';
 import { updateTransactionStatus, cancelTransaction, addPayment } from '@/actions/transaction-actions';
 import { approvePriceRequest, rejectPriceRequest } from '@/actions/approval-actions';
@@ -46,6 +46,8 @@ export type TransactionDetail = {
 export function TransactionsClient({ transactions }: { transactions: TransactionDetail[] }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState('PENDING_APPROVAL');
+  const [showPrintModalFor, setShowPrintModalFor] = useState<string | null>(null);
+  const [activeIframe, setActiveIframe] = useState<{ id: string, action: string, key: number } | null>(null);
   const [selectedTx, setSelectedTx] = useState<TransactionDetail | null>(null);
   
   // Approval state
@@ -54,6 +56,19 @@ export function TransactionsClient({ transactions }: { transactions: Transaction
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [adminNotes, setAdminNotes] = useState('');
+
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      if (event.data === 'print-action-done') {
+        toast.dismiss();
+        toast.success('Unduhan PDF selesai');
+      } else if (event.data === 'print-dialog-opened') {
+        toast.dismiss();
+      }
+    };
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, []);
 
   const handleOpenModal = (tx: TransactionDetail) => {
     setSelectedTx(tx);
@@ -425,12 +440,12 @@ export function TransactionsClient({ transactions }: { transactions: Transaction
               </div>
               <div className="flex items-center gap-3">
                 {(selectedTx.status === 'APPROVED' || selectedTx.status === 'SHIPPED' || selectedTx.status === 'COMPLETED') && (
-                  <a 
-                    href={`/print/delivery-order/${selectedTx.id}`} 
+                  <button 
+                    onClick={() => setShowPrintModalFor(selectedTx.id)}
                     className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-lg text-sm font-bold transition-colors border border-blue-200"
                   >
                     <Truck className="w-4 h-4" /> Cetak Surat Jalan
-                  </a>
+                  </button>
                 )}
                 <button 
                   onClick={() => !isSubmitting && setSelectedTx(null)}
@@ -722,6 +737,68 @@ export function TransactionsClient({ transactions }: { transactions: Transaction
             </div>
           </div>
         </div>
+      )}
+      {/* Print Options Modal */}
+      {showPrintModalFor && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+              <h3 className="font-bold text-slate-800">Opsi Cetak Surat Jalan</h3>
+              <button 
+                onClick={() => setShowPrintModalFor(null)}
+                className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-200 rounded-full transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <div className="p-6 space-y-4">
+              <button
+                onClick={() => {
+                  toast.loading('Membuka dialog print...', { duration: 2000 });
+                  setActiveIframe({ id: showPrintModalFor, action: 'print', key: Date.now() });
+                  setShowPrintModalFor(null);
+                }}
+                className="w-full flex items-center p-4 gap-4 bg-white border-2 border-slate-200 rounded-xl hover:border-slate-800 hover:bg-slate-50 transition-all group"
+              >
+                <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center group-hover:bg-slate-200 group-hover:text-slate-900 text-slate-500 transition-colors shrink-0">
+                  <Printer className="w-6 h-6" />
+                </div>
+                <div className="text-left">
+                  <div className="font-bold text-slate-900 text-sm">Cetak ke Printer</div>
+                  <div className="text-[11px] text-slate-500 font-medium">Print langsung menggunakan mesin cetak.</div>
+                </div>
+              </button>
+
+              <button
+                onClick={() => {
+                  toast.loading('Menyiapkan dan mengunduh PDF...', { duration: 3000 });
+                  setActiveIframe({ id: showPrintModalFor, action: 'download', key: Date.now() });
+                  setShowPrintModalFor(null);
+                }}
+                className="w-full flex items-center p-4 gap-4 bg-white border-2 border-slate-200 rounded-xl hover:border-blue-600 hover:bg-blue-50 transition-all group text-left"
+              >
+                <div className="w-12 h-12 bg-blue-50 rounded-full flex items-center justify-center group-hover:bg-blue-100 group-hover:text-blue-700 text-blue-500 transition-colors shrink-0">
+                  <FileDown className="w-6 h-6" />
+                </div>
+                <div className="text-left">
+                  <div className="font-bold text-slate-900 text-sm">Unduh File PDF</div>
+                  <div className="text-[11px] text-slate-500 font-medium">Simpan dokumen ini ke dalam perangkat Anda.</div>
+                </div>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Invisible Iframe for Print Engine */}
+      {activeIframe && (
+        <iframe
+          key={activeIframe.key}
+          src={`/print/delivery-order/${activeIframe.id}?action=${activeIframe.action}&iframe=true`}
+          className="fixed top-0 left-0 w-screen h-screen opacity-0 pointer-events-none z-[-50]"
+          title="Print Engine"
+        />
       )}
     </div>
   );
