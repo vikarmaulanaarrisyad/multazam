@@ -33,6 +33,7 @@ export default function RequestsClient({ requests }: { requests: RequestItem[] }
       if (activeTab === 'Semua') return true;
       if (activeTab === 'Menunggu') return req.status === 'PENDING' || req.status === 'PENDING_APPROVAL';
       if (activeTab === 'Disetujui') return req.status === 'APPROVED';
+      if (activeTab === 'Selesai/Dikirim') return req.status === 'SHIPPED' || req.status === 'COMPLETED';
       if (activeTab === 'Terlambat') {
         if (!req.dueDate) return false;
         const dueDate = new Date(req.dueDate);
@@ -105,7 +106,7 @@ export default function RequestsClient({ requests }: { requests: RequestItem[] }
 
       {/* Filters / Tabs */}
       <div className="flex gap-2 overflow-x-auto px-4 pb-1 hide-scrollbar">
-        {['Semua', 'Menunggu', 'Disetujui', 'Terlambat'].map(tab => (
+        {['Semua', 'Menunggu', 'Disetujui', 'Selesai/Dikirim', 'Terlambat'].map(tab => (
           <button 
             key={tab}
             onClick={() => setActiveTab(tab)}
@@ -160,17 +161,29 @@ export default function RequestsClient({ requests }: { requests: RequestItem[] }
                 tagText = "text-blue-600";
                 StatusIcon = CheckCircle2;
                 statusLabel = "Disetujui";
-              } else if (req.status === 'REJECTED') {
+              } else if (req.status === 'SHIPPED') {
+                statusColor = "bg-purple-500";
+                tagBg = "bg-purple-50";
+                tagText = "text-purple-600";
+                StatusIcon = CheckCircle2;
+                statusLabel = "Dikirim";
+              } else if (req.status === 'COMPLETED') {
+                statusColor = "bg-green-500";
+                tagBg = "bg-green-50";
+                tagText = "text-green-600";
+                StatusIcon = CheckCircle2;
+                statusLabel = "Selesai";
+              } else if (req.status === 'REJECTED' || req.status === 'CANCELLED') {
                 statusColor = "bg-red-500";
                 tagBg = "bg-red-50";
                 tagText = "text-red-600";
                 StatusIcon = AlertCircle;
-                statusLabel = "Ditolak";
+                statusLabel = req.status === 'REJECTED' ? "Ditolak" : "Dibatalkan";
               }
             }
 
             return (
-              <div key={req.id} className={`bg-white rounded-2xl shadow-sm border border-slate-100 p-3 flex flex-col gap-3 relative overflow-hidden group ${req.status === 'APPROVED' ? 'opacity-75' : ''}`}>
+              <div key={req.id} className={`bg-white rounded-2xl shadow-sm border border-slate-100 p-3 flex flex-col gap-3 relative overflow-hidden group ${req.status === 'COMPLETED' ? 'opacity-75' : ''}`}>
                 <div className={`absolute left-0 top-0 bottom-0 w-1 ${statusColor}`}></div>
                 <div className="flex justify-between items-start pl-2">
                   <div>
