@@ -427,8 +427,6 @@ export function TransactionsClient({ transactions }: { transactions: Transaction
                 {(selectedTx.status === 'APPROVED' || selectedTx.status === 'SHIPPED' || selectedTx.status === 'COMPLETED') && (
                   <a 
                     href={`/print/delivery-order/${selectedTx.id}`} 
-                    target="_blank" 
-                    rel="noreferrer"
                     className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-lg text-sm font-bold transition-colors border border-blue-200"
                   >
                     <Truck className="w-4 h-4" /> Cetak Surat Jalan
