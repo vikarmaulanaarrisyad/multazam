@@ -159,9 +159,9 @@ export default async function PrintDeliveryOrderPage({ params }: { params: Promi
 
   return (
     <div className="min-h-screen bg-slate-100 print:bg-white flex flex-col items-center py-8 print:py-0">
-      <div className="w-full max-w-[210mm] bg-white shadow-lg print:shadow-none mx-auto relative print:w-full">
+      <div id="print-container" className="w-full max-w-[210mm] bg-white shadow-lg print:shadow-none mx-auto relative print:w-full">
         {/* Floating Print Button (Hidden on Print) */}
-        <PrintButton />
+        <PrintButton invoiceNumber={transaction.invoiceNumber} />
         
         {/* Salinan Untuk Driver / Arsip */}
         <SuratJalanCopy transaction={transaction} title="Salinan Karyawan (Pengirim)" />
