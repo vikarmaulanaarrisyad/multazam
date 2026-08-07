@@ -1,0 +1,456 @@
+'use client';
+
+import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { Tag, UserCircle, Package, Send, CheckCircle2, ChevronLeft, Minus, Plus } from 'lucide-react';
+import { createPreOrder } from '@/actions/sales-orders';
+import { Product } from '@/generated/prisma/client';
+import { cn } from '@/lib/utils';
+
+export function PreOrderClient() {
+  const router = useRouter();
+  
+  const [cartItems, setCartItems] = useState<{product: Product, quantity: number, requestedPrice?: number}[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  
+  const [formData, setFormData] = useState({
+    customerName: '',
+    customerPhone: '',
+    dueDate: '',
+    shippingAddress: '',
+    shippingCost: '',
+    notes: '',
+  });
+
+  useEffect(() => {
+    sessionStorage.setItem('preOrderFormData', JSON.stringify(formData));
+  }, [formData]);
+
+  useEffect(() => {
+    // Load cart from session storage
+    const stored = sessionStorage.getItem('preOrderCart');
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setCartItems(parsed.map(item => ({
+            ...item,
+            requestedPrice: item.requestedPrice || Number(item.product.price)
+          })));
+        } else {
+          router.push('/sales/products');
+        }
+      } catch (e) {
+        console.error('Failed to parse cart', e);
+        router.push('/sales/products');
+      }
+    } else {
+      router.push('/sales/products');
+    }
+    
+    // Load form data
+    const storedForm = sessionStorage.getItem('preOrderFormData');
+    let loadedForm = null;
+    if (storedForm) {
+      try {
+        loadedForm = JSON.parse(storedForm);
+        // Only set if we actually have data, otherwise let the default take over
+        if (loadedForm.customerName || loadedForm.customerPhone || loadedForm.notes) {
+          setFormData(loadedForm);
+        }
+      } catch (e) {
+        console.error('Failed to parse form data', e);
+      }
+    }
+    
+    // Set default due date to tomorrow if empty
+    if (!loadedForm || !loadedForm.dueDate) {
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      setFormData(prev => ({
+        ...prev,
+        dueDate: tomorrow.toISOString().split('T')[0]
+      }));
+    }
+    
+    setIsLoading(false);
+  }, [router]);
+
+  const updateQuantity = (index: number, change: number) => {
+    setCartItems(prev => {
+      const newItems = [...prev];
+      const newQty = newItems[index].quantity + change;
+      
+      if (newQty <= 0) {
+        newItems.splice(index, 1);
+        if (newItems.length === 0) {
+          router.push('/sales/products');
+        }
+      } else if (newQty <= newItems[index].product.stock) {
+        newItems[index].quantity = newQty;
+      }
+      
+      sessionStorage.setItem('preOrderCart', JSON.stringify(newItems));
+      return newItems;
+    });
+  };
+
+  const updateRequestedPrice = (index: number, newPrice: number) => {
+    setCartItems(prev => {
+      const newItems = [...prev];
+      newItems[index].requestedPrice = newPrice;
+      sessionStorage.setItem('preOrderCart', JSON.stringify(newItems));
+      return newItems;
+    });
+  };
+
+  const handleAddMore = () => {
+    router.push('/sales/products');
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (cartItems.length === 0) return;
+    
+    setIsSubmitting(true);
+    setError(null);
+    
+    try {
+      const result = await createPreOrder({
+        customerName: formData.customerName,
+        customerPhone: formData.customerPhone,
+        shippingAddress: formData.shippingAddress,
+        shippingCost: formData.shippingCost ? Number(formData.shippingCost.replace(/\D/g, '')) : undefined,
+        dueDate: new Date(formData.dueDate),
+        notes: formData.notes,
+        items: cartItems.map(item => ({
+          productId: item.product.id,
+          quantity: item.quantity,
+          price: item.requestedPrice || Number(item.product.price),
+          originalPrice: Number(item.product.price)
+        }))
+      });
+      
+      if (result.success) {
+        setIsSuccess(true);
+        sessionStorage.removeItem('preOrderCart');
+        sessionStorage.removeItem('preOrderFormData');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } else {
+        setError(result.error || 'Failed to create pre-order');
+      }
+    } catch (err: any) {
+      setError(err.message || 'An error occurred');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('id-ID', {
+      style: 'currency',
+      currency: 'IDR',
+      minimumFractionDigits: 0,
+    }).format(amount);
+  };
+
+  const totalOriginal = cartItems.reduce((total, item) => total + (Number(item.product.price) * item.quantity), 0);
+  const totalRequested = cartItems.reduce((total, item) => total + ((item.requestedPrice || Number(item.product.price)) * item.quantity), 0);
+  const totalVariance = totalRequested - totalOriginal;
+  const isPriceProposal = totalVariance < 0;
+
+  if (isLoading) {
+    return <div className="p-8 text-center text-slate-500">Loading cart...</div>;
+  }
+
+  return (
+    <div className="flex flex-col w-full pb-24">
+      {/* Header */}
+      <div className="flex items-center gap-3 px-4 py-4 bg-white sticky top-0 z-40 border-b border-slate-100 shadow-sm">
+        <button 
+          onClick={() => router.back()}
+          className="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors"
+        >
+          <ChevronLeft className="w-5 h-5" />
+        </button>
+        <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center">
+          <Tag className="text-blue-700 w-4 h-4" />
+        </div>
+        <span className="text-lg font-bold text-slate-900 tracking-tight">Pending Requests</span>
+      </div>
+
+      <div className="px-4 py-6 flex flex-col gap-6">
+        
+        {isSuccess ? (
+          <div className="flex flex-col items-center justify-center py-12 px-4 text-center bg-white rounded-2xl shadow-sm border border-slate-100 animate-in fade-in zoom-in duration-300">
+            <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mb-4">
+              <CheckCircle2 className="text-emerald-600 w-8 h-8" />
+            </div>
+            <h2 className="text-2xl font-bold text-slate-900 mb-2">Request Submitted!</h2>
+            <p className="text-slate-500 text-sm mb-8">
+              Your pre-order request has been sent for approval. You can track its status in the Requests tab.
+            </p>
+            <button 
+              onClick={() => router.push('/sales/requests')}
+              className="px-6 py-3 rounded-xl bg-slate-100 text-slate-700 font-bold hover:bg-slate-200 transition-colors active:scale-95"
+            >
+              Lihat Daftar Pengajuan
+            </button>
+          </div>
+        ) : (
+          <>
+            <div className={cn("rounded-xl p-4 border", isPriceProposal ? "bg-amber-50 border-amber-100" : "bg-blue-50 border-blue-100")}>
+              <h2 className="text-lg font-bold text-slate-900 mb-1">
+                {isPriceProposal ? "Pengajuan Harga Khusus" : "New Pre-Order Request"}
+              </h2>
+              <p className="text-sm text-slate-600">
+                {isPriceProposal 
+                  ? "Anda sedang mengajukan harga khusus. Formulir ini akan diteruskan ke Admin untuk persetujuan." 
+                  : "Fill in the details below to submit a new pre-order for a customer."}
+              </p>
+            </div>
+
+            {error && (
+              <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm font-medium border border-red-100">
+                {error}
+              </div>
+            )}
+
+            <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+              
+              {/* Customer Details */}
+              <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100">
+                <h3 className="text-sm font-bold text-blue-700 mb-4 flex items-center gap-2 uppercase tracking-wider">
+                  <UserCircle className="w-5 h-5" />
+                  Customer Details
+                </h3>
+                <div className="flex flex-col gap-4">
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs font-bold text-slate-500" htmlFor="customerName">Customer Name</label>
+                    <input 
+                      id="customerName"
+                      type="text" 
+                      required
+                      placeholder="Enter customer name"
+                      value={formData.customerName}
+                      onChange={e => setFormData({...formData, customerName: e.target.value})}
+                      className="w-full h-11 px-3 rounded-lg bg-slate-50 border-slate-200 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all border"
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs font-bold text-slate-500" htmlFor="contactNumber">Contact Number</label>
+                    <input 
+                      id="contactNumber"
+                      type="tel" 
+                      required
+                      placeholder="e.g. +62 812..."
+                      value={formData.customerPhone}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Shipping Details */}
+              <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100">
+                <h3 className="text-sm font-bold text-blue-700 mb-4 flex items-center gap-2 uppercase tracking-wider">
+                  <Send className="w-5 h-5" />
+                  Detail Pengiriman
+                </h3>
+                <div className="flex flex-col gap-4">
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs font-bold text-slate-500" htmlFor="shippingAddress">Alamat Lengkap</label>
+                    <textarea 
+                      id="shippingAddress"
+                      placeholder="Masukkan alamat pengiriman..."
+                      value={formData.shippingAddress}
+                      onChange={e => setFormData({...formData, shippingAddress: e.target.value})}
+                      className="w-full h-20 p-3 rounded-lg bg-slate-50 border-slate-200 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none transition-all border"
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs font-bold text-slate-500" htmlFor="shippingCost">Biaya Ongkir (opsional)</label>
+                    <div className="relative">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm font-bold">Rp</span>
+                      <input 
+                        id="shippingCost"
+                        type="text" 
+                        placeholder="0"
+                        value={formData.shippingCost}
+                        onChange={e => {
+                          const val = e.target.value.replace(/\D/g, '');
+                          setFormData({...formData, shippingCost: val ? parseInt(val).toLocaleString('id-ID') : ''});
+                        }}
+                        className="w-full h-11 pl-9 pr-3 rounded-lg bg-slate-50 border-slate-200 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all border"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Product Selection */}
+              <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100">
+                <h3 className="text-sm font-bold text-blue-700 mb-4 flex items-center gap-2 uppercase tracking-wider">
+                  <Package className="w-5 h-5" />
+                  Product Selection
+                </h3>
+                <div className="flex flex-col gap-3">
+                  {cartItems.map((item, index) => (
+                    <div key={item.product.id} className="flex flex-col gap-3 p-3 bg-slate-50 rounded-xl relative overflow-hidden group border border-slate-100">
+                      <div className="absolute left-0 top-0 bottom-0 w-1 bg-blue-500 rounded-l-xl opacity-50"></div>
+                      
+                      <div className="flex justify-between items-start pl-2">
+                        <div className="flex flex-col gap-0.5 flex-1 min-w-0 pr-2">
+                          <span className="text-sm font-bold text-slate-900 truncate">{item.product.name}</span>
+                          <span className="text-[11px] font-medium text-slate-500">SKU: {item.product.code}</span>
+                        </div>
+                        <div className="flex flex-col items-end gap-0.5 shrink-0">
+                          <span className="text-[10px] font-bold text-slate-400 uppercase">Original Price</span>
+                          <span className={cn(
+                            "text-sm font-bold text-slate-900",
+                            item.requestedPrice && item.requestedPrice < Number(item.product.price) && "line-through opacity-50 text-xs"
+                          )}>
+                            {formatCurrency(Number(item.product.price))}
+                          </span>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center justify-between mt-1 pl-2">
+                        <span className="text-xs font-bold text-slate-500">Quantity:</span>
+                        <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-full p-1 shadow-sm">
+                          <button 
+                            type="button"
+                            onClick={() => updateQuantity(index, -1)}
+                            className="w-7 h-7 flex items-center justify-center rounded-full bg-slate-50 hover:bg-slate-100 text-slate-600 transition-colors"
+                          >
+                            <Minus className="w-3.5 h-3.5" />
+                          </button>
+                          <span className="w-6 text-center font-bold text-sm text-slate-900">{item.quantity}</span>
+                          <button 
+                            type="button"
+                            onClick={() => updateQuantity(index, 1)}
+                            disabled={item.quantity >= item.product.stock}
+                            className={cn(
+                              "w-7 h-7 flex items-center justify-center rounded-full transition-colors",
+                              item.quantity >= item.product.stock 
+                                ? "bg-slate-100 text-slate-400 opacity-50" 
+                                : "bg-slate-50 hover:bg-slate-100 text-slate-600"
+                            )}
+                          >
+                            <Plus className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="mt-1 bg-white border border-slate-200 rounded-lg p-2 flex items-center justify-between gap-3 transition-colors focus-within:ring-1 focus-within:ring-blue-300 shadow-sm ml-2">
+                        <label className="text-[11px] font-bold text-slate-600 pl-1 whitespace-nowrap">Req. Price</label>
+                        <div className="flex items-center gap-1.5 w-32">
+                          <span className="text-xs font-bold text-slate-400">Rp</span>
+                          <input 
+                            type="number" 
+                            min="0"
+                            required
+                            value={item.requestedPrice === 0 ? '' : item.requestedPrice}
+                            onChange={e => updateRequestedPrice(index, Number(e.target.value))}
+                            className="w-full bg-transparent border-none outline-none font-bold text-sm text-right text-blue-700 p-0 m-0"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                
+                <button 
+                  type="button"
+                  onClick={handleAddMore}
+                  className="mt-4 w-full py-2.5 flex items-center justify-center gap-2 text-blue-600 font-bold text-sm hover:bg-blue-50 rounded-xl transition-colors border border-dashed border-blue-200"
+                >
+                  <Plus className="w-4 h-4" />
+                  Add More Products
+                </button>
+              </div>
+
+              {/* Payment & Timeline */}
+              <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100">
+                <h3 className="text-sm font-bold text-blue-700 mb-4 flex items-center gap-2 uppercase tracking-wider">
+                  <Package className="w-5 h-5" />
+                  Payment & Timeline
+                </h3>
+                <div className="flex flex-col gap-4">
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs font-bold text-slate-500" htmlFor="dueDate">Jatuh Tempo Pembayaran</label>
+                    <input 
+                      id="dueDate"
+                      type="date" 
+                      required
+                      value={formData.dueDate}
+                      onChange={e => setFormData({...formData, dueDate: e.target.value})}
+                      className="w-full h-11 px-3 rounded-lg bg-slate-50 border-slate-200 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all border"
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs font-bold text-slate-500" htmlFor="notes">
+                      {isPriceProposal ? "Justification (Wajib)" : "Special Instructions (Optional)"}
+                    </label>
+                    <textarea 
+                      id="notes"
+                      rows={3}
+                      required={isPriceProposal}
+                      placeholder={isPriceProposal ? "Alasan mengapa mengajukan harga ini..." : "Add any notes for the warehouse..."}
+                      value={formData.notes}
+                      onChange={e => setFormData({...formData, notes: e.target.value})}
+                      className="w-full p-3 rounded-lg bg-slate-50 border-slate-200 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all border resize-none"
+                    ></textarea>
+                  </div>
+                </div>
+              </div>
+
+              {/* Sticky Submit Footer */}
+              <div className="fixed bottom-20 left-0 right-0 px-4 z-40 pb-safe">
+                <div className={cn(
+                  "rounded-2xl shadow-xl p-4 flex flex-col gap-3 text-white border",
+                  isPriceProposal ? "bg-amber-600 border-amber-700" : "bg-slate-900 border-slate-700"
+                )}>
+                  {isPriceProposal && (
+                    <div className="flex justify-between items-center pb-2 border-b border-white/20">
+                      <span className="text-xs text-white/80 font-medium">Original Total:</span>
+                      <span className="text-sm font-bold opacity-80 line-through">{formatCurrency(totalOriginal)}</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs text-white/90 font-medium">
+                      {isPriceProposal ? "Requested Value:" : "Total Estimated Value:"}
+                    </span>
+                    <span className="text-lg font-bold text-white">{formatCurrency(totalRequested)}</span>
+                  </div>
+                  <button 
+                    type="submit"
+                    disabled={isSubmitting}
+                    className={cn(
+                      "w-full h-12 font-bold rounded-xl flex items-center justify-center gap-2 shadow-sm transition-colors active:scale-[0.98] disabled:opacity-70 text-sm",
+                      isPriceProposal ? "bg-white text-amber-700 hover:bg-slate-50" : "bg-blue-600 text-white hover:bg-blue-500"
+                    )}
+                  >
+                    {isSubmitting ? (
+                      <div className={cn("w-5 h-5 border-2 border-t-transparent rounded-full animate-spin", isPriceProposal ? "border-amber-700" : "border-white")}></div>
+                    ) : (
+                      <>
+                        <Send className="w-4 h-4" />
+                        {isPriceProposal ? "Ajukan Persetujuan Harga" : "Submit Pre-Order"}
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+              
+              {/* Spacer for sticky footer */}
+              <div className="h-24"></div>
+            </form>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}

@@ -18,6 +18,7 @@ import {
   Ruler,
   ArrowRightLeft,
   Truck,
+  ClipboardCheck,
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -41,6 +42,12 @@ export function AdminSidebar({ role, className, onNavigate }: SidebarProps) {
       title: 'Produk',
       href: `${basePath}/products`,
       icon: Package,
+      visible: true,
+    },
+    {
+      title: 'Persetujuan Harga',
+      href: `${basePath}/approvals`,
+      icon: ClipboardCheck,
       visible: true,
     },
     {

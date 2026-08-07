@@ -1,6 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
-import { Home, Package, ClipboardList, User, Bell } from 'lucide-react';
+import { Home, Package, ClipboardList, User, Bell, Tags } from 'lucide-react';
 import { auth } from '@/auth';
 
 export default async function SalesDashboardLayout({ children }: { children: React.ReactNode }) {
@@ -28,34 +28,41 @@ export default async function SalesDashboardLayout({ children }: { children: Rea
       </header>
 
       {/* Main Content Area */}
-      {children}
+      <main className="flex-1 overflow-y-auto w-full">
+        {children}
+      </main>
 
       {/* Bottom Navigation Bar */}
       <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 flex justify-around items-center h-18 pb-safe z-50 shadow-[0_-4px_12px_rgba(0,0,0,0.05)]">
-        <Link href="/sales" className="flex flex-col items-center gap-1 p-2 text-primary w-20 group">
+        <Link href="/sales" className="flex flex-col items-center gap-1 p-2 text-primary w-16 group">
           <div className="w-12 h-8 rounded-full bg-primary/10 flex items-center justify-center">
             <Home className="w-5 h-5 font-bold" />
           </div>
-          <span className="text-[11px] font-bold">Home</span>
+          <span className="text-[10px] font-bold">Home</span>
         </Link>
-        <Link href="/sales/orders" className="flex flex-col items-center gap-1 p-2 text-slate-500 hover:text-slate-900 transition-colors w-20 group">
+        <Link href="/sales/orders" className="flex flex-col items-center gap-1 p-2 text-slate-500 hover:text-slate-900 transition-colors w-16 group">
           <div className="w-12 h-8 rounded-full flex items-center justify-center group-hover:bg-slate-100 transition-colors">
             <Package className="w-5 h-5" />
           </div>
-          <span className="text-[11px] font-medium">Orders</span>
+          <span className="text-[10px] font-medium">Orders</span>
         </Link>
-        <Link href="/sales/requests" className="flex flex-col items-center gap-1 p-2 text-slate-500 hover:text-slate-900 transition-colors w-20 group">
-          <div className="w-12 h-8 rounded-full flex items-center justify-center relative group-hover:bg-slate-100 transition-colors">
+        <Link href="/sales/requests" className="flex flex-col items-center gap-1 p-2 text-slate-500 hover:text-slate-900 transition-colors w-16 group">
+          <div className="w-12 h-8 rounded-full flex items-center justify-center group-hover:bg-slate-100 transition-colors">
             <ClipboardList className="w-5 h-5" />
-            <span className="absolute top-1 right-2 w-2 h-2 bg-red-500 rounded-full border border-white"></span>
           </div>
-          <span className="text-[11px] font-medium">Requests</span>
+          <span className="text-[10px] font-medium">Requests</span>
         </Link>
-        <Link href="/sales/profile" className="flex flex-col items-center gap-1 p-2 text-slate-500 hover:text-slate-900 transition-colors w-20 group">
+        <Link href="/sales/products" className="flex flex-col items-center gap-1 p-2 text-slate-500 hover:text-slate-900 transition-colors w-16 group">
+          <div className="w-12 h-8 rounded-full flex items-center justify-center relative group-hover:bg-slate-100 transition-colors">
+            <Tags className="w-5 h-5" />
+          </div>
+          <span className="text-[11px] font-medium">Products</span>
+        </Link>
+        <Link href="/sales/reports" className="flex flex-col items-center gap-1 p-2 text-slate-500 hover:text-slate-900 transition-colors w-16 group">
           <div className="w-12 h-8 rounded-full flex items-center justify-center group-hover:bg-slate-100 transition-colors">
             <User className="w-5 h-5" />
           </div>
-          <span className="text-[11px] font-medium">Profile</span>
+          <span className="text-[10px] font-medium">Profile</span>
         </Link>
       </nav>
     </div>

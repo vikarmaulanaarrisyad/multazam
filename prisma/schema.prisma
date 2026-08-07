@@ -114,6 +114,13 @@ model Transaction {
   user          User     @relation(fields: [userId], references: [id])
   totalAmount   Decimal  @db.Decimal(10, 2)
   status        String   @default("COMPLETED") // PENDING, COMPLETED, CANCELLED
+  customerName    String?
+  customerPhone   String?
+  shippingAddress String?  @db.Text
+  shippingCost    Decimal? @db.Decimal(10, 2)
+  dueDate         DateTime?
+  notes         String?  @db.Text
+  adminNotes    String?  @db.Text
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
@@ -128,6 +135,7 @@ model TransactionItem {
   product       Product     @relation(fields: [productId], references: [id])
   quantity      Int
   price         Decimal     @db.Decimal(10, 2)
+  originalPrice Decimal?    @db.Decimal(10, 2)
 }
 
 model StockMovement {

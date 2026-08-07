@@ -9,8 +9,9 @@ export const authConfig = {
       const isLoggedIn = !!auth?.user;
       const isApiRoute = nextUrl.pathname.startsWith('/api');
       const isAuthRoute = nextUrl.pathname === '/login' || nextUrl.pathname === '/sales/login';
+      const isPublicAsset = nextUrl.pathname === '/manifest.json' || nextUrl.pathname.startsWith('/icon-') || nextUrl.pathname.endsWith('.svg') || nextUrl.pathname.endsWith('.png') || nextUrl.pathname === '/sw.js' || nextUrl.pathname.startsWith('/workbox-');
       
-      if (isApiRoute) return true;
+      if (isApiRoute || isPublicAsset) return true;
       
       if (isAuthRoute) {
         if (isLoggedIn) {

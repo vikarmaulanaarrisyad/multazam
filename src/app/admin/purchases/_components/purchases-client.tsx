@@ -268,7 +268,7 @@ export function PurchasesClient({ initialData, metadata }: PurchasesClientProps)
       />
 
       <Dialog open={detailsOpen} onOpenChange={setDetailsOpen}>
-        <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
+        <DialogContent className="sm:max-w-150 max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Detail Pesanan - {selectedDetails?.invoiceNumber}</DialogTitle>
           </DialogHeader>
