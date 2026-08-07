@@ -11,8 +11,29 @@ export async function updateTransactionStatus(data: {
 }) {
   try {
     const session = await auth();
-    if (!session?.user?.id || (session.user.role !== 'ADMIN' && session.user.role !== 'SUPER_ADMIN')) {
+    if (!session?.user?.id) {
       return { success: false, error: 'Unauthorized' };
+    }
+
+    const isSales = session.user.role === 'SALES';
+    const isAdmin = session.user.role === 'ADMIN' || session.user.role === 'SUPER_ADMIN';
+
+    if (!isAdmin && !isSales) {
+      return { success: false, error: 'Unauthorized' };
+    }
+
+    if (isSales && data.status !== 'COMPLETED') {
+      return { success: false, error: 'Sales hanya diizinkan mengubah status menjadi selesai' };
+    }
+
+    if (isSales) {
+      const tx = await prisma.transaction.findUnique({
+        where: { id: data.transactionId },
+        select: { userId: true }
+      });
+      if (!tx || tx.userId !== session.user.id) {
+        return { success: false, error: 'Anda tidak memiliki akses ke pesanan ini' };
+      }
     }
 
     await prisma.transaction.update({

@@ -1,7 +1,9 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import { Search, Filter, Clock, AlertTriangle, AlertCircle, Hourglass, MoreHorizontal, CheckCircle2 } from 'lucide-react';
+import { Search, Filter, Clock, AlertTriangle, AlertCircle, Hourglass, MoreHorizontal, CheckCircle2, PackageCheck, Loader2 } from 'lucide-react';
+import { updateTransactionStatus } from '@/actions/transaction-actions';
+import { toast } from 'sonner';
 
 interface RequestItem {
   id: string;
@@ -9,12 +11,41 @@ interface RequestItem {
   customerName: string | null;
   dueDate: Date | null;
   totalAmount: number;
+  shippingCost: number;
   status: string;
+  adminNotes: string | null;
+  createdAt: Date;
+  items: {
+    id: string;
+    productName: string;
+    quantity: number;
+    price: number;
+    originalPrice: number;
+  }[];
 }
 
 export default function RequestsClient({ requests }: { requests: RequestItem[] }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState('Semua');
+  const [selectedRequest, setSelectedRequest] = useState<RequestItem | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleCompleteOrder = async (e: React.MouseEvent, req: RequestItem) => {
+    e.stopPropagation();
+    setIsSubmitting(true);
+    const res = await updateTransactionStatus({
+      transactionId: req.id,
+      status: 'COMPLETED'
+    });
+    
+    if (res.success) {
+      toast.success('Pesanan berhasil diselesaikan!');
+      setSelectedRequest(null);
+    } else {
+      toast.error(res.error || 'Gagal menyelesaikan pesanan');
+    }
+    setIsSubmitting(false);
+  };
 
   const now = new Date();
   // Reset time to start of day for comparison
@@ -183,7 +214,11 @@ export default function RequestsClient({ requests }: { requests: RequestItem[] }
             }
 
             return (
-              <div key={req.id} className={`bg-white rounded-2xl shadow-sm border border-slate-100 p-3 flex flex-col gap-3 relative overflow-hidden group ${req.status === 'COMPLETED' ? 'opacity-75' : ''}`}>
+              <div 
+                key={req.id} 
+                onClick={() => setSelectedRequest(req)}
+                className={`bg-white rounded-2xl shadow-sm border border-slate-100 p-3 flex flex-col gap-3 relative overflow-hidden group cursor-pointer hover:shadow-md transition-all ${req.status === 'COMPLETED' ? 'opacity-75' : ''}`}
+              >
                 <div className={`absolute left-0 top-0 bottom-0 w-1 ${statusColor}`}></div>
                 <div className="flex justify-between items-start pl-2">
                   <div>
@@ -226,6 +261,111 @@ export default function RequestsClient({ requests }: { requests: RequestItem[] }
           scrollbar-width: none;
         }
       `}} />
+
+      {/* Detail Modal */}
+      {selectedRequest && (
+        <div className="fixed inset-0 z-[100] flex flex-col justify-end bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-200" onClick={() => setSelectedRequest(null)}>
+          <div 
+            className="bg-white rounded-t-3xl w-full max-h-[85vh] flex flex-col shadow-2xl animate-in slide-in-from-bottom duration-300" 
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="w-full flex justify-center py-3">
+              <div className="w-12 h-1.5 bg-slate-200 rounded-full"></div>
+            </div>
+            
+            <div className="px-6 pb-2 flex justify-between items-center border-b border-slate-100">
+              <div>
+                <h3 className="text-lg font-bold text-slate-900">{selectedRequest.invoiceNumber}</h3>
+                <p className="text-xs text-slate-500 font-medium">{new Date(selectedRequest.createdAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</p>
+              </div>
+              <button 
+                onClick={() => setSelectedRequest(null)}
+                className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors"
+              >
+                <AlertCircle className="w-5 h-5 hidden" /> 
+                <span className="font-bold text-lg leading-none">&times;</span>
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-6 pb-safe space-y-6">
+              
+              {selectedRequest.adminNotes && (
+                <div className="p-4 bg-blue-50 rounded-xl border border-blue-100">
+                  <div className="text-xs font-bold text-blue-600 uppercase tracking-wider mb-1">Catatan Admin</div>
+                  <p className="text-sm text-blue-900 font-medium">
+                    &quot;{selectedRequest.adminNotes}&quot;
+                  </p>
+                </div>
+              )}
+
+              <div>
+                <div className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Informasi Pelanggan</div>
+                <div className="flex justify-between items-center bg-slate-50 p-3 rounded-xl border border-slate-100">
+                  <span className="text-sm text-slate-500">Nama Pelanggan</span>
+                  <span className="text-sm font-bold text-slate-900">{selectedRequest.customerName || 'Anonim'}</span>
+                </div>
+              </div>
+
+              <div>
+                <div className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Daftar Produk</div>
+                <div className="border border-slate-100 rounded-xl overflow-hidden divide-y divide-slate-100 bg-white">
+                  {selectedRequest.items.map(item => (
+                    <div key={item.id} className="p-3">
+                      <div className="font-bold text-slate-900 text-sm mb-1">{item.productName}</div>
+                      <div className="flex justify-between items-end">
+                        <div className="text-xs text-slate-500">{item.quantity} x {item.price.toLocaleString('id-ID')}</div>
+                        <div className="text-sm font-bold text-slate-800">Rp {(item.quantity * item.price).toLocaleString('id-ID')}</div>
+                      </div>
+                      {item.price !== item.originalPrice && (
+                        <div className="text-[10px] text-amber-600 font-semibold mt-1">
+                          Harga asli: Rp {item.originalPrice.toLocaleString('id-ID')} (Telah dinego)
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 space-y-2">
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-slate-500 font-medium">Subtotal Produk</span>
+                  <span className="font-bold text-slate-700">
+                    Rp {(selectedRequest.totalAmount - (selectedRequest.shippingCost || 0)).toLocaleString('id-ID')}
+                  </span>
+                </div>
+                {selectedRequest.shippingCost > 0 && (
+                  <div className="flex justify-between items-center text-sm border-t border-slate-200/60 pt-2 mt-2">
+                    <span className="text-slate-500 font-medium">Ongkos Kirim</span>
+                    <span className="font-bold text-slate-700">Rp {selectedRequest.shippingCost.toLocaleString('id-ID')}</span>
+                  </div>
+                )}
+                <div className="flex justify-between items-center text-base pt-3 mt-3 border-t border-slate-200">
+                  <span className="text-slate-900 font-extrabold uppercase text-xs">Total Pembayaran</span>
+                  <span className="font-black text-blue-700 text-lg">Rp {selectedRequest.totalAmount.toLocaleString('id-ID')}</span>
+                </div>
+              </div>
+
+              {selectedRequest.status === 'SHIPPED' && (
+                <div className="pt-2">
+                  <button 
+                    onClick={(e) => handleCompleteOrder(e, selectedRequest)}
+                    disabled={isSubmitting}
+                    className="w-full flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 active:bg-green-800 text-white p-3.5 rounded-xl font-bold shadow-lg shadow-green-600/20 transition-all disabled:opacity-70"
+                  >
+                    {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : <PackageCheck className="w-5 h-5" />}
+                    Tandai Pesanan Selesai
+                  </button>
+                  <p className="text-center text-[10px] text-slate-400 mt-3 px-6">
+                    Tekan tombol ini hanya ketika barang sudah diserahkan kepada pelanggan dan pembayaran telah lunas.
+                  </p>
+                </div>
+              )}
+              
+              <div className="h-4"></div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

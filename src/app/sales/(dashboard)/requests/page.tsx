@@ -24,6 +24,15 @@ export default async function RequestsPage() {
     },
     orderBy: {
       createdAt: 'desc'
+    },
+    include: {
+      items: {
+        include: {
+          product: {
+            select: { name: true }
+          }
+        }
+      }
     }
   });
 
@@ -34,8 +43,18 @@ export default async function RequestsPage() {
     customerName: t.customerName,
     dueDate: t.dueDate,
     totalAmount: Number(t.totalAmount),
-    status: t.status
+    shippingCost: t.shippingCost ? Number(t.shippingCost) : 0,
+    status: t.status,
+    adminNotes: t.adminNotes,
+    createdAt: t.createdAt,
+    items: t.items.map(item => ({
+      id: item.id,
+      productName: item.product.name,
+      quantity: item.quantity,
+      price: Number(item.price),
+      originalPrice: item.originalPrice ? Number(item.originalPrice) : Number(item.price),
+    }))
   }));
 
-  return <RequestsClient requests={serializedRequests} />;
+  return <RequestsClient requests={serializedRequests as any} />;
 }
