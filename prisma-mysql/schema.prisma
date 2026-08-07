@@ -107,7 +107,7 @@ model StockMovement {
 }
 
 model Supplier {
-  id          String     @id
+  id          String     @id @default(cuid())
   code        String     @unique
   name        String
   email       String?
@@ -120,7 +120,7 @@ model Supplier {
 }
 
 model Purchase {
-  id            String         @id
+  id            String         @id @default(cuid())
   invoiceNumber String         @unique
   supplierId    String
   supplier      Supplier       @relation(fields: [supplierId], references: [id])
@@ -136,7 +136,7 @@ model Purchase {
 }
 
 model PurchaseItem {
-  id          String   @id
+  id          String   @id @default(cuid())
   purchaseId  String
   purchase    Purchase @relation(fields: [purchaseId], references: [id], onDelete: Cascade)
   productId   String

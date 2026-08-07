@@ -12,6 +12,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -76,9 +77,12 @@ export function SupplierForm({ open, onOpenChange, supplier }: SupplierFormProps
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>{supplier?.id ? 'Edit Supplier' : 'Tambah Supplier Baru'}</DialogTitle>
+          <DialogTitle>{supplier ? 'Edit Supplier' : 'Tambah Supplier'}</DialogTitle>
+          <DialogDescription>
+            {supplier ? 'Ubah informasi supplier di bawah ini.' : 'Masukkan informasi supplier baru.'}
+          </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 py-4">
           <div className="space-y-2">

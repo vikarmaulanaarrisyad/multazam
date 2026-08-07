@@ -75,68 +75,93 @@ export function SuppliersClient({ initialData, metadata }: SuppliersClientProps)
 
   const columns = [
     {
+      id: 'no',
+      header: 'No',
+      cell: ({ row }: { row: any }) => (
+        <div className="text-sm text-slate-500">
+          {(page - 1) * limit + row.index + 1}
+        </div>
+      ),
+    },
+    {
+      id: 'supplier',
       header: 'Supplier',
-      accessor: (row: SupplierType) => (
-        <div>
-          <div className="font-medium text-slate-900">{row.name}</div>
-          <div className="text-xs text-slate-500">{row.code}</div>
-        </div>
-      ),
+      cell: ({ row }: { row: any }) => {
+        const supplier = row.original as SupplierType;
+        return (
+          <div>
+            <div className="font-medium text-slate-900">{supplier.name}</div>
+            <div className="text-xs text-slate-500">{supplier.code}</div>
+          </div>
+        );
+      },
     },
     {
+      id: 'kontak',
       header: 'Kontak',
-      accessor: (row: SupplierType) => (
-        <div className="space-y-1 text-sm text-slate-600">
-          {row.phone && (
-            <div className="flex items-center gap-1.5">
-              <Phone className="h-3 w-3" /> {row.phone}
-            </div>
-          )}
-          {row.email && (
-            <div className="flex items-center gap-1.5">
-              <Mail className="h-3 w-3" /> {row.email}
-            </div>
-          )}
-          {!row.phone && !row.email && <span className="text-slate-400 italic">Tidak ada kontak</span>}
-        </div>
-      ),
+      cell: ({ row }: { row: any }) => {
+        const supplier = row.original as SupplierType;
+        return (
+          <div className="space-y-1 text-sm text-slate-600">
+            {supplier.phone && (
+              <div className="flex items-center gap-1.5">
+                <Phone className="h-3 w-3" /> {supplier.phone}
+              </div>
+            )}
+            {supplier.email && (
+              <div className="flex items-center gap-1.5">
+                <Mail className="h-3 w-3" /> {supplier.email}
+              </div>
+            )}
+            {!supplier.phone && !supplier.email && <span className="text-slate-400 italic">Tidak ada kontak</span>}
+          </div>
+        );
+      },
     },
     {
+      id: 'alamat',
       header: 'Alamat',
-      accessor: (row: SupplierType) => (
-        <span className="text-sm text-slate-600 truncate max-w-[200px] block" title={row.address || ''}>
-          {row.address || '-'}
-        </span>
-      ),
+      cell: ({ row }: { row: any }) => {
+        const supplier = row.original as SupplierType;
+        return (
+          <span className="text-sm text-slate-600 truncate inline-block max-w-50" title={supplier.address || '-'}>
+            {supplier.address || '-'}
+          </span>
+        );
+      },
     },
     {
+      id: 'aksi',
       header: 'Aksi',
-      accessor: (row: SupplierType) => (
-        <div className="flex items-center justify-end gap-2">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
-            onClick={() => {
-              setEditingSupplier(row);
-              setFormOpen(true);
-            }}
-          >
-            <Pencil className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50"
-            onClick={() => {
-              setDeletingSupplier(row);
-              setDeleteOpen(true);
-            }}
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
-        </div>
-      ),
+      cell: ({ row }: { row: any }) => {
+        const supplier = row.original as SupplierType;
+        return (
+          <div className="flex items-center justify-end gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+              onClick={() => {
+                setEditingSupplier(supplier);
+                setFormOpen(true);
+              }}
+            >
+              <Pencil className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50"
+              onClick={() => {
+                setDeletingSupplier(supplier);
+                setDeleteOpen(true);
+              }}
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </div>
+        );
+      },
     },
   ];
 

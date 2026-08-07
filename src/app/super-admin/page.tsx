@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Package, Users, DatabaseZap, DollarSign, Activity } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
 import Link from 'next/link';
 
 export default function SuperAdminDashboard() {
@@ -11,11 +11,9 @@ export default function SuperAdminDashboard() {
           <h1 className="text-2xl font-bold text-slate-900">Beranda Super Admin</h1>
           <p className="text-sm text-slate-500">Kendali penuh atas sistem dan aktivitas Multazam.</p>
         </div>
-        <Link href="/super-admin/sync">
-          <Button className="flex items-center gap-2">
-            <DatabaseZap className="h-4 w-4" />
-            Jalankan Sinkronisasi
-          </Button>
+        <Link href="/super-admin/sync" className={buttonVariants({ className: "flex items-center gap-2" })}>
+          <DatabaseZap className="h-4 w-4" />
+          Jalankan Sinkronisasi
         </Link>
       </div>
 

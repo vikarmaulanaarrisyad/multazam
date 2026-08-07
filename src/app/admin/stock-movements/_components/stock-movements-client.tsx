@@ -48,24 +48,40 @@ export function StockMovementsClient({ initialData, metadata }: StockMovementsCl
 
   const columns = [
     {
-      header: 'Waktu',
-      accessor: (row: StockMovementWithProduct) => format(new Date(row.createdAt), 'dd MMM yyyy, HH:mm', { locale: id }),
-    },
-    {
-      header: 'Produk',
-      accessor: (row: StockMovementWithProduct) => (
-        <div>
-          <div className="font-medium text-slate-900">{row.product.name}</div>
-          <div className="text-xs text-slate-500">{row.product.code}</div>
+      id: 'no',
+      header: 'No',
+      cell: ({ row }: { row: any }) => (
+        <div className="text-sm text-slate-500">
+          {(page - 1) * limit + row.index + 1}
         </div>
       ),
     },
     {
+      id: 'waktu',
+      header: 'Waktu',
+      cell: ({ row }: { row: any }) => format(new Date(row.original.createdAt), 'dd MMM yyyy, HH:mm', { locale: id }),
+    },
+    {
+      id: 'produk',
+      header: 'Produk',
+      cell: ({ row }: { row: any }) => {
+        const movement = row.original as StockMovementWithProduct;
+        return (
+          <div>
+            <div className="font-medium text-slate-900">{movement.product.name}</div>
+            <div className="text-xs text-slate-500">{movement.product.code}</div>
+          </div>
+        );
+      },
+    },
+    {
+      id: 'tipe',
       header: 'Tipe',
-      accessor: (row: StockMovementWithProduct) => {
-        if (row.type === 'IN') {
+      cell: ({ row }: { row: any }) => {
+        const movement = row.original as StockMovementWithProduct;
+        if (movement.type === 'IN') {
           return <span className="inline-flex items-center rounded-md bg-green-50 px-2 py-1 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20">Masuk</span>;
-        } else if (row.type === 'OUT') {
+        } else if (movement.type === 'OUT') {
           return <span className="inline-flex items-center rounded-md bg-red-50 px-2 py-1 text-xs font-medium text-red-700 ring-1 ring-inset ring-red-600/10">Keluar</span>;
         } else {
           return <span className="inline-flex items-center rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10">Penyesuaian</span>;
@@ -73,29 +89,41 @@ export function StockMovementsClient({ initialData, metadata }: StockMovementsCl
       },
     },
     {
+      id: 'jumlah',
       header: 'Jumlah',
-      accessor: (row: StockMovementWithProduct) => (
-        <span className={`font-semibold ${row.type === 'IN' ? 'text-green-600' : 'text-red-600'}`}>
-          {row.type === 'IN' ? '+' : '-'}{row.quantity}
-        </span>
-      ),
+      cell: ({ row }: { row: any }) => {
+        const movement = row.original as StockMovementWithProduct;
+        return (
+          <span className={`font-semibold ${movement.type === 'IN' ? 'text-green-600' : 'text-red-600'}`}>
+            {movement.type === 'IN' ? '+' : '-'}{movement.quantity}
+          </span>
+        );
+      },
     },
     {
+      id: 'sisa_stok',
       header: 'Sisa Stok',
-      accessor: (row: StockMovementWithProduct) => (
-        <span className="text-slate-600 font-medium">
-          {row.balanceAfter}
-        </span>
-      ),
+      cell: ({ row }: { row: any }) => {
+        const movement = row.original as StockMovementWithProduct;
+        return (
+          <span className="text-slate-600 font-medium">
+            {movement.balanceAfter}
+          </span>
+        );
+      },
     },
     {
+      id: 'keterangan',
       header: 'Keterangan',
-      accessor: (row: StockMovementWithProduct) => (
-        <div className="text-sm">
-          <div className="text-slate-900">{row.reference || '-'}</div>
-          {row.notes && <div className="text-xs text-slate-500">{row.notes}</div>}
-        </div>
-      ),
+      cell: ({ row }: { row: any }) => {
+        const movement = row.original as StockMovementWithProduct;
+        return (
+          <div className="text-sm">
+            <div className="text-slate-900">{movement.reference || '-'}</div>
+            {movement.notes && <div className="text-xs text-slate-500">{movement.notes}</div>}
+          </div>
+        );
+      },
     },
   ];
 
