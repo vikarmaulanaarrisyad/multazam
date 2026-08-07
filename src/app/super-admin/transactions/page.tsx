@@ -13,7 +13,7 @@ export default async function SuperAdminTransactionsPage() {
   const transactions = await prisma.transaction.findMany({
     where: {
       status: {
-        in: ['PENDING', 'APPROVED', 'SHIPPED', 'COMPLETED', 'CANCELLED', 'REJECTED']
+        in: ['PENDING_APPROVAL', 'PENDING', 'APPROVED', 'SHIPPED', 'COMPLETED', 'CANCELLED', 'REJECTED']
       }
     },
     orderBy: {
@@ -52,6 +52,7 @@ export default async function SuperAdminTransactionsPage() {
     adminNotes: tx.adminNotes,
     status: tx.status,
     createdAt: tx.createdAt,
+    updatedAt: tx.updatedAt,
     latitude: tx.latitude,
     longitude: tx.longitude,
     totalAmount: Number(tx.totalAmount),

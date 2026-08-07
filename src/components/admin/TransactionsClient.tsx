@@ -20,6 +20,7 @@ export type TransactionDetail = {
   adminNotes: string | null;
   status: string;
   createdAt: Date;
+  updatedAt: Date;
   latitude: number | null;
   longitude: number | null;
   totalAmount: number;
@@ -422,12 +423,24 @@ export function TransactionsClient({ transactions }: { transactions: Transaction
                   {getStatusBadge(selectedTx.status)}
                 </div>
               </div>
-              <button 
-                onClick={() => !isSubmitting && setSelectedTx(null)}
-                className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-200 rounded-full transition-colors"
-              >
-                <X className="w-5 h-5" />
-              </button>
+              <div className="flex items-center gap-3">
+                {(selectedTx.status === 'APPROVED' || selectedTx.status === 'SHIPPED' || selectedTx.status === 'COMPLETED') && (
+                  <a 
+                    href={`/print/delivery-order/${selectedTx.id}`} 
+                    target="_blank" 
+                    rel="noreferrer"
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-lg text-sm font-bold transition-colors border border-blue-200"
+                  >
+                    <Truck className="w-4 h-4" /> Cetak Surat Jalan
+                  </a>
+                )}
+                <button 
+                  onClick={() => !isSubmitting && setSelectedTx(null)}
+                  className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-200 rounded-full transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
             </div>
 
             {/* Modal Body */}
@@ -447,7 +460,14 @@ export function TransactionsClient({ transactions }: { transactions: Transaction
                     <div className="flex justify-between"><span className="text-slate-500">Pelanggan:</span> <span className="font-semibold text-slate-900">{selectedTx.customerName || '-'}</span></div>
                     <div className="flex justify-between"><span className="text-slate-500">Telepon:</span> <span className="font-semibold text-slate-900">{selectedTx.customerPhone || '-'}</span></div>
                     <div className="flex justify-between"><span className="text-slate-500">Sales:</span> <span className="font-semibold text-slate-900">{selectedTx.user.name || '-'}</span></div>
-                    <div className="flex justify-between"><span className="text-slate-500">Tenggat Waktu:</span> <span className="font-semibold text-slate-900">{selectedTx.dueDate ? new Date(selectedTx.dueDate).toLocaleDateString('id-ID') : '-'}</span></div>
+                    <div className="flex justify-between"><span className="text-slate-500">Tgl Pesanan:</span> <span className="font-semibold text-slate-900">{new Date(selectedTx.createdAt).toLocaleDateString('id-ID')}</span></div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-500">Tgl Pengiriman:</span> 
+                      <span className="font-semibold text-slate-900">
+                        {selectedTx.status === 'SHIPPED' || selectedTx.status === 'COMPLETED' ? new Date(selectedTx.updatedAt).toLocaleDateString('id-ID') : 'Belum Dikirim'}
+                      </span>
+                    </div>
+                    <div className="flex justify-between"><span className="text-slate-500">Jatuh Tempo:</span> <span className="font-semibold text-red-600">{selectedTx.dueDate ? new Date(selectedTx.dueDate).toLocaleDateString('id-ID') : '-'}</span></div>
                     
                     <div className="flex flex-col mt-2 pt-2 border-t border-slate-200 gap-1">
                       <span className="text-slate-500">Alamat Pengiriman:</span>
