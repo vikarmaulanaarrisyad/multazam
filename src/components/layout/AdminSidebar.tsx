@@ -63,7 +63,7 @@ export function AdminSidebar({ role, className, onNavigate }: SidebarProps) {
       visible: true,
     },
     {
-      title: 'Transaksi',
+      title: 'Daftar Pre-Order',
       href: `${basePath}/transactions`,
       icon: ShoppingCart,
       visible: true,

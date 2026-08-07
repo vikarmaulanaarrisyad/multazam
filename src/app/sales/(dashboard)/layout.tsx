@@ -2,6 +2,7 @@ import React from 'react';
 import Link from 'next/link';
 import { Home, Package, ClipboardList, User, Bell, Tags } from 'lucide-react';
 import { auth } from '@/auth';
+import { LogoutButton } from './_components/logout-button';
 
 export default async function SalesDashboardLayout({ children }: { children: React.ReactNode }) {
   const session = await auth();
@@ -20,10 +21,13 @@ export default async function SalesDashboardLayout({ children }: { children: Rea
               <p className="text-sm text-slate-500">Sales Representative • Jakarta</p>
             </div>
           </div>
-          <button className="relative p-2 text-slate-500 hover:bg-slate-100 rounded-full transition-colors">
-            <Bell className="w-6 h-6" />
-            <span className="absolute top-2 right-2 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white"></span>
-          </button>
+          <div className="flex items-center gap-1">
+            <button className="relative p-2 text-slate-500 hover:bg-slate-100 rounded-full transition-colors">
+              <Bell className="w-5 h-5" />
+              <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
+            </button>
+            <LogoutButton />
+          </div>
         </div>
       </header>
 
