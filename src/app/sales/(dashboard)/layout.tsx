@@ -68,6 +68,7 @@ export default async function SalesDashboardLayout({ children }: { children: Rea
           </div>
           <span className="text-[10px] font-medium">Profile</span>
         </Link>
+      </nav>
     </div>
   );
 }
