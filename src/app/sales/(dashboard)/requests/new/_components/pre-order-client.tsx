@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Tag, UserCircle, Package, Send, CheckCircle2, ChevronLeft, Minus, Plus } from 'lucide-react';
+import { Tag, UserCircle, Package, Send, CheckCircle2, ChevronLeft, Minus, Plus, Search, ChevronDown } from 'lucide-react';
 import { createPreOrder } from '@/actions/sales-orders';
 import { Product } from '@/generated/prisma/client';
 import { cn } from '@/lib/utils';
@@ -21,6 +21,8 @@ export function PreOrderClient({ stores }: PreOrderClientProps) {
   const [error, setError] = useState<string | null>(null);
   
   const [selectedStoreId, setSelectedStoreId] = useState<string>('NEW');
+  const [isStoreDropdownOpen, setIsStoreDropdownOpen] = useState(false);
+  const [storeSearchQuery, setStoreSearchQuery] = useState('');
 
   const [formData, setFormData] = useState({
     customerName: '',
@@ -280,20 +282,92 @@ export function PreOrderClient({ stores }: PreOrderClientProps) {
                 </h3>
                 <div className="flex flex-col gap-4">
                   
-                  {/* Select Store */}
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-bold text-slate-500" htmlFor="storeSelect">Pilih Toko</label>
-                    <select
-                      id="storeSelect"
-                      value={selectedStoreId}
-                      onChange={(e) => handleStoreChange(e.target.value)}
-                      className="w-full h-11 px-3 rounded-lg bg-slate-50 border-slate-200 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all border font-medium"
+                  {/* Select Store (Searchable) */}
+                  <div className="flex flex-col gap-1.5 relative">
+                    <label className="text-xs font-bold text-slate-500" htmlFor="storeSelect">Pilih Toko (Bisa Cari Nama Toko / Pemilik)</label>
+                    
+                    <button
+                      type="button"
+                      onClick={() => setIsStoreDropdownOpen(!isStoreDropdownOpen)}
+                      className="w-full h-11 px-3 rounded-lg bg-slate-50 border-slate-200 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all border font-medium flex items-center justify-between"
                     >
-                      <option value="NEW">+ Input Manual / Toko Baru</option>
-                      {stores.map(store => (
-                        <option key={store.id} value={store.id}>{store.name}</option>
-                      ))}
-                    </select>
+                      <span className="truncate">
+                        {selectedStoreId === 'NEW' 
+                          ? '+ Input Manual / Toko Baru' 
+                          : stores.find(s => s.id === selectedStoreId)?.name || 'Pilih Toko...'}
+                      </span>
+                      <ChevronDown className="w-4 h-4 text-slate-400" />
+                    </button>
+
+                    {isStoreDropdownOpen && (
+                      <>
+                        <div 
+                          className="fixed inset-0 z-40" 
+                          onClick={() => setIsStoreDropdownOpen(false)}
+                        ></div>
+                        <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-slate-200 rounded-lg shadow-xl z-50 flex flex-col overflow-hidden max-h-60">
+                        <div className="p-2 border-b border-slate-100 flex items-center gap-2 sticky top-0 bg-white">
+                          <Search className="w-4 h-4 text-slate-400 shrink-0" />
+                          <input 
+                            type="text"
+                            placeholder="Cari toko atau pemilik..."
+                            value={storeSearchQuery}
+                            onChange={(e) => setStoreSearchQuery(e.target.value)}
+                            className="w-full text-sm outline-none bg-transparent"
+                            autoFocus
+                          />
+                        </div>
+                        <div className="overflow-y-auto flex-1 p-1">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              handleStoreChange('NEW');
+                              setIsStoreDropdownOpen(false);
+                            }}
+                            className={cn(
+                              "w-full text-left px-3 py-2 text-sm rounded-md mb-1 transition-colors",
+                              selectedStoreId === 'NEW' ? "bg-blue-50 text-blue-700 font-bold" : "hover:bg-slate-50 text-slate-700 font-medium"
+                            )}
+                          >
+                            + Input Manual / Toko Baru
+                          </button>
+                          
+                          {stores
+                            .filter(s => 
+                              s.name.toLowerCase().includes(storeSearchQuery.toLowerCase()) || 
+                              (s.ownerName && s.ownerName.toLowerCase().includes(storeSearchQuery.toLowerCase()))
+                            )
+                            .map(store => (
+                              <button
+                                key={store.id}
+                                type="button"
+                                onClick={() => {
+                                  handleStoreChange(store.id);
+                                  setIsStoreDropdownOpen(false);
+                                }}
+                                className={cn(
+                                  "w-full text-left px-3 py-2 text-sm rounded-md mb-1 transition-colors flex flex-col",
+                                  selectedStoreId === store.id ? "bg-blue-50 text-blue-700 font-bold" : "hover:bg-slate-50 text-slate-700 font-medium"
+                                )}
+                              >
+                                <span>{store.name}</span>
+                                {store.ownerName && (
+                                  <span className="text-xs text-slate-500 font-normal">Pemilik: {store.ownerName}</span>
+                                )}
+                              </button>
+                            ))
+                          }
+                          
+                          {stores.filter(s => 
+                              s.name.toLowerCase().includes(storeSearchQuery.toLowerCase()) || 
+                              (s.ownerName && s.ownerName.toLowerCase().includes(storeSearchQuery.toLowerCase()))
+                            ).length === 0 && (
+                            <div className="text-center py-3 text-xs text-slate-500">Toko tidak ditemukan.</div>
+                          )}
+                        </div>
+                      </div>
+                      </>
+                    )}
                   </div>
 
                   <div className="flex flex-col gap-1.5">
