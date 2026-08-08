@@ -539,6 +539,37 @@ export default function RequestsClient({ requests }: { requests: RequestItem[] }
                   </p>
                 </div>
               )}
+
+              {(selectedRequest.status === 'REJECTED' || selectedRequest.status === 'CANCELLED') && (
+                <div className="pt-2">
+                  <button 
+                    onClick={() => {
+                      // Salin ke form pre-order baru
+                      const cartData = selectedRequest.items.map(item => ({
+                        product: item.product,
+                        quantity: item.quantity,
+                        requestedPrice: item.product.price // Normal price
+                      }));
+                      
+                      const formData = {
+                        customerName: selectedRequest.customerName || '',
+                        customerPhone: '',
+                        shippingAddress: selectedRequest.shippingAddress || '',
+                        notes: `[Salinan dari ${selectedRequest.invoiceNumber}]`
+                      };
+                      
+                      sessionStorage.setItem('preOrderCart', JSON.stringify(cartData));
+                      sessionStorage.setItem('preOrderFormData', JSON.stringify(formData));
+                      
+                      router.push('/sales/requests/new');
+                    }}
+                    className="w-full flex items-center justify-center gap-2 bg-blue-100 hover:bg-blue-200 text-blue-700 p-3.5 rounded-xl font-bold transition-colors"
+                  >
+                    <Plus className="w-5 h-5" />
+                    Buat Ulang (Harga Normal)
+                  </button>
+                </div>
+              )}
               
               <div className="h-4"></div>
             </div>
