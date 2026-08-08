@@ -145,7 +145,7 @@ export const productService = {
       let duplicateInDb = 0;
 
       for (const row of jsonData) {
-        const rawName = row['Nama Produk'] || row['nama_produk'] || row['name'];
+        const rawName = row['PRODUK'] || row['Nama Produk'] || row['nama_produk'] || row['name'];
         if (!rawName || typeof rawName !== 'string') {
           skipped++;
           continue;
@@ -157,7 +157,7 @@ export const productService = {
           continue;
         }
 
-        const categoryName = row['Kategori'] || row['kategori'] || row['Category'];
+        const categoryName = row['KATEGORI'] || row['Kategori'] || row['kategori'] || row['Category'];
         if (!categoryName || typeof categoryName !== 'string') {
           skipped++;
           continue; // Kategori wajib
