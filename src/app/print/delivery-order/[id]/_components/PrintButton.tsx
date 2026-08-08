@@ -38,10 +38,11 @@ export function PrintButton({ invoiceNumber }: { invoiceNumber?: string }) {
       
       if (buttons) buttons.style.display = 'flex';
 
+      const orientation = searchParams.get('orientation') === 'landscape' ? 'landscape' : 'portrait';
       const pdf = new jsPDF({
-        orientation: 'portrait',
+        orientation: orientation,
         unit: 'mm',
-        format: [210, 330]
+        format: orientation === 'landscape' ? [330, 210] : [210, 330]
       });
       
       const pdfWidth = pdf.internal.pageSize.getWidth();

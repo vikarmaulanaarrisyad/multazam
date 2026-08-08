@@ -783,8 +783,8 @@ export function TransactionsClient({ transactions }: { transactions: Transaction
 
               <button
                 onClick={() => {
-                  toast.loading('Menyiapkan dan mengunduh PDF...', { duration: 3000 });
-                  setActiveIframe({ id: showPrintModalFor, action: 'download', key: Date.now() });
+                  toast.loading('Menyiapkan dan mengunduh PDF (Portrait)...', { duration: 3000 });
+                  setActiveIframe({ id: showPrintModalFor, action: 'download&orientation=portrait', key: Date.now() });
                   setShowPrintModalFor(null);
                 }}
                 className="w-full flex items-center p-4 gap-4 bg-white border-2 border-slate-200 rounded-xl hover:border-blue-600 hover:bg-blue-50 transition-all group text-left"
@@ -793,8 +793,25 @@ export function TransactionsClient({ transactions }: { transactions: Transaction
                   <FileDown className="w-6 h-6" />
                 </div>
                 <div className="text-left">
-                  <div className="font-bold text-slate-900 text-sm">Unduh File PDF</div>
-                  <div className="text-[11px] text-slate-500 font-medium">Simpan dokumen ini ke dalam perangkat Anda.</div>
+                  <div className="font-bold text-slate-900 text-sm">Unduh File PDF (Portrait)</div>
+                  <div className="text-[11px] text-slate-500 font-medium">Format tegak (vertikal).</div>
+                </div>
+              </button>
+              
+              <button
+                onClick={() => {
+                  toast.loading('Menyiapkan dan mengunduh PDF (Landscape)...', { duration: 3000 });
+                  setActiveIframe({ id: showPrintModalFor, action: 'download&orientation=landscape', key: Date.now() });
+                  setShowPrintModalFor(null);
+                }}
+                className="w-full flex items-center p-4 gap-4 bg-white border-2 border-slate-200 rounded-xl hover:border-emerald-600 hover:bg-emerald-50 transition-all group text-left"
+              >
+                <div className="w-12 h-12 bg-emerald-50 rounded-full flex items-center justify-center group-hover:bg-emerald-100 group-hover:text-emerald-700 text-emerald-500 transition-colors shrink-0">
+                  <FileDown className="w-6 h-6" />
+                </div>
+                <div className="text-left">
+                  <div className="font-bold text-slate-900 text-sm">Unduh File PDF (Landscape)</div>
+                  <div className="text-[11px] text-slate-500 font-medium">Format memanjang (horizontal).</div>
                 </div>
               </button>
             </div>

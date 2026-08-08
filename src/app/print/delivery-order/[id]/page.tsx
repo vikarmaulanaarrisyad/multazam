@@ -195,8 +195,10 @@ function SuratJalanCopy({ transaction, setting, isDivider = false }: any) {
   );
 }
 
-export default async function PrintDeliveryOrderPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function PrintDeliveryOrderPage({ params, searchParams }: { params: Promise<{ id: string }>, searchParams: Promise<{ [key: string]: string | string[] | undefined }> }) {
   const { id } = await params;
+  const sp = await searchParams;
+  const orientation = sp.orientation === 'landscape' ? 'landscape' : 'portrait';
 
   const transaction = await prisma.transaction.findUnique({
     where: { id },
@@ -222,7 +224,7 @@ export default async function PrintDeliveryOrderPage({ params }: { params: Promi
 
   return (
     <div className="min-h-screen bg-white print:bg-white flex flex-col items-start p-8 print:p-0 w-full">
-      <div id="print-container" className="w-full max-w-[210mm] print:max-w-none shrink-0 bg-white relative print:w-full">
+      <div id="print-container" className={`w-full ${orientation === 'landscape' ? 'max-w-[330mm]' : 'max-w-[210mm]'} print:max-w-none shrink-0 bg-white relative print:w-full`}>
         {/* Floating Print Button (Hidden on Print) */}
         <Suspense fallback={<div />}>
           <PrintButton invoiceNumber={transaction.invoiceNumber} />
