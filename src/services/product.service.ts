@@ -140,6 +140,11 @@ export const productService = {
       const unitMap = new Map<string, string>();
       units.forEach(u => unitMap.set(u.name.toLowerCase(), u.id));
 
+      // Fetch existing products to map name -> code for upsert
+      const existingProducts = await productRepository.findAll();
+      const productCodeMap = new Map<string, string>();
+      existingProducts.forEach(p => productCodeMap.set(p.name.toLowerCase(), p.code));
+
       const validProducts = [];
       let skipped = 0;
       let duplicateInDb = 0;
@@ -209,8 +214,14 @@ export const productService = {
         if (code && typeof code === 'string') {
           code = code.trim();
         } else {
-          // Generate code
-          code = generateSKU(name);
+          // Check if product with same name exists
+          const existingCode = productCodeMap.get(name.toLowerCase());
+          if (existingCode) {
+            code = existingCode;
+          } else {
+            // Generate code
+            code = generateSKU(name);
+          }
         }
 
         // Check if code already valid
@@ -252,8 +263,11 @@ export const productService = {
         success: true, 
         message: msg
       };
-    } catch (error) {
+    } catch (error: any) {
       console.error('Import products error:', error);
+      try {
+        require('fs').writeFileSync('import-error.log', String(error) + '\n' + (error.stack || '') + '\n' + JSON.stringify(error, null, 2));
+      } catch (e) {}
       return { success: false, message: 'Terjadi kesalahan saat memproses file Excel.' };
     }
   },

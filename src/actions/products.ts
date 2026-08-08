@@ -9,7 +9,8 @@ export async function getProductsPaginated(page: number = 1, limit: number = 10,
     // Serialize Prisma Decimal to string to pass safely to Client Components
     const serializedData = result.data.map((p: any) => ({
       ...p,
-      price: p.price ? p.price.toString() : '0'
+      price: p.price ? p.price.toString() : '0',
+      purchasePrice: p.purchasePrice ? p.purchasePrice.toString() : null
     }));
     return { ...result, data: serializedData };
   }
@@ -21,7 +22,8 @@ export async function getAllProducts() {
   if (result.success && result.data) {
     const serializedData = result.data.map((p: any) => ({
       ...p,
-      price: p.price ? p.price.toString() : '0'
+      price: p.price ? p.price.toString() : '0',
+      purchasePrice: p.purchasePrice ? p.purchasePrice.toString() : null
     }));
     return { ...result, data: serializedData };
   }
