@@ -4,7 +4,50 @@ import { notFound } from 'next/navigation';
 import { PrintButton } from './_components/PrintButton';
 import { Suspense } from 'react';
 
-function SuratJalanCopy({ transaction, title, hideCutLine, setting }: any) {
+// Terbilang helper function
+function terbilang(angka: number): string {
+  const huruf = ["", "satu", "dua", "tiga", "empat", "lima", "enam", "tujuh", "delapan", "sembilan", "sepuluh", "sebelas"];
+  let result = "";
+  if (angka < 12) {
+    result = " " + huruf[angka];
+  } else if (angka < 20) {
+    result = terbilang(angka - 10) + " belas";
+  } else if (angka < 100) {
+    result = terbilang(Math.floor(angka / 10)) + " puluh" + terbilang(angka % 10);
+  } else if (angka < 200) {
+    result = " seratus" + terbilang(angka - 100);
+  } else if (angka < 1000) {
+    result = terbilang(Math.floor(angka / 100)) + " ratus" + terbilang(angka % 100);
+  } else if (angka < 2000) {
+    result = " seribu" + terbilang(angka - 1000);
+  } else if (angka < 1000000) {
+    result = terbilang(Math.floor(angka / 1000)) + " ribu" + terbilang(angka % 1000);
+  } else if (angka < 1000000000) {
+    result = terbilang(Math.floor(angka / 1000000)) + " juta" + terbilang(angka % 1000000);
+  } else if (angka < 1000000000000) {
+    result = terbilang(Math.floor(angka / 1000000000)) + " miliar" + terbilang(angka % 1000000000);
+  }
+  return result;
+}
+
+function toTerbilang(angka: number): string {
+  if (angka === 0) return "Nol Rupiah";
+  const str = terbilang(angka).trim();
+  return str.charAt(0).toUpperCase() + str.slice(1) + " Rupiah";
+}
+
+const getEceranPrice = (product: any): number | null => {
+  if (!product?.retailPriceNote) return null;
+  const match = product.retailPriceNote.match(/[\d.,]+/);
+  if (match) {
+    const rawNum = match[0].replace(/[.,]/g, '');
+    const num = parseInt(rawNum, 10);
+    if (!isNaN(num)) return num;
+  }
+  return null;
+};
+
+function SuratJalanCopy({ transaction, setting, isDivider = false }: any) {
   const invoiceNumber = transaction.invoiceNumber;
   const date = new Date(transaction.createdAt).toLocaleDateString('id-ID', {
     year: 'numeric',
@@ -17,127 +60,121 @@ function SuratJalanCopy({ transaction, title, hideCutLine, setting }: any) {
   const totalKeseluruhan = totalItemAmount + shippingCost;
 
   return (
-    <div className={`w-full bg-white p-6 print:p-0 relative flex flex-col justify-between ${!hideCutLine ? 'border-b-2 border-dashed border-slate-300 print:border-slate-400 pb-8 mb-8 print:pb-6 print:mb-6' : ''}`} style={{ minHeight: '160mm' }}>
-      <div>
-        {/* Header */}
-        <div className="flex justify-between items-start border-b-2 border-slate-900 pb-3 mb-4">
-          <div className="flex gap-4 items-center">
-            {setting?.logoUrl && (
-              <img src={setting.logoUrl} alt="Logo" className="h-12 w-auto object-contain" />
-            )}
-            <div>
-              <h1 className="text-2xl font-extrabold text-slate-900 tracking-tighter uppercase">{setting?.companyName || 'MULTAZAM'}</h1>
-              <p className="text-slate-600 font-medium text-[10px] mt-1">Sistem Penjualan & Inventori Terpercaya</p>
-              <p className="text-slate-500 text-[10px] max-w-[250px] whitespace-pre-wrap leading-tight mt-1">{setting?.companyAddress || 'Jl. Contoh Alamat No. 123, Kota, Provinsi'}</p>
-            </div>
-          </div>
-          <div className="text-right">
-            <h2 className="text-xl font-bold text-slate-900 uppercase tracking-widest">Surat Jalan</h2>
-            <h3 className="text-sm font-semibold text-slate-600 uppercase tracking-widest">/ Invoice</h3>
-            <div className="mt-2 text-[10px] flex flex-col text-slate-600 font-medium">
-              <p>NO: <span className="text-slate-900 font-bold ml-1">{invoiceNumber}</span></p>
-              <p>TGL: <span className="text-slate-900 font-bold ml-1">{date}</span></p>
-            </div>
-          </div>
+    <div className={`w-full bg-white print:p-0 relative flex flex-col font-mono text-sm leading-tight text-black ${isDivider ? 'border-b-2 border-dashed border-slate-300 print:border-slate-400 pb-12 mb-12 print:pb-12 print:mb-12' : ''}`} style={{ width: '210mm' }}>
+      
+      {/* HEADER SECTION */}
+      <div className="flex justify-between w-full mb-4 uppercase">
+        {/* Kiri */}
+        <div className="flex flex-col font-bold">
+          <span className="text-xl tracking-widest">{setting?.companyName || 'E - DIA MAKMUR ABADI'}</span>
+          <span className="text-base tracking-wide mt-1">FAKTUR PENJUALAN TUNAI</span>
         </div>
-
-        {/* Info Pelanggan & Pengiriman */}
-        <div className="grid grid-cols-2 gap-4 mb-4">
-          <div className="flex flex-col gap-1">
-            <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Pelanggan</h4>
-            <div className="p-2 bg-slate-50 border border-slate-200 rounded print:border-none print:p-0 print:bg-transparent">
-              <p className="font-bold text-slate-900 text-sm">{transaction.customerName || 'Anonim'}</p>
-              <p className="text-[10px] text-slate-700">HP: <span className="font-semibold">{transaction.customerPhone || '-'}</span></p>
-              <p className="text-[10px] text-slate-700 mt-1">Sales: <span className="font-semibold">{transaction.user.name || '-'}</span></p>
-            </div>
-          </div>
-
-          <div className="flex flex-col gap-1">
-            <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Alamat Pengiriman</h4>
-            <div className="p-2 bg-slate-50 border border-slate-200 rounded h-full print:border-none print:p-0 print:bg-transparent">
-              <p className="text-[10px] text-slate-900 font-medium">
-                {transaction.shippingAddress || 'Diambil di tempat.'}
-              </p>
-            </div>
-          </div>
+        
+        {/* Kanan */}
+        <div className="flex flex-col whitespace-pre text-sm">
+          <div className="flex"><span className="w-24">NO</span><span>: {invoiceNumber}</span></div>
+          <div className="flex"><span className="w-24">Nama Toko</span><span>: {transaction.customerName || '-'}</span></div>
+          <div className="flex"><span className="w-24">Alamat</span><span className="truncate max-w-[250px]">: {transaction.shippingAddress || '-'}</span></div>
+          <div className="flex"><span className="w-24">Sales</span><span>: {transaction.user?.name || '-'}</span></div>
         </div>
+      </div>
 
-        {/* Tabel Barang */}
-        <div className="mb-4">
-          <table className="w-full text-left text-[10px] border-collapse">
-            <thead>
-              <tr className="bg-slate-900 text-white print:bg-slate-200 print:text-slate-900">
-                <th className="py-1.5 px-2 font-bold">No.</th>
-                <th className="py-1.5 px-2 font-bold">Deskripsi Barang</th>
-                <th className="py-1.5 px-2 font-bold text-center">Qty</th>
-                <th className="py-1.5 px-2 font-bold text-right">Harga</th>
-                <th className="py-1.5 px-2 font-bold text-right">Jumlah</th>
+      <div className="flex mb-2 uppercase text-sm font-semibold">
+        <span className="w-24">TANGGAL</span><span>: {date}</span>
+      </div>
+
+      {/* TABLE */}
+      <table className="w-full text-left uppercase border-collapse mt-2 text-sm">
+        <thead className="border-y-2 border-black">
+          <tr>
+            <th className="py-1 px-1 font-normal text-center w-12">NO</th>
+            <th className="py-1 px-1 font-normal w-32">KODE</th>
+            <th className="py-1 px-1 font-normal">NAMA PRODUK</th>
+            <th className="py-1 px-1 font-normal text-center w-16">QTY</th>
+            <th className="py-1 px-1 font-normal text-right w-40">HARGA</th>
+            <th className="py-1 px-1 font-normal text-right w-40">TOTAL</th>
+          </tr>
+        </thead>
+        <tbody className="border-b-2 border-black">
+          {transaction.items.map((item: any, index: number) => {
+            // Determine Unit string
+            let unitString = item.product.unit?.name || '';
+            const eceranPrice = getEceranPrice(item.product);
+            if (eceranPrice !== null && Number(item.price) === eceranPrice) {
+               // Extract string unit from retailPriceNote (e.g. "BTL 15000" -> "BTL")
+               const match = item.product.retailPriceNote.match(/[a-zA-Z]+/);
+               if (match) {
+                 unitString = match[0].toUpperCase();
+               }
+            }
+
+            return (
+              <tr key={item.id}>
+                <td className="py-1 px-1 text-center align-top">{index + 1}</td>
+                <td className="py-1 px-1 align-top">{item.product.code}</td>
+                <td className="py-1 px-1 align-top">{item.product.name}</td>
+                <td className="py-1 px-1 text-center align-top whitespace-nowrap">{item.quantity} {unitString}</td>
+                <td className="py-1 px-1 text-right align-top">
+                  <div className="flex justify-between w-full pl-4">
+                    <span>Rp</span>
+                    <span>{Number(item.price).toLocaleString('id-ID')},00</span>
+                  </div>
+                </td>
+                <td className="py-1 px-1 text-right align-top">
+                  <div className="flex justify-between w-full pl-4">
+                    <span>Rp</span>
+                    <span>{(Number(item.price) * item.quantity).toLocaleString('id-ID')},00</span>
+                  </div>
+                </td>
               </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-200 border-b">
-              {transaction.items.map((item: any, index: number) => (
-                <tr key={item.id}>
-                  <td className="py-1.5 px-2 text-slate-500 font-medium">{index + 1}</td>
-                  <td className="py-1.5 px-2">
-                    <p className="font-bold text-slate-900">{item.product.name}</p>
-                    <p className="text-[8px] text-slate-500 font-medium">SKU: {item.product.code}</p>
-                  </td>
-                  <td className="py-1.5 px-2 text-center font-bold text-slate-900">{item.quantity}</td>
-                  <td className="py-1.5 px-2 text-right text-slate-600">Rp {Number(item.price).toLocaleString('id-ID')}</td>
-                  <td className="py-1.5 px-2 text-right font-bold text-slate-900">Rp {(Number(item.price) * item.quantity).toLocaleString('id-ID')}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+            );
+          })}
+          {shippingCost > 0 && (
+             <tr>
+              <td className="py-1 px-1 text-center align-top"></td>
+              <td className="py-1 px-1 align-top"></td>
+              <td className="py-1 px-1 align-top">BIAYA ONGKIR PENGIRIMAN</td>
+              <td className="py-1 px-1 text-center align-top">1</td>
+              <td className="py-1 px-1 text-right align-top">
+                <div className="flex justify-between w-full pl-4">
+                  <span>Rp</span>
+                  <span>{shippingCost.toLocaleString('id-ID')},00</span>
+                </div>
+              </td>
+              <td className="py-1 px-1 text-right align-top">
+                <div className="flex justify-between w-full pl-4">
+                  <span>Rp</span>
+                  <span>{shippingCost.toLocaleString('id-ID')},00</span>
+                </div>
+              </td>
+            </tr>
+          )}
+        </tbody>
+      </table>
 
-        {/* Totals */}
-        <div className="flex justify-between items-end mb-4">
-          <div className="text-[9px] font-bold text-slate-400 bg-slate-50 px-2 py-1 rounded border border-slate-200 print:border-none print:bg-transparent">
-            * {title}
-          </div>
-          <div className="w-1/2 max-w-50">
-            <div className="flex justify-between py-1 border-b border-slate-100 text-[10px]">
-              <span className="text-slate-500 font-medium">Barang</span>
-              <span className="text-slate-900 font-bold">Rp {totalItemAmount.toLocaleString('id-ID')}</span>
-            </div>
-            {shippingCost > 0 && (
-              <div className="flex justify-between py-1 border-b border-slate-100 text-[10px]">
-                <span className="text-slate-500 font-medium">Ongkir</span>
-                <span className="text-slate-900 font-bold">Rp {shippingCost.toLocaleString('id-ID')}</span>
-              </div>
-            )}
-            <div className="flex justify-between py-1.5 text-xs border-b border-slate-900">
-              <span className="text-slate-900 font-extrabold">TOTAL</span>
-              <span className="text-slate-900 font-extrabold">Rp {totalKeseluruhan.toLocaleString('id-ID')}</span>
-            </div>
+      {/* FOOTER */}
+      <div className="flex justify-between mt-2 mb-8 uppercase text-sm">
+        <div className="flex gap-2 font-medium">
+          <span className="w-24">TERBILANG</span>
+          <span className="w-96">: {toTerbilang(totalKeseluruhan)}</span>
+        </div>
+        <div className="flex gap-4">
+          <div className="w-40 flex justify-between font-bold border-b border-black">
+            <span className="pl-4">Rp</span>
+            <span>{totalKeseluruhan.toLocaleString('id-ID')},00</span>
           </div>
         </div>
       </div>
 
-      <div>
-        {/* Tanda Tangan */}
-        <div className="grid grid-cols-3 gap-4 text-center text-[10px] font-medium text-slate-900">
-          <div className="flex flex-col items-center">
-            <p className="mb-8">Penerima,</p>
-            <div className="w-24 border-b border-slate-400"></div>
-            <p className="mt-1 text-[8px] text-slate-500 font-bold">{transaction.customerName || 'Nama Terang'}</p>
-          </div>
-          <div className="flex flex-col items-center">
-            <p className="mb-8">Pengirim,</p>
-            <div className="w-24 border-b border-slate-400"></div>
-            <p className="mt-1 text-[8px] text-slate-500 font-bold">Ttd</p>
-          </div>
-          <div className="flex flex-col items-center">
-            <p className="mb-8">Hormat Kami,</p>
-            <div className="w-24 border-b border-slate-400"></div>
-            <p className="mt-1 text-[8px] text-slate-500 font-bold">Admin Multazam</p>
-          </div>
+      {/* SIGNATURES */}
+      <div className="flex justify-around mt-8 uppercase text-center w-2/3 self-center text-sm font-semibold">
+        <div className="flex flex-col items-center">
+          <p className="mb-14">( ________________________ )</p>
+          <p>Penerima</p>
         </div>
-        
-        {/* Catatan Bawah */}
-        <div className="mt-4 pt-2 border-t border-slate-200 text-[8px] text-slate-400 text-center italic">
-          Dokumen ini merupakan bukti pengiriman barang. Barang yang diterima tidak dapat ditukar/dikembalikan kecuali ada perjanjian sebelumnya.
+        <div className="flex flex-col items-center">
+          <p className="mb-14">( ________________________ )</p>
+          <p>Pengirim</p>
         </div>
       </div>
     </div>
@@ -153,7 +190,9 @@ export default async function PrintDeliveryOrderPage({ params }: { params: Promi
       user: true,
       items: {
         include: {
-          product: true,
+          product: {
+            include: { unit: true }
+          },
         }
       }
     }
@@ -168,18 +207,18 @@ export default async function PrintDeliveryOrderPage({ params }: { params: Promi
   }
 
   return (
-    <div className="min-h-screen bg-white print:bg-white flex flex-col items-start py-0">
+    <div className="min-h-screen bg-white print:bg-white flex flex-col items-start p-8 print:p-0">
       <div id="print-container" className="w-[210mm] shrink-0 bg-white relative print:w-[210mm]">
         {/* Floating Print Button (Hidden on Print) */}
         <Suspense fallback={<div />}>
           <PrintButton invoiceNumber={transaction.invoiceNumber} />
         </Suspense>
         
-        {/* Salinan Untuk Driver / Arsip */}
-        <SuratJalanCopy transaction={transaction} title="Salinan Karyawan (Pengirim)" setting={setting} />
+        {/* Salinan Atas */}
+        <SuratJalanCopy transaction={transaction} setting={setting} isDivider={true} />
         
-        {/* Salinan Untuk Kardus / Pelanggan */}
-        <SuratJalanCopy transaction={transaction} title="Salinan Pelanggan (Tempel di Kardus)" hideCutLine={true} setting={setting} />
+        {/* Salinan Bawah */}
+        <SuratJalanCopy transaction={transaction} setting={setting} isDivider={false} />
       </div>
     </div>
   );
