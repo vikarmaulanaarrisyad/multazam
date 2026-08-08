@@ -23,6 +23,7 @@ interface ImportExcelDialogProps {
 export function ImportExcelDialog({ open, onOpenChange, onSuccess }: ImportExcelDialogProps) {
   const [loading, setLoading] = useState(false);
   const [file, setFile] = useState<File | null>(null);
+  const [importErrors, setImportErrors] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleDownloadTemplate = () => {
@@ -92,13 +93,26 @@ export function ImportExcelDialog({ open, onOpenChange, onSuccess }: ImportExcel
       const formData = new FormData();
       formData.append('file', file);
       
-      const response = await importProductsAction(formData);
+      const response = await importProductsAction(formData) as any;
+
+      if (response.errors && Array.isArray(response.errors)) {
+        setImportErrors(response.errors);
+      } else {
+        setImportErrors([]);
+      }
 
       if (response.success) {
         toast.success(response.message);
-        setFile(null);
-        onOpenChange(false);
-        if (onSuccess) onSuccess();
+        if (onSuccess) onSuccess(); // Refresh data immediately
+        
+        // If there are no errors, we can close the dialog automatically
+        if (!response.errors || response.errors.length === 0) {
+          setFile(null);
+          onOpenChange(false);
+        } else {
+          // Keep dialog open so user can read errors, but allow them to change file
+          setFile(null);
+        }
       } else {
         toast.error(response.message);
       }
@@ -112,6 +126,7 @@ export function ImportExcelDialog({ open, onOpenChange, onSuccess }: ImportExcel
   const handleClose = () => {
     if (!loading) {
       setFile(null);
+      setImportErrors([]);
       onOpenChange(false);
     }
   };
@@ -185,6 +200,17 @@ export function ImportExcelDialog({ open, onOpenChange, onSuccess }: ImportExcel
                 </div>
               </div>
             </div>
+
+            {importErrors.length > 0 && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-3 max-h-40 overflow-y-auto animate-in fade-in slide-in-from-bottom-2">
+                <h4 className="text-xs font-bold text-red-800 mb-2">Detail Error (Baris yang dilewati):</h4>
+                <ul className="list-disc pl-4 space-y-1">
+                  {importErrors.map((err, i) => (
+                    <li key={i} className="text-xs text-red-700">{err}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
             
             <div className="flex justify-end gap-3">
               <Button type="button" variant="outline" onClick={handleClose} disabled={loading}>

@@ -110,7 +110,7 @@ export const productService = {
     }
   },
 
-  async importProducts(formData: FormData): Promise<{ success: boolean; message: string }> {
+  async importProducts(formData: FormData): Promise<{ success: boolean; message: string; errors?: string[] }> {
     try {
       const file = formData.get('file') as File | null;
       if (!file) {
@@ -148,22 +148,28 @@ export const productService = {
       const validProducts = [];
       let skipped = 0;
       let duplicateInDb = 0;
+      const errorDetails: string[] = [];
 
-      for (const row of jsonData) {
+      for (let i = 0; i < jsonData.length; i++) {
+        const row = jsonData[i];
+        const rowNum = i + 2; // Assuming header is row 1
         const rawName = row['PRODUK'] || row['Nama Produk'] || row['nama_produk'] || row['name'];
         if (!rawName || typeof rawName !== 'string') {
+          errorDetails.push(`Baris ${rowNum}: Nama produk kosong`);
           skipped++;
           continue;
         }
 
         const name = rawName.trim();
         if (name.length === 0 || name.length > 100) {
+          errorDetails.push(`Baris ${rowNum}: Nama produk tidak valid (kosong atau terlalu panjang)`);
           skipped++;
           continue;
         }
 
         const categoryName = row['KATEGORI'] || row['Kategori'] || row['kategori'] || row['Category'];
         if (!categoryName || typeof categoryName !== 'string') {
+          errorDetails.push(`Baris ${rowNum}: Kategori kosong untuk produk "${name}"`);
           skipped++;
           continue; // Kategori wajib
         }
@@ -175,6 +181,7 @@ export const productService = {
             categoryId = newCategory.id;
             categoryMap.set(categoryName.trim().toLowerCase(), categoryId);
           } catch (error) {
+            errorDetails.push(`Baris ${rowNum}: Gagal membuat kategori baru "${categoryName.trim()}"`);
             skipped++;
             continue;
           }
@@ -245,26 +252,24 @@ export const productService = {
       }
 
       if (validProducts.length === 0) {
-        return { success: false, message: `Tidak ada data baru yang valid untuk diimpor. Pastikan Kategori sesuai.` };
+        return { success: false, message: `Tidak ada data baru yang valid untuk diimpor. Pastikan Kategori dan Nama Produk sesuai.`, errors: errorDetails };
       }
 
       // Bulk upsert (update if exists, insert if not)
       const upsertedCount = await productRepository.upsertMany(validProducts);
       
-      const totalDuplicates = 0; // Since we upsert, there are no skipped duplicates due to conflict.
-
       let msg = `Berhasil mengimpor/memperbarui ${upsertedCount} produk.`;
       const warnings = [];
-      if (totalDuplicates > 0) warnings.push(`${totalDuplicates} produk dilewati karena duplikat kode`);
-      if (skipped > 0) warnings.push(`${skipped} baris dilewati karena format salah atau kategori tidak ada`);
+      if (skipped > 0) warnings.push(`${skipped} baris dilewati karena format salah`);
       
       if (warnings.length > 0) {
-        msg += ` (${warnings.join(', ')})`;
+        msg += ` (${warnings.join(', ')}).`;
       }
 
       return { 
         success: true, 
-        message: msg
+        message: msg,
+        errors: errorDetails.length > 0 ? errorDetails : undefined
       };
     } catch (error: any) {
       console.error('Import products error:', error);
