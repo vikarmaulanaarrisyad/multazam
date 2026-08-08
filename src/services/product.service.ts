@@ -200,7 +200,10 @@ export const productService = {
         }
 
         const contents = (row['ISI'] || row['isi'] || '')?.toString() || null;
-        const retailPriceNote = (row['BTL,RTG,PCS,BAG'] || row['Eceran'] || '')?.toString() || null;
+        let retailPriceNote = (row['BTL,RTG,PCS,BAG'] || row['Eceran'] || '')?.toString() || null;
+        if (!retailPriceNote && price > 0) {
+          retailPriceNote = price.toString();
+        }
 
         const rawStock = row['STOK'] || row['Stok'] || row['stok'] || row['stock'];
         let stock = parseInt(rawStock);
