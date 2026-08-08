@@ -461,15 +461,35 @@ export function PreOrderClient({ stores }: PreOrderClientProps) {
                         </div>
                       </div>
                       
-                      {/* Retail Price Note info */}
-                      {(item.product as any).retailPriceNote && (
-                        <div className="flex items-center justify-end pl-2 -mt-1 mb-2">
-                           <span className="text-[10px] font-medium text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100">
-                             Info Eceran: {(item.product as any).retailPriceNote}
-                           </span>
-                        </div>
-                      )}
-                      
+                      {/* Quick Price Selectors */}
+                      <div className="flex items-center justify-end gap-1.5 pl-2 -mt-1 mb-2">
+                        <button
+                          type="button"
+                          onClick={() => updateRequestedPrice(index, Number(item.product.price))}
+                          className="text-[10px] font-bold px-2 py-1 rounded border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 transition-colors shadow-sm"
+                        >
+                          Karton
+                        </button>
+                        {(item.product as any).retailPriceNote && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const note = (item.product as any).retailPriceNote;
+                              const parsedMatch = note.match(/[\d.,]+/);
+                              if (parsedMatch) {
+                                const rawNum = parsedMatch[0].replace(/[.,]/g, '');
+                                const num = parseInt(rawNum, 10);
+                                if (!isNaN(num)) {
+                                  updateRequestedPrice(index, num);
+                                }
+                              }
+                            }}
+                            className="text-[10px] font-bold px-2 py-1 rounded border border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition-colors shadow-sm"
+                          >
+                            Eceran ({(item.product as any).retailPriceNote})
+                          </button>
+                        )}
+                      </div>
                       <div className="flex items-center justify-between mt-1 pl-2">
                         <span className="text-xs font-bold text-slate-500">Jumlah:</span>
                         <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-full p-1 shadow-sm">
