@@ -244,6 +244,8 @@ model Store {
   ownerName String
   address   String   @db.Text
   phone     String?
+  latitude  Float?
+  longitude Float?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }

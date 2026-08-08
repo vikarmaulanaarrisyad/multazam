@@ -62,7 +62,9 @@ export async function createPreOrder(data: PreOrderData) {
               name: data.customerName,
               ownerName: data.ownerName || data.customerName,
               phone: data.customerPhone || null,
-              address: data.shippingAddress || ''
+              address: data.shippingAddress || '',
+              latitude: data.latitude,
+              longitude: data.longitude
             }
           });
         }

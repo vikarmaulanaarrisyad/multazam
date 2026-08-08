@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import { Search, Filter, Clock, AlertTriangle, AlertCircle, Hourglass, MoreHorizontal, CheckCircle2, PackageCheck, Loader2, Plus, X } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { Search, Filter, Clock, AlertTriangle, AlertCircle, Hourglass, MoreHorizontal, CheckCircle2, PackageCheck, Loader2, Plus, X, RefreshCw } from 'lucide-react';
 import { updateTransactionStatus, addPayment, cancelTransaction } from '@/actions/transaction-actions';
 import { toast } from 'sonner';
 
@@ -32,6 +33,7 @@ interface RequestItem {
 }
 
 export default function RequestsClient({ requests }: { requests: RequestItem[] }) {
+  const router = useRouter();
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState('Semua');
   const [selectedRequest, setSelectedRequest] = useState<RequestItem | null>(null);
@@ -139,9 +141,26 @@ export default function RequestsClient({ requests }: { requests: RequestItem[] }
   return (
     <div className="flex flex-col w-full gap-4 pb-24">
       {/* Header Info */}
-      <div className="px-4 pt-4">
-        <h2 className="text-xl font-bold text-slate-900 tracking-tight">Daftar Pengajuan</h2>
-        <p className="text-sm text-slate-500">Kelola pengajuan harga dan pesanan tertunda.</p>
+      <div className="px-4 pt-4 flex justify-between items-start">
+        <div>
+          <h2 className="text-xl font-bold text-slate-900 tracking-tight">Daftar Pengajuan</h2>
+          <p className="text-sm text-slate-500">Kelola pengajuan harga dan pesanan tertunda.</p>
+        </div>
+        <button 
+          onClick={() => {
+            setIsSubmitting(true);
+            router.refresh();
+            setTimeout(() => {
+              setIsSubmitting(false);
+              toast.success('Data berhasil diperbarui');
+            }, 1000);
+          }}
+          disabled={isSubmitting}
+          className="p-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl transition-colors disabled:opacity-50 flex items-center justify-center shadow-sm border border-slate-200"
+          title="Segarkan Data"
+        >
+          <RefreshCw className={`w-5 h-5 ${isSubmitting ? 'animate-spin' : ''}`} />
+        </button>
       </div>
 
       {/* Action Bar */}
