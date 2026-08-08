@@ -224,16 +224,21 @@ export default async function PrintDeliveryOrderPage({ params, searchParams }: {
 
   return (
     <div className="min-h-screen bg-white print:bg-white flex flex-col items-start p-8 print:p-0 w-full">
+      <style dangerouslySetInnerHTML={{__html: `
+        @media print {
+          @page {
+            size: 21.5cm 14cm;
+            margin: 0.5cm;
+          }
+        }
+      `}} />
       <div id="print-container" className={`w-full ${orientation === 'landscape' ? 'max-w-[330mm]' : 'max-w-[210mm]'} print:max-w-none shrink-0 bg-white relative print:w-full`}>
         {/* Floating Print Button (Hidden on Print) */}
         <Suspense fallback={<div />}>
           <PrintButton invoiceNumber={transaction.invoiceNumber} />
         </Suspense>
         
-        {/* Salinan Atas */}
-        <SuratJalanCopy transaction={transaction} setting={setting} isDivider={true} />
-        
-        {/* Salinan Bawah */}
+        {/* Salinan Tunggal (Karena kertas Bagi 2) */}
         <SuratJalanCopy transaction={transaction} setting={setting} isDivider={false} />
       </div>
     </div>
