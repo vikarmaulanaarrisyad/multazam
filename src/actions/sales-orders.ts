@@ -108,9 +108,13 @@ export async function createPreOrder(data: PreOrderData) {
         });
       }
 
-      // 2. Deduct stock for each item and record StockMovement (Option A logic)
+      // 2. Deduct stock for each item and record StockMovement
       for (const item of data.items) {
-        // Find product to ensure enough stock (optional, but good practice)
+        if (!item.productId) {
+          throw new Error('ID Produk tidak valid pada salah satu pesanan.');
+        }
+
+        // Find product to ensure enough stock
         const product = await tx.product.findUnique({
           where: { id: item.productId }
         });
@@ -134,12 +138,16 @@ export async function createPreOrder(data: PreOrderData) {
             balanceBefore: product.stock,
             balanceAfter: product.stock - item.quantity,
             reference: invoiceNumber,
-            notes: isPriceProposal ? 'Booking (Menunggu Persetujuan)' : 'Penjualan / Pre-Order'
+            notes: isPriceProposal ? 'Booking (Menunggu Persetujuan)' : 'Penjualan / Pre-Order',
+            userId: session.user.id
           }
         });
       }
 
       return newTransaction;
+    }, {
+      maxWait: 10000, // 10 seconds max wait to connect to prisma
+      timeout: 20000  // 20 seconds timeout for the entire transaction
     });
 
     revalidatePath('/sales');
