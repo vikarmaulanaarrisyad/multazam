@@ -120,7 +120,7 @@ export default async function SalesDashboardPage() {
       <section>
         <h2 className="text-sm font-semibold text-slate-900 mb-4">Aksi Cepat</h2>
         <div className="flex gap-4 overflow-x-auto pb-2 snap-x no-scrollbar">
-          <Link href="/sales/requests/new" className="snap-start flex-none w-28 bg-slate-100 hover:bg-slate-200 transition-colors rounded-xl p-4 flex flex-col items-center gap-2 shadow-sm group">
+          <Link href="/sales/new-order" className="snap-start flex-none w-28 bg-slate-100 hover:bg-slate-200 transition-colors rounded-xl p-4 flex flex-col items-center gap-2 shadow-sm group">
             <div className="w-12 h-12 rounded-full bg-emerald-100 flex items-center justify-center group-hover:bg-emerald-200 transition-colors">
               <ShoppingCart className="text-emerald-700 w-6 h-6" />
             </div>
