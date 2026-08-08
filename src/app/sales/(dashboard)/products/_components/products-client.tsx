@@ -155,7 +155,7 @@ export function SalesProductsClient({ initialProducts, categories }: SalesProduc
       </div>
       
       {/* Product Grid */}
-      <div className="grid grid-cols-2 gap-3 px-4 pb-8 pt-4 overflow-y-auto">
+      <div className="grid grid-cols-2 gap-3 px-4 pb-36 pt-4">
         {filteredProducts.map(product => {
           const isOutOfStock = product.stock <= 0;
           const isLowStock = product.stock > 0 && product.stock <= 10;
