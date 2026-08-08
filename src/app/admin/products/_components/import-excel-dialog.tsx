@@ -28,16 +28,37 @@ export function ImportExcelDialog({ open, onOpenChange, onSuccess }: ImportExcel
   const handleDownloadTemplate = () => {
     try {
       const data = [
-        { 'Nama Produk': 'Elektronik' },
-        { 'Nama Produk': 'Pakaian Pria' },
-        { 'Nama Produk': 'Buku & Alat Tulis' },
+        { 
+          'Kode Produk': 'PRD-001',
+          'Nama Produk': 'Susu Bubuk 1Kg',
+          'Kategori': 'Minuman',
+          'Satuan': 'Box',
+          'Harga': 50000,
+          'Stok': 100,
+          'Deskripsi': 'Susu bubuk berkualitas tinggi'
+        },
+        { 
+          'Kode Produk': 'PRD-002',
+          'Nama Produk': 'Kopi Sachet',
+          'Kategori': 'Minuman',
+          'Satuan': 'Pcs',
+          'Harga': 1500,
+          'Stok': 500,
+          'Deskripsi': 'Kopi instan'
+        },
       ];
       
       const worksheet = xlsx.utils.json_to_sheet(data);
       
       // Set column widths
       worksheet['!cols'] = [
-        { wch: 30 }
+        { wch: 15 }, // Kode
+        { wch: 30 }, // Nama
+        { wch: 20 }, // Kategori
+        { wch: 15 }, // Satuan
+        { wch: 15 }, // Harga
+        { wch: 10 }, // Stok
+        { wch: 40 }, // Deskripsi
       ];
 
       const workbook = xlsx.utils.book_new();
