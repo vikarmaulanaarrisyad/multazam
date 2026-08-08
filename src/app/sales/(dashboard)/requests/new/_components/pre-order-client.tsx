@@ -29,10 +29,11 @@ export function PreOrderClient({ stores }: PreOrderClientProps) {
     customerPhone: '',
     shippingAddress: '',
     shippingCost: '',
+    dpAmount: '',
     dueDate: '',
-    notes: '',
-    dpAmount: ''
+    notes: ''
   });
+  const [isFormLoaded, setIsFormLoaded] = useState(false);
 
   const handleStoreChange = (storeId: string) => {
     setSelectedStoreId(storeId);
@@ -57,8 +58,10 @@ export function PreOrderClient({ stores }: PreOrderClientProps) {
   };
 
   useEffect(() => {
-    sessionStorage.setItem('preOrderFormData', JSON.stringify(formData));
-  }, [formData]);
+    if (isFormLoaded) {
+      sessionStorage.setItem('preOrderFormData', JSON.stringify(formData));
+    }
+  }, [formData, isFormLoaded]);
 
   useEffect(() => {
     // Load cart from session storage
@@ -110,6 +113,7 @@ export function PreOrderClient({ stores }: PreOrderClientProps) {
       }));
     }
     
+    setIsFormLoaded(true);
     setIsLoading(false);
   }, [router]);
 
