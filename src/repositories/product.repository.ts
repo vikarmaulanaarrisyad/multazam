@@ -116,7 +116,7 @@ export const productRepository = {
         }
       })
     );
-    await prisma.$transaction(transactions);
+    await prisma.$transaction(transactions, { maxWait: 15000, timeout: 30000 });
     return data.length;
   },
 
