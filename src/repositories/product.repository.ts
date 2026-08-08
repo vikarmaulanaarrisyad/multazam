@@ -69,6 +69,9 @@ export const productRepository = {
         name: data.name,
         description: data.description,
         price: data.price,
+        purchasePrice: data.purchasePrice,
+        contents: data.contents,
+        retailPriceNote: data.retailPriceNote,
         stock: data.stock,
         categoryId: data.categoryId,
         unitId: data.unitId,
@@ -84,6 +87,39 @@ export const productRepository = {
     return result.count;
   },
 
+  async upsertMany(data: (ProductInput & { code: string })[]): Promise<number> {
+    const transactions = data.map(item => 
+      prisma.product.upsert({
+        where: { code: item.code },
+        update: {
+          name: item.name,
+          description: item.description,
+          price: item.price,
+          purchasePrice: item.purchasePrice,
+          contents: item.contents,
+          retailPriceNote: item.retailPriceNote,
+          stock: item.stock,
+          categoryId: item.categoryId,
+          unitId: item.unitId,
+        },
+        create: {
+          code: item.code,
+          name: item.name,
+          description: item.description,
+          price: item.price,
+          purchasePrice: item.purchasePrice,
+          contents: item.contents,
+          retailPriceNote: item.retailPriceNote,
+          stock: item.stock,
+          categoryId: item.categoryId,
+          unitId: item.unitId,
+        }
+      })
+    );
+    await prisma.$transaction(transactions);
+    return data.length;
+  },
+
   async update(id: string, data: ProductInput & { code: string }): Promise<ProductType> {
     return prisma.product.update({
       where: { id },
@@ -92,6 +128,9 @@ export const productRepository = {
         name: data.name,
         description: data.description,
         price: data.price,
+        purchasePrice: data.purchasePrice,
+        contents: data.contents,
+        retailPriceNote: data.retailPriceNote,
         stock: data.stock,
         categoryId: data.categoryId,
         unitId: data.unitId,

@@ -163,10 +163,16 @@ export const productService = {
           continue; // Kategori wajib
         }
 
-        const categoryId = categoryMap.get(categoryName.trim().toLowerCase());
+        let categoryId = categoryMap.get(categoryName.trim().toLowerCase());
         if (!categoryId) {
-          skipped++;
-          continue; // Kategori tidak ditemukan
+          try {
+            const newCategory = await categoryRepository.create({ name: categoryName.trim() });
+            categoryId = newCategory.id;
+            categoryMap.set(categoryName.trim().toLowerCase(), categoryId);
+          } catch (error) {
+            skipped++;
+            continue;
+          }
         }
 
         const unitName = row['Satuan'] || row['satuan'] || row['Unit'];
@@ -176,10 +182,9 @@ export const productService = {
         }
 
         const rawPrice = row['HARGA KARTON'] || row['Harga'] || row['harga'] || row['price'];
-        const price = parseFloat(rawPrice);
+        let price = parseFloat(rawPrice);
         if (isNaN(price) || price < 0) {
-          skipped++;
-          continue;
+          price = 0;
         }
 
         const rawPurchasePrice = row['HARGA BELI'] || row['Harga Beli'] || null;
@@ -229,12 +234,12 @@ export const productService = {
         return { success: false, message: `Tidak ada data baru yang valid untuk diimpor. Pastikan Kategori sesuai.` };
       }
 
-      // Bulk insert (duplicates already filtered out manually or skipped by prisma)
-      const insertedCount = await productRepository.createMany(validProducts);
+      // Bulk upsert (update if exists, insert if not)
+      const upsertedCount = await productRepository.upsertMany(validProducts);
       
-      const totalDuplicates = validProducts.length - insertedCount;
+      const totalDuplicates = 0; // Since we upsert, there are no skipped duplicates due to conflict.
 
-      let msg = `Berhasil mengimpor ${insertedCount} produk.`;
+      let msg = `Berhasil mengimpor/memperbarui ${upsertedCount} produk.`;
       const warnings = [];
       if (totalDuplicates > 0) warnings.push(`${totalDuplicates} produk dilewati karena duplikat kode`);
       if (skipped > 0) warnings.push(`${skipped} baris dilewati karena format salah atau kategori tidak ada`);
