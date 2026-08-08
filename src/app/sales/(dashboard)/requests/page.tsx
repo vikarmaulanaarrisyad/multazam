@@ -29,7 +29,9 @@ export default async function RequestsPage() {
       items: {
         include: {
           product: {
-            select: { name: true }
+            include: {
+              unit: true
+            }
           }
         }
       },
@@ -44,6 +46,7 @@ export default async function RequestsPage() {
     id: t.id,
     invoiceNumber: t.invoiceNumber,
     customerName: t.customerName,
+    shippingAddress: t.shippingAddress,
     dueDate: t.dueDate,
     totalAmount: Number(t.totalAmount),
     paidAmount: Number(t.paidAmount),
@@ -54,10 +57,18 @@ export default async function RequestsPage() {
     createdAt: t.createdAt,
     items: t.items.map(item => ({
       id: item.id,
+      productId: item.productId,
       productName: item.product.name,
       quantity: item.quantity,
       price: Number(item.price),
       originalPrice: item.originalPrice ? Number(item.originalPrice) : Number(item.price),
+      product: {
+        id: item.product.id,
+        name: item.product.name,
+        price: Number(item.product.price),
+        unit: item.product.unit?.name || 'PCS',
+        stock: item.product.stock
+      }
     })),
     paymentHistories: t.paymentHistories.map(ph => ({
       id: ph.id,

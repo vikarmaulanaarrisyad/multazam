@@ -10,6 +10,7 @@ interface RequestItem {
   id: string;
   invoiceNumber: string;
   customerName: string | null;
+  shippingAddress: string | null;
   dueDate: Date | null;
   totalAmount: number;
   paidAmount: number;
@@ -20,10 +21,18 @@ interface RequestItem {
   createdAt: Date;
   items: {
     id: string;
+    productId: string;
     productName: string;
     quantity: number;
     price: number;
     originalPrice: number;
+    product: {
+      id: string;
+      name: string;
+      price: number;
+      unit: string;
+      stock: number;
+    };
   }[];
   paymentHistories: {
     id: string;
@@ -348,33 +357,41 @@ export default function RequestsClient({ requests }: { requests: RequestItem[] }
               </div>
               <button 
                 onClick={() => setSelectedRequest(null)}
-                className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors"
+                className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-200 text-slate-500 transition-colors"
               >
-                <AlertCircle className="w-5 h-5 hidden" /> 
-                <span className="font-bold text-lg leading-none">&times;</span>
+                <X className="w-5 h-5" />
               </button>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-6 pb-safe space-y-6">
-              
-              {selectedRequest.adminNotes && (
-                <div className="p-4 bg-blue-50 rounded-xl border border-blue-100">
-                  <div className="text-xs font-bold text-blue-600 uppercase tracking-wider mb-1">Catatan Admin</div>
-                  <p className="text-sm text-blue-900 font-medium">
-                    &quot;{selectedRequest.adminNotes}&quot;
-                  </p>
+            <div className="flex-1 p-6 overflow-y-auto">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <div className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Informasi Pelanggan</div>
+                  <div className="bg-slate-50 p-4 rounded-xl space-y-3">
+                    <div>
+                      <div className="text-xs text-slate-500">Nama Pelanggan</div>
+                      <div className="font-bold text-slate-900">{selectedRequest.customerName || 'Anonim'}</div>
+                    </div>
+                    {selectedRequest.shippingAddress && (
+                      <div>
+                        <div className="text-xs text-slate-500">Alamat Pengiriman</div>
+                        <div className="text-sm font-medium text-slate-700">{selectedRequest.shippingAddress}</div>
+                      </div>
+                    )}
+                  </div>
                 </div>
-              )}
 
-              <div>
-                <div className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Informasi Pelanggan</div>
-                <div className="flex justify-between items-center bg-slate-50 p-3 rounded-xl border border-slate-100">
-                  <span className="text-sm text-slate-500">Nama Pelanggan</span>
-                  <span className="text-sm font-bold text-slate-900">{selectedRequest.customerName || 'Anonim'}</span>
-                </div>
+                {selectedRequest.adminNotes && (
+                  <div className="p-4 bg-blue-50 rounded-xl border border-blue-100">
+                    <div className="text-xs font-bold text-blue-600 uppercase tracking-wider mb-1">Catatan Admin</div>
+                    <p className="text-sm text-blue-900 font-medium">
+                      &quot;{selectedRequest.adminNotes}&quot;
+                    </p>
+                  </div>
+                )}
               </div>
 
-              <div>
+              <div className="mt-6">
                 <div className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Daftar Produk</div>
                 <div className="border border-slate-100 rounded-xl overflow-hidden divide-y bg-white">
                   {selectedRequest.items.map(item => (
