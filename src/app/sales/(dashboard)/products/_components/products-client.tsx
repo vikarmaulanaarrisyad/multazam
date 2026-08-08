@@ -199,8 +199,17 @@ export function SalesProductsClient({ initialProducts, categories }: SalesProduc
                     <span>Stok {product.stock}</span>
                   </div>
                   
-                  <div className="flex items-center justify-between mt-1 h-8">
-                    <span className="text-sm font-bold text-slate-900">{formatCurrency(product.price)}</span>
+                  <div className="flex flex-col mt-1">
+                    <span className="text-sm font-bold text-slate-900">{formatCurrency(product.price)} <span className="text-[10px] font-normal text-slate-500">/Karton</span></span>
+                    {(product as any).retailPriceNote && (
+                      <span className="text-[10px] font-medium text-emerald-600 mt-0.5">Ecer: {(product as any).retailPriceNote}</span>
+                    )}
+                    {(product as any).contents && (
+                      <span className="text-[10px] font-medium text-slate-500">Isi: {(product as any).contents}</span>
+                    )}
+                  </div>
+                  
+                  <div className="flex items-center justify-end mt-1 h-8">
                     {cartQty > 0 ? (
                       <div className="flex items-center gap-1.5 bg-blue-50 rounded-full p-1 border border-blue-100 shadow-sm">
                         <button 

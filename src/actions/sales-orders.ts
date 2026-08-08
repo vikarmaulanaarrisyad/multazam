@@ -48,6 +48,25 @@ export async function createPreOrder(data: PreOrderData) {
 
     // Create the transaction inside a Prisma transaction block to ensure data consistency
     const transaction = await prisma.$transaction(async (tx) => {
+      // 0. Auto-save new store if it doesn't exist
+      if (data.customerName) {
+        const existingStore = await tx.store.findFirst({
+          where: { userId: session.user.id, name: data.customerName }
+        });
+
+        if (!existingStore) {
+          await tx.store.create({
+            data: {
+              userId: session.user.id,
+              name: data.customerName,
+              ownerName: data.customerName, // fallback
+              phone: data.customerPhone || null,
+              address: data.shippingAddress || ''
+            }
+          });
+        }
+      }
+
       // 1. Create the Transaction record
       const newTransaction = await tx.transaction.create({
         data: {

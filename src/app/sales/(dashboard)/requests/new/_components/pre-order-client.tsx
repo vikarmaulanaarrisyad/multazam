@@ -7,7 +7,11 @@ import { createPreOrder } from '@/actions/sales-orders';
 import { Product } from '@/generated/prisma/client';
 import { cn } from '@/lib/utils';
 
-export function PreOrderClient() {
+interface PreOrderClientProps {
+  stores: any[];
+}
+
+export function PreOrderClient({ stores }: PreOrderClientProps) {
   const router = useRouter();
   
   const [cartItems, setCartItems] = useState<{product: Product, quantity: number, requestedPrice?: number}[]>([]);
@@ -16,6 +20,8 @@ export function PreOrderClient() {
   const [isSuccess, setIsSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
+  const [selectedStoreId, setSelectedStoreId] = useState<string>('NEW');
+
   const [formData, setFormData] = useState({
     customerName: '',
     customerPhone: '',
@@ -25,6 +31,28 @@ export function PreOrderClient() {
     notes: '',
     dpAmount: ''
   });
+
+  const handleStoreChange = (storeId: string) => {
+    setSelectedStoreId(storeId);
+    if (storeId === 'NEW') {
+      setFormData(prev => ({
+        ...prev,
+        customerName: '',
+        customerPhone: '',
+        shippingAddress: ''
+      }));
+    } else {
+      const store = stores.find(s => s.id === storeId);
+      if (store) {
+        setFormData(prev => ({
+          ...prev,
+          customerName: store.name,
+          customerPhone: store.phone || '',
+          shippingAddress: store.address || ''
+        }));
+      }
+    }
+  };
 
   useEffect(() => {
     sessionStorage.setItem('preOrderFormData', JSON.stringify(formData));
@@ -251,8 +279,25 @@ export function PreOrderClient() {
                   Detail Pelanggan
                 </h3>
                 <div className="flex flex-col gap-4">
+                  
+                  {/* Select Store */}
                   <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-bold text-slate-500" htmlFor="customerName">Nama Pelanggan</label>
+                    <label className="text-xs font-bold text-slate-500" htmlFor="storeSelect">Pilih Toko</label>
+                    <select
+                      id="storeSelect"
+                      value={selectedStoreId}
+                      onChange={(e) => handleStoreChange(e.target.value)}
+                      className="w-full h-11 px-3 rounded-lg bg-slate-50 border-slate-200 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all border font-medium"
+                    >
+                      <option value="NEW">+ Input Manual / Toko Baru</option>
+                      {stores.map(store => (
+                        <option key={store.id} value={store.id}>{store.name}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs font-bold text-slate-500" htmlFor="customerName">Nama Pelanggan / Toko</label>
                     <input 
                       id="customerName"
                       type="text" 
@@ -332,7 +377,7 @@ export function PreOrderClient() {
                           <span className="text-[11px] font-medium text-slate-500">SKU: {item.product.code}</span>
                         </div>
                         <div className="flex flex-col items-end gap-0.5 shrink-0">
-                          <span className="text-[10px] font-bold text-slate-400 uppercase">Harga Asli</span>
+                          <span className="text-[10px] font-bold text-slate-400 uppercase">Harga Karton (Asli)</span>
                           <span className={cn(
                             "text-sm font-bold text-slate-900",
                             item.requestedPrice && item.requestedPrice < Number(item.product.price) && "line-through opacity-50 text-xs"
@@ -341,6 +386,15 @@ export function PreOrderClient() {
                           </span>
                         </div>
                       </div>
+                      
+                      {/* Retail Price Note info */}
+                      {(item.product as any).retailPriceNote && (
+                        <div className="flex items-center justify-end pl-2 -mt-1 mb-2">
+                           <span className="text-[10px] font-medium text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100">
+                             Info Eceran: {(item.product as any).retailPriceNote}
+                           </span>
+                        </div>
+                      )}
                       
                       <div className="flex items-center justify-between mt-1 pl-2">
                         <span className="text-xs font-bold text-slate-500">Jumlah:</span>

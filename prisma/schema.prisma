@@ -36,7 +36,7 @@ model User {
   purchases     Purchase[]
   stockMovements StockMovement[]
   paymentHistories PaymentHistory[]
-  store         Store?
+  stores        Store[]
 }
 
 model Account {
@@ -96,8 +96,11 @@ model Product {
   code        String   @unique
   name        String
   description String?
-  price       Decimal  @db.Decimal(10, 2)
-  stock       Int      @default(0)
+  price           Decimal  @db.Decimal(10, 2)
+  purchasePrice   Decimal? @db.Decimal(10, 2)
+  contents        String?  // for 'ISI' e.g. 48btl
+  retailPriceNote String?  // for 'BTL,RTG,PCS,BAG'
+  stock           Int      @default(0)
   categoryId  String
   category    Category @relation(fields: [categoryId], references: [id])
   unitId      String?
@@ -235,7 +238,7 @@ model Notification {
 
 model Store {
   id        String   @id @default(cuid())
-  userId    String   @unique
+  userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   name      String
   ownerName String

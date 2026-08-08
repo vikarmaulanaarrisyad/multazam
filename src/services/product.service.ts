@@ -175,20 +175,30 @@ export const productService = {
           unitId = unitMap.get(unitName.trim().toLowerCase()) || null;
         }
 
-        const rawPrice = row['Harga'] || row['harga'] || row['price'];
+        const rawPrice = row['HARGA KARTON'] || row['Harga'] || row['harga'] || row['price'];
         const price = parseFloat(rawPrice);
         if (isNaN(price) || price < 0) {
           skipped++;
           continue;
         }
 
-        const rawStock = row['Stok'] || row['stok'] || row['stock'];
+        const rawPurchasePrice = row['HARGA BELI'] || row['Harga Beli'] || null;
+        let purchasePrice = null;
+        if (rawPurchasePrice !== null) {
+          const parsed = parseFloat(rawPurchasePrice);
+          if (!isNaN(parsed) && parsed >= 0) purchasePrice = parsed;
+        }
+
+        const contents = (row['ISI'] || row['isi'] || '')?.toString() || null;
+        const retailPriceNote = (row['BTL,RTG,PCS,BAG'] || row['Eceran'] || '')?.toString() || null;
+
+        const rawStock = row['STOK'] || row['Stok'] || row['stok'] || row['stock'];
         let stock = parseInt(rawStock);
         if (isNaN(stock) || stock < 0) {
           stock = 0;
         }
 
-        const description = row['Deskripsi'] || row['deskripsi'] || row['description'] || null;
+        const description = row['DESKRIPSI'] || row['Deskripsi'] || row['deskripsi'] || row['description'] || null;
 
         let code = row['Kode Produk'] || row['kode_produk'] || row['code'];
         if (code && typeof code === 'string') {
@@ -206,6 +216,9 @@ export const productService = {
           name,
           description,
           price,
+          purchasePrice,
+          contents,
+          retailPriceNote,
           stock,
           categoryId,
           unitId

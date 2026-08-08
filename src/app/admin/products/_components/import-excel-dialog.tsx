@@ -27,38 +27,30 @@ export function ImportExcelDialog({ open, onOpenChange, onSuccess }: ImportExcel
 
   const handleDownloadTemplate = () => {
     try {
-      const data = [
-        { 
-          'Kode Produk': 'PRD-001',
-          'Nama Produk': 'Susu Bubuk 1Kg',
-          'Kategori': 'Minuman',
-          'Satuan': 'Box',
-          'Harga': 50000,
-          'Stok': 100,
-          'Deskripsi': 'Susu bubuk berkualitas tinggi'
-        },
-        { 
-          'Kode Produk': 'PRD-002',
-          'Nama Produk': 'Kopi Sachet',
-          'Kategori': 'Minuman',
-          'Satuan': 'Pcs',
-          'Harga': 1500,
-          'Stok': 500,
-          'Deskripsi': 'Kopi instan'
-        },
-      ];
+
+      const data = [{
+        'PRODUK': 'Contoh Produk A',
+        'KATEGORI': 'Minuman',
+        'ISI': '48btl',
+        'BTL,RTG,PCS,BAG': '27.500 per 4 pcs',
+        'HARGA KARTON': 150000,
+        'HARGA BELI': 130000,
+        'STOK': 100,
+        'DESKRIPSI': 'Opsional'
+      }];
       
       const worksheet = xlsx.utils.json_to_sheet(data);
       
       // Set column widths
       worksheet['!cols'] = [
-        { wch: 15 }, // Kode
-        { wch: 30 }, // Nama
-        { wch: 20 }, // Kategori
-        { wch: 15 }, // Satuan
-        { wch: 15 }, // Harga
-        { wch: 10 }, // Stok
-        { wch: 40 }, // Deskripsi
+        { wch: 30 }, // PRODUK
+        { wch: 15 }, // KATEGORI
+        { wch: 10 }, // ISI
+        { wch: 20 }, // BTL,RTG,PCS,BAG
+        { wch: 15 }, // HARGA KARTON
+        { wch: 15 }, // HARGA BELI
+        { wch: 10 }, // STOK
+        { wch: 30 }, // DESKRIPSI
       ];
 
       const workbook = xlsx.utils.book_new();

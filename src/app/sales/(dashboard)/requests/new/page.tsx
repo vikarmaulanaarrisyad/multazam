@@ -11,24 +11,25 @@ export const metadata: Metadata = {
 
 export default async function NewPreOrderPage() {
   const session = await auth();
-  
-  if (session?.user?.id) {
-    const store = await prisma.store.findUnique({
-      where: { userId: session.user.id }
-    });
+  if (!session?.user?.id) return null;
 
-    if (!store) {
-      return (
-        <div className="flex flex-col w-full h-full">
-          <StoreRegistrationClient />
-        </div>
-      );
-    }
+  const stores = await prisma.store.findMany({
+    where: { userId: session?.user?.id },
+    orderBy: { name: 'asc' }
+  });
+
+  // Jika belum punya toko sama sekali, paksa daftar
+  if (stores.length === 0) {
+    return (
+      <div className="flex flex-col w-full h-full">
+        <StoreRegistrationClient />
+      </div>
+    );
   }
 
   return (
     <div className="flex flex-col w-full h-full">
-      <PreOrderClient />
+      <PreOrderClient stores={stores} />
     </div>
   );
 }

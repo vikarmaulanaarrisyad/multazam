@@ -18,14 +18,7 @@ export async function createStore(data: StoreData) {
       return { success: false, error: 'Unauthorized' };
     }
 
-    // Check if store already exists
-    const existingStore = await prisma.store.findUnique({
-      where: { userId: session.user.id }
-    });
-
-    if (existingStore) {
-      return { success: false, error: 'Toko sudah terdaftar untuk akun ini' };
-    }
+    // Store is now a 1-to-Many relation, so we don't need to block creation
 
     const store = await prisma.store.create({
       data: {
