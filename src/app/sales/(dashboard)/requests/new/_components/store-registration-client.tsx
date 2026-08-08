@@ -132,26 +132,21 @@ export function StoreRegistrationClient() {
               />
             </div>
 
-          </div>
+            <button 
+              type="submit"
+              disabled={isSubmitting}
+              className="w-full h-12 mt-2 bg-blue-600 text-white font-bold rounded-xl flex items-center justify-center gap-2 shadow-sm shadow-blue-200 hover:bg-blue-700 transition-all active:scale-[0.98] disabled:opacity-70 text-sm"
+            >
+              {isSubmitting ? (
+                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              ) : (
+                <>
+                  <Send className="w-4 h-4" />
+                  Simpan & Lanjutkan
+                </>
+              )}
+            </button>
 
-          {/* Sticky Footer for Button */}
-          <div className="fixed bottom-20 left-0 right-0 p-4 bg-white/80 backdrop-blur-md border-t border-slate-100 shadow-[0_-4px_12px_rgba(0,0,0,0.02)] z-40">
-            <div className="max-w-md mx-auto">
-              <button 
-                type="submit"
-                disabled={isSubmitting}
-                className="w-full h-12 bg-blue-600 text-white font-bold rounded-xl flex items-center justify-center gap-2 shadow-sm shadow-blue-200 hover:bg-blue-700 transition-all active:scale-[0.98] disabled:opacity-70 text-sm"
-              >
-                {isSubmitting ? (
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                ) : (
-                  <>
-                    <Send className="w-4 h-4" />
-                    Simpan & Lanjutkan
-                  </>
-                )}
-              </button>
-            </div>
           </div>
         </form>
       </div>
