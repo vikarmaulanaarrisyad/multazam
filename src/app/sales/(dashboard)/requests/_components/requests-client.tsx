@@ -18,6 +18,7 @@ interface RequestItem {
   shippingCost: number;
   status: string;
   adminNotes: string | null;
+  hasBeenReordered: boolean;
   createdAt: Date;
   items: {
     id: string;
@@ -540,7 +541,7 @@ export default function RequestsClient({ requests }: { requests: RequestItem[] }
                 </div>
               )}
 
-              {(selectedRequest.status === 'REJECTED' || selectedRequest.status === 'CANCELLED') && (
+              {(selectedRequest.status === 'REJECTED' || selectedRequest.status === 'CANCELLED') && !selectedRequest.hasBeenReordered && (
                 <div className="pt-2">
                   <button 
                     onClick={() => {
@@ -555,7 +556,8 @@ export default function RequestsClient({ requests }: { requests: RequestItem[] }
                         customerName: selectedRequest.customerName || '',
                         customerPhone: '',
                         shippingAddress: selectedRequest.shippingAddress || '',
-                        notes: `[Salinan dari ${selectedRequest.invoiceNumber}]`
+                        notes: `[Salinan dari ${selectedRequest.invoiceNumber}]`,
+                        clonedFromId: selectedRequest.id
                       };
                       
                       sessionStorage.setItem('preOrderCart', JSON.stringify(cartData));

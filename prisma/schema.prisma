@@ -133,6 +133,7 @@ model Transaction {
   paymentStatus String   @default("UNPAID") // UNPAID, PARTIAL, PAID
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+  hasBeenReordered Boolean @default(false)
 
   items           TransactionItem[]
   paymentHistories PaymentHistory[]

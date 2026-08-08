@@ -188,6 +188,7 @@ export function PreOrderClient({ stores }: PreOrderClientProps) {
         notes: formData.notes,
         latitude: lat,
         longitude: lng,
+        clonedFromId: formData.clonedFromId,
         items: cartItems.map(item => ({
           productId: item.product.id,
           quantity: item.quantity,
@@ -200,6 +201,7 @@ export function PreOrderClient({ stores }: PreOrderClientProps) {
         setIsSuccess(true);
         sessionStorage.removeItem('preOrderCart');
         sessionStorage.removeItem('preOrderFormData');
+        router.refresh();
         window.scrollTo({ top: 0, behavior: 'smooth' });
       } else {
         setError(result.error || 'Failed to create pre-order');

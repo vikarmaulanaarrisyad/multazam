@@ -60,9 +60,10 @@ function SuratJalanCopy({ transaction, setting, isDivider = false }: any) {
   const totalKeseluruhan = totalItemAmount + shippingCost;
 
   return (
-    <div className={`w-full bg-white print:p-0 relative flex flex-col font-mono text-sm leading-tight text-black ${isDivider ? 'border-b-2 border-dashed border-slate-300 print:border-slate-400 pb-12 mb-12 print:pb-12 print:mb-12' : ''}`}>
+    <div className={`w-full h-[13.5cm] overflow-hidden bg-white print:p-0 relative flex flex-col justify-between font-mono text-sm leading-tight text-black ${isDivider ? 'border-b-2 border-dashed border-slate-300 print:border-slate-400 pb-12 mb-12 print:pb-12 print:mb-12' : ''}`}>
       
-      {/* HEADER SECTION */}
+      <div>
+        {/* HEADER SECTION */}
       <div className="flex justify-between w-full mb-4 uppercase">
         {/* Kiri */}
         <div className="flex flex-col font-bold">
@@ -165,31 +166,32 @@ function SuratJalanCopy({ transaction, setting, isDivider = false }: any) {
           )}
         </tbody>
       </table>
+      </div>
 
+      <div className="mt-auto">
       {/* FOOTER */}
-      <div className="flex justify-between mt-2 mb-8 uppercase text-sm">
-        <div className="flex gap-2 font-medium">
+      <div className="flex justify-between items-center py-1 uppercase text-sm font-semibold border-b-4 border-double border-black">
+        <div className="flex gap-2">
           <span className="w-24">TERBILANG</span>
-          <span className="w-96">: {toTerbilang(totalKeseluruhan)}</span>
+          <span className="truncate max-w-[60%]">: {toTerbilang(totalKeseluruhan)}</span>
         </div>
-        <div className="flex gap-4">
-          <div className="w-40 flex justify-between font-bold border-b border-black">
-            <span className="pl-4">Rp</span>
-            <span>{totalKeseluruhan.toLocaleString('id-ID')},00</span>
-          </div>
+        <div className="w-40 flex justify-between pr-1">
+          <span>Rp</span>
+          <span>{totalKeseluruhan.toLocaleString('id-ID')},00</span>
         </div>
       </div>
 
       {/* SIGNATURES */}
-      <div className="flex justify-around mt-8 uppercase text-center w-2/3 self-center text-sm font-semibold">
+      <div className="flex justify-center gap-32 mt-6 mb-4 uppercase text-center text-sm font-semibold">
         <div className="flex flex-col items-center">
-          <p className="mb-14">( ________________________ )</p>
+          <p className="mb-14">(&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;)</p>
           <p>Penerima</p>
         </div>
         <div className="flex flex-col items-center">
-          <p className="mb-14">( ________________________ )</p>
+          <p className="mb-14">(&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;)</p>
           <p>Pengirim</p>
         </div>
+      </div>
       </div>
     </div>
   );

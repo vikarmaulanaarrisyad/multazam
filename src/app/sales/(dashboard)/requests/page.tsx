@@ -54,6 +54,7 @@ export default async function RequestsPage() {
     shippingCost: t.shippingCost ? Number(t.shippingCost) : 0,
     status: t.status,
     adminNotes: t.adminNotes,
+    hasBeenReordered: t.hasBeenReordered,
     createdAt: t.createdAt,
     items: t.items.map(item => ({
       id: item.id,

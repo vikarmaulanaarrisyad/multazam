@@ -21,6 +21,7 @@ export interface PreOrderData {
     price: number;
     originalPrice?: number;
   }[];
+  clonedFromId?: string;
 }
 
 export async function createPreOrder(data: PreOrderData) {
@@ -97,6 +98,15 @@ export async function createPreOrder(data: PreOrderData) {
           }
         }
       });
+
+      // 1.2 If this is a clone, mark the old transaction as reordered
+      if (data.clonedFromId) {
+        await tx.transaction.update({
+          where: { id: data.clonedFromId },
+          data: { hasBeenReordered: true }
+        });
+      }
+
 
       // 1.5 Record DP in PaymentHistory if there's any
       if (data.dpAmount && data.dpAmount > 0) {
