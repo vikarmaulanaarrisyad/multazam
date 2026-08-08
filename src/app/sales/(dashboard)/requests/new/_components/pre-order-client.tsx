@@ -103,13 +103,13 @@ export function PreOrderClient({ stores }: PreOrderClientProps) {
       }
     }
     
-    // Set default due date to tomorrow if empty
+    // Set default due date to 1 week if empty
     if (!loadedForm || !loadedForm.dueDate) {
-      const tomorrow = new Date();
-      tomorrow.setDate(tomorrow.getDate() + 1);
+      const nextWeek = new Date();
+      nextWeek.setDate(nextWeek.getDate() + 7);
       setFormData(prev => ({
         ...prev,
-        dueDate: prev.dueDate || tomorrow.toISOString().split('T')[0]
+        dueDate: prev.dueDate || nextWeek.toISOString().split('T')[0]
       }));
     }
     
@@ -500,9 +500,9 @@ export function PreOrderClient({ stores }: PreOrderClientProps) {
                       id="dueDate"
                       type="date" 
                       required
+                      readOnly
                       value={formData.dueDate}
-                      onChange={e => setFormData({...formData, dueDate: e.target.value})}
-                      className="w-full h-11 px-3 rounded-lg bg-slate-50 border-slate-200 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all border"
+                      className="w-full h-11 px-3 rounded-lg bg-slate-100 border-slate-200 text-slate-500 cursor-not-allowed border"
                     />
                   </div>
                   <div className="flex flex-col gap-1.5">
