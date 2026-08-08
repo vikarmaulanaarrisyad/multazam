@@ -84,13 +84,16 @@ export function PreOrderClient({ stores }: PreOrderClientProps) {
     
     // Load form data
     const storedForm = sessionStorage.getItem('preOrderFormData');
-    let loadedForm = null;
+    let loadedForm: any = null;
     if (storedForm) {
       try {
         loadedForm = JSON.parse(storedForm);
         // Only set if we actually have data, otherwise let the default take over
         if (loadedForm.customerName || loadedForm.customerPhone || loadedForm.notes) {
-          setFormData(loadedForm);
+          setFormData(prev => ({
+            ...prev,
+            ...loadedForm
+          }));
         }
       } catch (e) {
         console.error('Failed to parse form data', e);
@@ -103,7 +106,7 @@ export function PreOrderClient({ stores }: PreOrderClientProps) {
       tomorrow.setDate(tomorrow.getDate() + 1);
       setFormData(prev => ({
         ...prev,
-        dueDate: tomorrow.toISOString().split('T')[0]
+        dueDate: prev.dueDate || tomorrow.toISOString().split('T')[0]
       }));
     }
     
@@ -210,10 +213,33 @@ export function PreOrderClient({ stores }: PreOrderClientProps) {
     }).format(amount);
   };
 
+  const getEceranPrice = (product: any): number | null => {
+    if (!product.retailPriceNote) return null;
+    const match = product.retailPriceNote.match(/[\d.,]+/);
+    if (match) {
+      const rawNum = match[0].replace(/[.,]/g, '');
+      const num = parseInt(rawNum, 10);
+      if (!isNaN(num)) return num;
+    }
+    return null;
+  };
+
   const totalOriginal = cartItems.reduce((total, item) => total + (Number(item.product.price) * item.quantity), 0);
   const totalRequested = cartItems.reduce((total, item) => total + ((item.requestedPrice || Number(item.product.price)) * item.quantity), 0);
-  const totalVariance = totalRequested - totalOriginal;
-  const isPriceProposal = totalVariance < 0;
+  
+  const isPriceProposal = cartItems.some(item => {
+    const requested = item.requestedPrice || Number(item.product.price);
+    const kartonPrice = Number(item.product.price);
+    const eceranPrice = getEceranPrice(item.product);
+    
+    if (requested < kartonPrice) {
+      if (eceranPrice !== null && requested === eceranPrice) {
+        return false; // Not a proposal, just buying retail
+      }
+      return true; // Lower than karton and not eceran -> proposal
+    }
+    return false;
+  });
 
   if (isLoading) {
     return <div className="p-8 text-center text-slate-500">Memuat keranjang...</div>;
@@ -373,25 +399,30 @@ export function PreOrderClient({ stores }: PreOrderClientProps) {
                         <button
                           type="button"
                           onClick={() => updateRequestedPrice(index, Number(item.product.price))}
-                          className="text-[10px] font-bold px-2 py-1 rounded border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 transition-colors shadow-sm"
+                          className={cn(
+                            "text-[10px] font-bold px-2 py-1 rounded border transition-colors shadow-sm",
+                            (item.requestedPrice === Number(item.product.price) || !item.requestedPrice)
+                              ? "bg-blue-600 text-white border-blue-600" 
+                              : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
+                          )}
                         >
                           Karton
                         </button>
-                        {(item.product as any).retailPriceNote && (
+                        {getEceranPrice(item.product) !== null && (
                           <button
                             type="button"
                             onClick={() => {
-                              const note = (item.product as any).retailPriceNote;
-                              const parsedMatch = note.match(/[\d.,]+/);
-                              if (parsedMatch) {
-                                const rawNum = parsedMatch[0].replace(/[.,]/g, '');
-                                const num = parseInt(rawNum, 10);
-                                if (!isNaN(num)) {
-                                  updateRequestedPrice(index, num);
-                                }
+                              const eceranPrice = getEceranPrice(item.product);
+                              if (eceranPrice !== null) {
+                                updateRequestedPrice(index, eceranPrice);
                               }
                             }}
-                            className="text-[10px] font-bold px-2 py-1 rounded border border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition-colors shadow-sm"
+                            className={cn(
+                              "text-[10px] font-bold px-2 py-1 rounded border transition-colors shadow-sm",
+                              item.requestedPrice === getEceranPrice(item.product)
+                                ? "bg-emerald-600 text-white border-emerald-600"
+                                : "bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100"
+                            )}
                           >
                             Eceran ({(item.product as any).retailPriceNote})
                           </button>
