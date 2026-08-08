@@ -1,0 +1,26 @@
+PrismaClientKnownRequestError: 
+Invalid `prisma.product.upsert()` invocation:
+
+
+Transaction API error: A rollback cannot be executed on an expired transaction. The timeout for this transaction was 5000 ms, however 5415 ms passed since the start of the transaction. Consider increasing the interactive transaction timeout or doing less work in the transaction.
+PrismaClientKnownRequestError: 
+Invalid `prisma.product.upsert()` invocation:
+
+
+Transaction API error: A rollback cannot be executed on an expired transaction. The timeout for this transaction was 5000 ms, however 5415 ms passed since the start of the transaction. Consider increasing the interactive transaction timeout or doing less work in the transaction.
+    at Jr.handleRequestError (E:\NEXTJS\multazam-app\node_modules\@prisma\client\runtime\client.js:65:8286)
+    at Jr.handleAndLogRequestError (E:\NEXTJS\multazam-app\node_modules\@prisma\client\runtime\client.js:65:7581)
+    at Jr.request (E:\NEXTJS\multazam-app\node_modules\@prisma\client\runtime\client.js:65:7288)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async a (E:\NEXTJS\multazam-app\node_modules\@prisma\client\runtime\client.js:99:6862)
+{
+  "code": "P2028",
+  "meta": {
+    "modelName": "Product",
+    "operation": "rollback",
+    "timeout": 5000,
+    "timeTaken": 5415
+  },
+  "clientVersion": "7.9.1",
+  "name": "PrismaClientKnownRequestError"
+}
