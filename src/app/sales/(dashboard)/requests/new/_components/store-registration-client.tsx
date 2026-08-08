@@ -40,7 +40,7 @@ export function StoreRegistrationClient() {
   };
 
   return (
-    <div className="flex flex-col w-full pb-24 min-h-screen bg-slate-50">
+    <div className="flex flex-col w-full pb-24 bg-slate-50">
       {/* Header */}
       <div className="flex items-center gap-3 px-4 py-4 bg-white sticky top-0 z-40 border-b border-slate-100 shadow-sm">
         <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center">
@@ -134,20 +134,25 @@ export function StoreRegistrationClient() {
 
           </div>
 
-          <button 
-            type="submit"
-            disabled={isSubmitting}
-            className="w-full h-12 bg-blue-600 text-white font-bold rounded-xl flex items-center justify-center gap-2 shadow-sm shadow-blue-200 hover:bg-blue-700 transition-all active:scale-[0.98] disabled:opacity-70 text-sm mt-2"
-          >
-            {isSubmitting ? (
-              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-            ) : (
-              <>
-                <Send className="w-4 h-4" />
-                Simpan & Lanjutkan
-              </>
-            )}
-          </button>
+          {/* Sticky Footer for Button */}
+          <div className="fixed bottom-20 left-0 right-0 p-4 bg-white/80 backdrop-blur-md border-t border-slate-100 shadow-[0_-4px_12px_rgba(0,0,0,0.02)] z-40">
+            <div className="max-w-md mx-auto">
+              <button 
+                type="submit"
+                disabled={isSubmitting}
+                className="w-full h-12 bg-blue-600 text-white font-bold rounded-xl flex items-center justify-center gap-2 shadow-sm shadow-blue-200 hover:bg-blue-700 transition-all active:scale-[0.98] disabled:opacity-70 text-sm"
+              >
+                {isSubmitting ? (
+                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                ) : (
+                  <>
+                    <Send className="w-4 h-4" />
+                    Simpan & Lanjutkan
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
         </form>
       </div>
     </div>
