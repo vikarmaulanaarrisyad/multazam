@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import { Search, Filter, Clock, AlertTriangle, AlertCircle, Hourglass, MoreHorizontal, CheckCircle2, PackageCheck, Loader2, Plus } from 'lucide-react';
-import { updateTransactionStatus, addPayment } from '@/actions/transaction-actions';
+import { Search, Filter, Clock, AlertTriangle, AlertCircle, Hourglass, MoreHorizontal, CheckCircle2, PackageCheck, Loader2, Plus, X } from 'lucide-react';
+import { updateTransactionStatus, addPayment, cancelTransaction } from '@/actions/transaction-actions';
 import { toast } from 'sonner';
 
 interface RequestItem {
@@ -41,19 +41,34 @@ export default function RequestsClient({ requests }: { requests: RequestItem[] }
 
   const handleCompleteOrder = async (e: React.MouseEvent, req: RequestItem) => {
     e.stopPropagation();
-    setIsSubmitting(true);
-    const res = await updateTransactionStatus({
-      transactionId: req.id,
-      status: 'COMPLETED'
-    });
+    if (!confirm('Anda yakin pesanan ini sudah selesai? (Barang sudah diterima pelanggan dan lunas)')) return;
     
-    if (res.success) {
-      toast.success('Pesanan berhasil diselesaikan!');
+    setIsSubmitting(true);
+    const result = await updateTransactionStatus({ transactionId: req.id, status: 'COMPLETED' });
+    setIsSubmitting(false);
+    
+    if (result.success) {
+      toast.success('Pesanan berhasil diselesaikan');
       setSelectedRequest(null);
     } else {
-      toast.error(res.error || 'Gagal menyelesaikan pesanan');
+      toast.error(result.error || 'Gagal menyelesaikan pesanan');
     }
+  };
+
+  const handleCancelOrder = async (e: React.MouseEvent, req: RequestItem) => {
+    e.stopPropagation();
+    if (!confirm('Anda yakin ingin membatalkan pesanan ini? Stok barang akan dikembalikan ke sistem.')) return;
+    
+    setIsSubmitting(true);
+    const result = await cancelTransaction({ transactionId: req.id, adminNotes: 'Dibatalkan oleh Sales' });
     setIsSubmitting(false);
+    
+    if (result.success) {
+      toast.success('Pesanan berhasil dibatalkan dan stok telah dikembalikan');
+      setSelectedRequest(null);
+    } else {
+      toast.error(result.error || 'Gagal membatalkan pesanan');
+    }
   };
 
   const handleAddPayment = async (e: React.FormEvent, req: RequestItem) => {
@@ -466,6 +481,22 @@ export default function RequestsClient({ requests }: { requests: RequestItem[] }
                   </button>
                   <p className="text-center text-[10px] text-slate-400 mt-3 px-6">
                     Tekan tombol ini hanya ketika barang sudah diserahkan kepada pelanggan dan pembayaran telah lunas.
+                  </p>
+                </div>
+              )}
+
+              {(selectedRequest.status === 'PENDING' || selectedRequest.status === 'PENDING_APPROVAL') && (
+                <div className="pt-2">
+                  <button 
+                    onClick={(e) => handleCancelOrder(e, selectedRequest)}
+                    disabled={isSubmitting}
+                    className="w-full flex items-center justify-center gap-2 bg-red-50 hover:bg-red-100 text-red-600 p-3.5 rounded-xl font-bold transition-all disabled:opacity-70 border border-red-100"
+                  >
+                    {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : <X className="w-5 h-5" />}
+                    Batalkan Pesanan
+                  </button>
+                  <p className="text-center text-[10px] text-slate-400 mt-3 px-6">
+                    Stok barang akan otomatis dikembalikan ke sistem jika pesanan dibatalkan.
                   </p>
                 </div>
               )}

@@ -74,7 +74,7 @@ function SuratJalanCopy({ transaction, setting, isDivider = false }: any) {
         <div className="flex flex-col whitespace-pre text-sm">
           <div className="flex"><span className="w-24">NO</span><span>: {invoiceNumber}</span></div>
           <div className="flex"><span className="w-24">Nama Toko</span><span>: {transaction.customerName || '-'}</span></div>
-          <div className="flex"><span className="w-24">Alamat</span><span className="truncate max-w-[250px]">: {transaction.shippingAddress || '-'}</span></div>
+          <div className="flex"><span className="w-24">Alamat</span><span className="truncate max-w-64">: {transaction.shippingAddress || '-'}</span></div>
           <div className="flex"><span className="w-24">Sales</span><span>: {transaction.user?.name || '-'}</span></div>
         </div>
       </div>

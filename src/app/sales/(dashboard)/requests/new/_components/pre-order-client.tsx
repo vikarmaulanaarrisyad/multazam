@@ -442,7 +442,19 @@ export function PreOrderClient({ stores }: PreOrderClientProps) {
                           >
                             <Minus className="w-3.5 h-3.5" />
                           </button>
-                          <span className="w-6 text-center font-bold text-sm text-slate-900">{item.quantity}</span>
+                          {(() => {
+                            let unitString = (item.product as any).unit?.name || '';
+                            const eceran = getEceranPrice(item.product);
+                            if (eceran !== null && item.requestedPrice === eceran) {
+                              const match = (item.product as any).retailPriceNote?.match(/[a-zA-Z]+/);
+                              if (match) unitString = match[0].toUpperCase();
+                            }
+                            return (
+                              <span className="min-w-8 px-1 text-center font-bold text-sm text-slate-900 whitespace-nowrap">
+                                {item.quantity} {unitString}
+                              </span>
+                            );
+                          })()}
                           <button 
                             type="button"
                             onClick={() => updateQuantity(index, 1)}

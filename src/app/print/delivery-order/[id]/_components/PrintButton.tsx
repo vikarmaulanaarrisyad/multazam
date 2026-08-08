@@ -80,16 +80,14 @@ export function PrintButton({ invoiceNumber }: { invoiceNumber?: string }) {
         window.print();
         if (searchParams.get('iframe') === 'true') {
           window.parent.postMessage('print-dialog-opened', '*');
-        } else {
-          // Go back after printing (when dialog closes)
-          window.history.back();
         }
+        // Disabled auto-back to prevent dialog closing prematurely on mobile
       }, 500);
     } else if (action === 'download') {
       actionTriggered.current = true;
       setTimeout(() => {
         handleDownloadPDF();
-      }, 800); // Give it a bit more time to render
+      }, 800);
     }
   }, [searchParams]);
 
