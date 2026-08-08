@@ -59,8 +59,11 @@ export default function RequestsClient({ requests }: { requests: RequestItem[] }
     e.stopPropagation();
     if (!confirm('Anda yakin ingin membatalkan pesanan ini? Stok barang akan dikembalikan ke sistem.')) return;
     
+    const reason = window.prompt('Masukkan alasan pembatalan pesanan ini:', 'Dibatalkan oleh Sales');
+    if (reason === null) return; // User cancelled the prompt
+    
     setIsSubmitting(true);
-    const result = await cancelTransaction({ transactionId: req.id, adminNotes: 'Dibatalkan oleh Sales' });
+    const result = await cancelTransaction({ transactionId: req.id, adminNotes: reason || 'Dibatalkan oleh Sales' });
     setIsSubmitting(false);
     
     if (result.success) {

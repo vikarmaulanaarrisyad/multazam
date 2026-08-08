@@ -62,7 +62,7 @@ export async function cancelTransaction(data: {
 }) {
   try {
     const session = await auth();
-    if (!session?.user?.id || (session.user.role !== 'ADMIN' && session.user.role !== 'SUPER_ADMIN')) {
+    if (!session?.user?.id) {
       return { success: false, error: 'Unauthorized' };
     }
 
@@ -78,6 +78,11 @@ export async function cancelTransaction(data: {
       });
 
       if (!transaction) throw new Error('Pesanan tidak ditemukan');
+
+      // If user is SALES, ensure it's their transaction
+      if (session.user.role === 'SALES' && transaction.userId !== session.user.id) {
+        throw new Error('Unauthorized');
+      }
 
       // Reject/Cancel transaction
       await tx.transaction.update({
