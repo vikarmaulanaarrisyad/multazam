@@ -19,6 +19,7 @@ import {
   ArrowRightLeft,
   Truck,
   ClipboardCheck,
+  Store,
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -92,6 +93,12 @@ export function AdminSidebar({ role, className, onNavigate }: SidebarProps) {
       href: `${basePath}/sync`,
       icon: DatabaseZap,
       visible: role === 'SUPER_ADMIN',
+    },
+    {
+      title: 'Data Toko',
+      href: `${basePath}/stores`,
+      icon: Store,
+      visible: true,
     },
     {
       title: 'Pengaturan',

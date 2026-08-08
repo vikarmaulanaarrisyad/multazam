@@ -1,6 +1,7 @@
 import { purchaseRepository, PurchaseWithRelations } from '@/repositories/purchase.repository';
 import prisma from '@/lib/prisma';
 import { format } from 'date-fns';
+import { createNotification } from '@/lib/createNotification';
 
 async function generateInvoiceNumber(): Promise<string> {
   const dateStr = format(new Date(), 'yyyyMMdd');
@@ -64,6 +65,20 @@ export const purchaseService = {
         }
       });
 
+      // 🔔 Notifikasi ke ADMIN bahwa ada permintaan baru
+      await createNotification(
+        "Permintaan Barang Baru",
+        `Pesanan #${invoiceNumber} menunggu persetujuan.`,
+        "ADMIN"
+      );
+      
+      // 🔔 Notifikasi ke SUPER_ADMIN juga
+      await createNotification(
+        "Permintaan Barang Baru",
+        `Pesanan #${invoiceNumber} menunggu persetujuan.`,
+        "SUPER_ADMIN"
+      );
+
       return { success: true, message: 'Pesanan pembelian berhasil dibuat (Status: PENDING).', purchaseId: purchase.id };
     } catch (error) {
       console.error('Create purchase error:', error);
@@ -124,6 +139,25 @@ export const purchaseService = {
           });
         }
       });
+
+      // 🔔 Notifikasi ke SALES bahwa permintaannya disetujui (COMPLETED)
+      await createNotification(
+        "Permintaan Disetujui ✅",
+        `Pesanan #${purchase.invoiceNumber} telah disetujui dan stok ditambahkan.`,
+        "SALES"
+      );
+
+      // 🔔 Notifikasi ke ADMIN dan SUPER_ADMIN sebagai arsip persetujuan
+      await createNotification(
+        "Permintaan Disetujui ✅",
+        `Pesanan #${purchase.invoiceNumber} telah selesai diproses.`,
+        "ADMIN"
+      );
+      await createNotification(
+        "Permintaan Disetujui ✅",
+        `Pesanan #${purchase.invoiceNumber} telah selesai diproses.`,
+        "SUPER_ADMIN"
+      );
 
       return { success: true, message: 'Pembelian selesai. Stok telah diperbarui.' };
     } catch (error) {

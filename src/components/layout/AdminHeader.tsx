@@ -16,6 +16,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { AdminSidebar } from './AdminSidebar';
+import { NotificationBell } from './NotificationBell';
 import { signOut } from 'next-auth/react';
 import { useState } from 'react';
 
@@ -75,7 +76,7 @@ export function AdminHeader({ role, userName = 'Admin', userEmail, userImage }: 
         </form>
 
         <div className="flex items-center gap-x-4 lg:gap-x-6">
-          {/* Notifications can go here */}
+          <NotificationBell role={role} />
 
           {/* Separator */}
           <div className="hidden lg:block lg:h-6 lg:w-px lg:bg-slate-200" aria-hidden="true" />
