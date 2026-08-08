@@ -14,6 +14,7 @@ export interface PreOrderData {
   notes?: string;
   latitude?: number;
   longitude?: number;
+  ownerName?: string;
   items: {
     productId: string;
     quantity: number;
@@ -59,7 +60,7 @@ export async function createPreOrder(data: PreOrderData) {
             data: {
               userId: session.user.id,
               name: data.customerName,
-              ownerName: data.customerName, // fallback
+              ownerName: data.ownerName || data.customerName,
               phone: data.customerPhone || null,
               address: data.shippingAddress || ''
             }

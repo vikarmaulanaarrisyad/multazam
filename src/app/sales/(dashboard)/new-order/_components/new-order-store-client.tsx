@@ -24,6 +24,7 @@ export function NewOrderStoreClient({ stores }: NewOrderStoreClientProps) {
 
   const [formData, setFormData] = useState({
     customerName: '',
+    ownerName: '',
     customerPhone: '',
     shippingAddress: ''
   });
@@ -34,6 +35,7 @@ export function NewOrderStoreClient({ stores }: NewOrderStoreClientProps) {
       setFormData(prev => ({
         ...prev,
         customerName: '',
+        ownerName: '',
         customerPhone: '',
         shippingAddress: ''
       }));
@@ -43,6 +45,7 @@ export function NewOrderStoreClient({ stores }: NewOrderStoreClientProps) {
         setFormData(prev => ({
           ...prev,
           customerName: store.name,
+          ownerName: store.ownerName || '',
           customerPhone: store.phone || '',
           shippingAddress: store.address || ''
         }));
@@ -66,6 +69,7 @@ export function NewOrderStoreClient({ stores }: NewOrderStoreClientProps) {
     const newFormData = {
       ...existingForm,
       customerName: formData.customerName,
+      ownerName: formData.ownerName,
       customerPhone: formData.customerPhone,
       shippingAddress: formData.shippingAddress,
       storeId: selectedStoreId
@@ -213,6 +217,17 @@ export function NewOrderStoreClient({ stores }: NewOrderStoreClientProps) {
                   placeholder="Masukkan nama pelanggan"
                   value={formData.customerName}
                   onChange={e => setFormData({...formData, customerName: e.target.value})}
+                  className="w-full h-11 px-3 rounded-lg bg-slate-50 border-slate-200 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all border"
+                />
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-bold text-slate-500" htmlFor="ownerName">Nama Pemilik Toko (Opsional)</label>
+                <input 
+                  id="ownerName"
+                  type="text" 
+                  placeholder="Masukkan nama pemilik"
+                  value={formData.ownerName}
+                  onChange={e => setFormData({...formData, ownerName: e.target.value})}
                   className="w-full h-11 px-3 rounded-lg bg-slate-50 border-slate-200 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all border"
                 />
               </div>

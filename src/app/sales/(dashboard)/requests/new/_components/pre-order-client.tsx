@@ -24,8 +24,9 @@ export function PreOrderClient({ stores }: PreOrderClientProps) {
   const [isStoreDropdownOpen, setIsStoreDropdownOpen] = useState(false);
   const [storeSearchQuery, setStoreSearchQuery] = useState('');
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<any>({
     customerName: '',
+    ownerName: '',
     customerPhone: '',
     shippingAddress: '',
     shippingCost: '',
@@ -38,7 +39,7 @@ export function PreOrderClient({ stores }: PreOrderClientProps) {
   const handleStoreChange = (storeId: string) => {
     setSelectedStoreId(storeId);
     if (storeId === 'NEW') {
-      setFormData(prev => ({
+      setFormData((prev: any) => ({
         ...prev,
         customerName: '',
         customerPhone: '',
@@ -47,7 +48,7 @@ export function PreOrderClient({ stores }: PreOrderClientProps) {
     } else {
       const store = stores.find(s => s.id === storeId);
       if (store) {
-        setFormData(prev => ({
+        setFormData((prev: any) => ({
           ...prev,
           customerName: store.name,
           customerPhone: store.phone || '',
@@ -93,7 +94,7 @@ export function PreOrderClient({ stores }: PreOrderClientProps) {
         loadedForm = JSON.parse(storedForm);
         // Only set if we actually have data, otherwise let the default take over
         if (loadedForm.customerName || loadedForm.customerPhone || loadedForm.notes) {
-          setFormData(prev => ({
+          setFormData((prev: any) => ({
             ...prev,
             ...loadedForm
           }));
@@ -107,7 +108,7 @@ export function PreOrderClient({ stores }: PreOrderClientProps) {
     if (!loadedForm || !loadedForm.dueDate) {
       const nextWeek = new Date();
       nextWeek.setDate(nextWeek.getDate() + 7);
-      setFormData(prev => ({
+      setFormData((prev: any) => ({
         ...prev,
         dueDate: prev.dueDate || nextWeek.toISOString().split('T')[0]
       }));
@@ -178,6 +179,7 @@ export function PreOrderClient({ stores }: PreOrderClientProps) {
     try {
       const result = await createPreOrder({
         customerName: formData.customerName,
+        ownerName: formData.ownerName,
         customerPhone: formData.customerPhone,
         shippingAddress: formData.shippingAddress,
         shippingCost: formData.shippingCost ? Number(formData.shippingCost.replace(/\D/g, '')) : undefined,
@@ -325,6 +327,12 @@ export function PreOrderClient({ stores }: PreOrderClientProps) {
                     <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Nama Toko / Pelanggan</span>
                     <span className="text-sm font-bold text-slate-900">{formData.customerName || '-'}</span>
                   </div>
+                  {formData.ownerName && (
+                    <div className="flex flex-col">
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Nama Pemilik</span>
+                      <span className="text-sm font-medium text-slate-700">{formData.ownerName}</span>
+                    </div>
+                  )}
                   {(formData.customerPhone) && (
                     <div className="flex flex-col">
                       <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Nomor Telepon</span>
