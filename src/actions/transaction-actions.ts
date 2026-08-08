@@ -120,7 +120,7 @@ export async function cancelTransaction(data: {
           }
         });
       }
-    });
+    }, { maxWait: 10000, timeout: 20000 });
 
     revalidatePath('/admin/transactions');
     revalidatePath('/super-admin/transactions');
