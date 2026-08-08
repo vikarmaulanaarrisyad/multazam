@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useMemo, useEffect } from 'react';
-import { Search, ChevronLeft, ChevronRight, CheckCircle, XCircle, Truck, Package, X, Plus, Printer, FileDown } from 'lucide-react';
+import { Search, ChevronLeft, ChevronRight, CheckCircle, XCircle, Truck, Package, X, Plus, Printer, FileDown, AlertCircle } from 'lucide-react';
 import { ColumnDef, flexRender, getCoreRowModel, useReactTable, getPaginationRowModel } from '@tanstack/react-table';
 import { updateTransactionStatus, cancelTransaction, addPayment } from '@/actions/transaction-actions';
 import { approvePriceRequest, rejectPriceRequest } from '@/actions/approval-actions';
@@ -465,6 +465,17 @@ export function TransactionsClient({ transactions }: { transactions: Transaction
                 </div>
               )}
 
+              {/* Cancel/Reject Alert */}
+              {(selectedTx.status === 'CANCELLED' || selectedTx.status === 'REJECTED') && selectedTx.adminNotes && (
+                <div className="mb-6 p-4 bg-red-50 text-red-800 rounded-xl border border-red-100 flex items-start gap-3">
+                  <AlertCircle className="w-5 h-5 shrink-0 mt-0.5 text-red-500" />
+                  <div>
+                    <h4 className="text-sm font-bold">{selectedTx.status === 'CANCELLED' ? 'Pesanan Dibatalkan' : 'Pengajuan Ditolak'}</h4>
+                    <p className="text-sm mt-1">{selectedTx.adminNotes}</p>
+                  </div>
+                </div>
+              )}
+
               {/* Info Section */}
               <div className="grid grid-cols-2 gap-4">
                 <div className="p-4 bg-slate-50 rounded-xl border border-slate-100 flex flex-col">
@@ -674,7 +685,7 @@ export function TransactionsClient({ transactions }: { transactions: Transaction
                   onChange={e => setAdminNotes(e.target.value)}
                   placeholder="Ketik catatan tambahan atau alasan penolakan/pembatalan..."
                   className="w-full px-3 py-2 rounded-lg bg-white border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all border"
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || selectedTx.status === 'CANCELLED' || selectedTx.status === 'REJECTED' || selectedTx.status === 'COMPLETED'}
                 />
               </div>
 
@@ -740,7 +751,7 @@ export function TransactionsClient({ transactions }: { transactions: Transaction
       )}
       {/* Print Options Modal */}
       {showPrintModalFor && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
           <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full overflow-hidden animate-in zoom-in-95 duration-200">
             <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
               <h3 className="font-bold text-slate-800">Opsi Cetak Surat Jalan</h3>
@@ -796,7 +807,7 @@ export function TransactionsClient({ transactions }: { transactions: Transaction
         <iframe
           key={activeIframe.key}
           src={`/print/delivery-order/${activeIframe.id}?action=${activeIframe.action}&iframe=true`}
-          className="fixed top-0 left-0 w-screen h-screen opacity-0 pointer-events-none z-[-50]"
+          className="fixed top-0 left-0 w-screen h-screen opacity-0 pointer-events-none -z-50"
           title="Print Engine"
         />
       )}

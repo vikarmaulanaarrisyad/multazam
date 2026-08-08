@@ -60,7 +60,7 @@ function SuratJalanCopy({ transaction, setting, isDivider = false }: any) {
   const totalKeseluruhan = totalItemAmount + shippingCost;
 
   return (
-    <div className={`w-full bg-white print:p-0 relative flex flex-col font-mono text-sm leading-tight text-black ${isDivider ? 'border-b-2 border-dashed border-slate-300 print:border-slate-400 pb-12 mb-12 print:pb-12 print:mb-12' : ''}`} style={{ width: '210mm' }}>
+    <div className={`w-full bg-white print:p-0 relative flex flex-col font-mono text-sm leading-tight text-black ${isDivider ? 'border-b-2 border-dashed border-slate-300 print:border-slate-400 pb-12 mb-12 print:pb-12 print:mb-12' : ''}`}>
       
       {/* HEADER SECTION */}
       <div className="flex justify-between w-full mb-4 uppercase">
@@ -98,13 +98,27 @@ function SuratJalanCopy({ transaction, setting, isDivider = false }: any) {
         <tbody className="border-b-2 border-black">
           {transaction.items.map((item: any, index: number) => {
             // Determine Unit string
-            let unitString = item.product.unit?.name || '';
+            let isEceran = false;
+            const kartonPrice = Number(item.originalPrice || item.product.price);
             const eceranPrice = getEceranPrice(item.product);
-            if (eceranPrice !== null && Number(item.price) === eceranPrice) {
+            
+            if (eceranPrice !== null) {
+               // Exact match or if the price is much closer to eceran than karton
+               if (Number(item.price) === eceranPrice) {
+                 isEceran = true;
+               } else if (Number(item.price) <= eceranPrice * 1.5) {
+                 isEceran = true;
+               }
+            }
+
+            let unitString = item.product.unit?.name || 'Dus';
+            if (isEceran && item.product.retailPriceNote) {
                // Extract string unit from retailPriceNote (e.g. "BTL 15000" -> "BTL")
                const match = item.product.retailPriceNote.match(/[a-zA-Z]+/);
                if (match) {
                  unitString = match[0].toUpperCase();
+               } else {
+                 unitString = 'PCS';
                }
             }
 
@@ -207,8 +221,8 @@ export default async function PrintDeliveryOrderPage({ params }: { params: Promi
   }
 
   return (
-    <div className="min-h-screen bg-white print:bg-white flex flex-col items-start p-8 print:p-0">
-      <div id="print-container" className="w-[210mm] shrink-0 bg-white relative print:w-[210mm]">
+    <div className="min-h-screen bg-white print:bg-white flex flex-col items-start p-8 print:p-0 w-full">
+      <div id="print-container" className="w-full max-w-[210mm] print:max-w-none shrink-0 bg-white relative print:w-full">
         {/* Floating Print Button (Hidden on Print) */}
         <Suspense fallback={<div />}>
           <PrintButton invoiceNumber={transaction.invoiceNumber} />
