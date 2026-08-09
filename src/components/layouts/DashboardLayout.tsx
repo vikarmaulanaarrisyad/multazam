@@ -1,6 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
-import { Home, Package, ShoppingCart, Users, LogOut, Menu } from 'lucide-react';
+import { Home, Package, ShoppingCart, Users, LogOut, Menu, MapPin } from 'lucide-react';
 import { auth, signOut } from '@/auth';
 
 interface DashboardLayoutProps {
@@ -15,6 +15,7 @@ export default async function DashboardLayout({ children, role }: DashboardLayou
     { name: 'Dashboard', href: `/${role.toLowerCase().replace('_', '-')}`, icon: Home },
     { name: 'Produk', href: `/${role.toLowerCase().replace('_', '-')}/products`, icon: Package },
     { name: 'Transaksi', href: `/${role.toLowerCase().replace('_', '-')}/transactions`, icon: ShoppingCart },
+    { name: 'Kunjungan', href: `/${role.toLowerCase().replace('_', '-')}/visits`, icon: MapPin },
   ];
 
   if (role === 'SUPER_ADMIN') {

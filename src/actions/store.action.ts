@@ -1,8 +1,8 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import prisma from '@/lib/prisma';
 import { auth } from '@/auth';
+import { StoreService } from '@/services/store.service';
 
 export interface StoreData {
   name: string;
@@ -18,16 +18,12 @@ export async function createStore(data: StoreData) {
       return { success: false, error: 'Unauthorized' };
     }
 
-    // Store is now a 1-to-Many relation, so we don't need to block creation
-
-    const store = await prisma.store.create({
-      data: {
-        userId: session.user.id,
-        name: data.name,
-        ownerName: data.ownerName,
-        address: data.address,
-        phone: data.phone || null,
-      }
+    const store = await StoreService.createStore({
+      name: data.name,
+      ownerName: data.ownerName,
+      address: data.address,
+      phone: data.phone || null,
+      userId: session.user.id,
     });
 
     revalidatePath('/sales/requests/new');

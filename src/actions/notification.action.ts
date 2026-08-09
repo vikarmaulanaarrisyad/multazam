@@ -1,13 +1,10 @@
 'use server';
 
-import prisma from '@/lib/prisma';
+import { NotificationService } from '@/services/notification.service';
 
 export async function markNotificationAsRead(id: string) {
   try {
-    await prisma.notification.update({
-      where: { id },
-      data: { status: 'READ' }
-    });
+    await NotificationService.markAsRead(id);
     return { success: true };
   } catch (error) {
     console.error("Failed to mark notification as read:", error);
@@ -17,10 +14,7 @@ export async function markNotificationAsRead(id: string) {
 
 export async function markAllNotificationsAsRead(role: string) {
   try {
-    await prisma.notification.updateMany({
-      where: { role, status: 'UNREAD' },
-      data: { status: 'READ' }
-    });
+    await NotificationService.markAllAsRead(role);
     return { success: true };
   } catch (error) {
     console.error("Failed to mark all as read:", error);
