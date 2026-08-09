@@ -76,13 +76,13 @@ export function StockMovementsClient({ initialData, metadata }: StockMovementsCl
       });
 
       // --- 1. TITLE SECTION ---
-      sheet.mergeCells('A1:J1');
+      sheet.mergeCells('A1:M1');
       const titleCell = sheet.getCell('A1');
       titleCell.value = 'LAPORAN RIWAYAT PERGERAKAN STOK';
       titleCell.font = { name: 'Arial', size: 16, bold: true, color: { argb: 'FF1E3A8A' } };
       titleCell.alignment = { vertical: 'middle', horizontal: 'center' };
 
-      sheet.mergeCells('A2:J2');
+      sheet.mergeCells('A2:M2');
       const subtitleCell = sheet.getCell('A2');
       subtitleCell.value = `Tanggal Cetak: ${new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}`;
       subtitleCell.font = { name: 'Arial', size: 11, italic: true, color: { argb: 'FF64748B' } };
@@ -93,7 +93,8 @@ export function StockMovementsClient({ initialData, metadata }: StockMovementsCl
       // --- 2. HEADERS ---
       const headers = [
         'No', 'Waktu', 'Kode Produk', 'Nama Produk', 'Tipe',
-        'Jml (Sistem)', 'Jml (Terkecil)', 'Sisa (Sistem)', 'Sisa (Terkecil)', 'Catatan/Keterangan'
+        'Jml (Sistem)', 'Jml (Terkecil)', 'Sisa (Sistem)', 'Sisa (Terkecil)',
+        'Nama Sales', 'Nama Toko', 'No. PO', 'Catatan/Keterangan'
       ];
       const headerRow = sheet.addRow(headers);
       
@@ -126,6 +127,18 @@ export function StockMovementsClient({ initialData, metadata }: StockMovementsCl
         const tipeStr = movement.type === 'IN' ? 'Masuk' : movement.type === 'OUT' ? 'Keluar' : 'Penyesuaian';
         const qtyPrefix = movement.type === 'IN' ? '+' : movement.type === 'OUT' ? '-' : '';
 
+        // Extract PO from notes if it exists
+        let rawNotes = movement.transaction?.notes || movement.notes || '';
+        let poNumber = '-';
+        const poMatch = rawNotes.match(/PO\s*[:\-]?\s*([A-Za-z0-9\-\/]+)/i);
+        if (poMatch) {
+          poNumber = poMatch[1];
+          rawNotes = rawNotes.replace(poMatch[0], '').trim();
+          // Remove any leading or trailing punctuation from leftover note
+          rawNotes = rawNotes.replace(/^[,.\-\s]+|[,.\-\s]+$/g, '');
+        }
+        const cleanNotes = [movement.reference, rawNotes].filter(Boolean).join(' - ');
+
         const row = sheet.addRow([
           index + 1,
           format(new Date(movement.createdAt), 'dd MMM yyyy, HH:mm', { locale: id }),
@@ -136,7 +149,10 @@ export function StockMovementsClient({ initialData, metadata }: StockMovementsCl
           `${qtyPrefix}${quantitySmallestUnit} ${smallestUnit}`,
           movement.balanceAfter,
           `${balanceAfterSmallestUnit} ${smallestUnit}`,
-          [movement.reference, movement.notes].filter(Boolean).join(' - ')
+          movement.transaction?.user?.name || '-',
+          movement.transaction?.customerName || '-',
+          poNumber,
+          cleanNotes || '-'
         ]);
 
         row.eachCell((cell, colNumber) => {
@@ -173,6 +189,9 @@ export function StockMovementsClient({ initialData, metadata }: StockMovementsCl
         { width: 20 }, // Jml Terkecil
         { width: 15 }, // Sisa Sistem
         { width: 20 }, // Sisa Terkecil
+        { width: 25 }, // Nama Sales
+        { width: 30 }, // Nama Toko
+        { width: 20 }, // No PO
         { width: 35 }, // Keterangan
       ];
 

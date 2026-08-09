@@ -15,6 +15,11 @@ export type StockMovementType = {
 
 export type StockMovementWithProduct = StockMovementType & {
   product: { id: string; name: string; code: string; contents: string | null; retailPriceNote: string | null; };
+  transaction?: {
+    user: { name: string } | null;
+    customerName: string | null;
+    notes: string | null;
+  } | null;
 };
 
 export const stockMovementRepository = {
@@ -74,7 +79,26 @@ export const stockMovementRepository = {
       orderBy: { createdAt: 'desc' },
     });
 
-    return data as StockMovementWithProduct[];
+    const references = data.map(d => d.reference).filter(Boolean) as string[];
+    const transactions = await prisma.transaction.findMany({
+      where: { invoiceNumber: { in: references } },
+      select: {
+        invoiceNumber: true,
+        customerName: true,
+        notes: true,
+        user: { select: { name: true } }
+      }
+    });
+
+    const txMap = new Map();
+    for (const tx of transactions) {
+      txMap.set(tx.invoiceNumber, tx);
+    }
+
+    return data.map(d => ({
+      ...d,
+      transaction: d.reference ? txMap.get(d.reference) || null : null
+    })) as StockMovementWithProduct[];
   },
 
   async create(data: {
