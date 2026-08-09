@@ -6,6 +6,7 @@ import { RefreshCw, X, ArrowUpCircle } from 'lucide-react';
 export function PwaUpdatePrompt() {
   const [needRefresh, setNeedRefresh] = useState(false);
   const [swRegistration, setSwRegistration] = useState<ServiceWorkerRegistration | null>(null);
+  const [isUpdating, setIsUpdating] = useState(false);
 
   useEffect(() => {
     if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
@@ -36,14 +37,18 @@ export function PwaUpdatePrompt() {
 
   const updateServiceWorker = () => {
     if (swRegistration && swRegistration.waiting) {
-      // Mengirimkan pesan untuk memaksa SW baru mengambil alih
-      swRegistration.waiting.postMessage({ type: 'SKIP_WAITING' });
-      setNeedRefresh(false);
+      setIsUpdating(true); // Memulai animasi loading
       
-      // Memberi sedikit waktu agar SW baru aktif sebelum reload
+      // Berikan jeda sedikit agar user bisa melihat animasi "Sedang Memperbarui..."
       setTimeout(() => {
-          window.location.reload();
-      }, 300);
+        // Mengirimkan pesan untuk memaksa SW baru mengambil alih
+        swRegistration.waiting?.postMessage({ type: 'SKIP_WAITING' });
+        
+        // Memberi sedikit waktu agar SW baru aktif sebelum reload
+        setTimeout(() => {
+            window.location.reload();
+        }, 500);
+      }, 800); // 800ms animasi buatan
     }
   };
 
@@ -82,10 +87,11 @@ export function PwaUpdatePrompt() {
         <div className="mt-4 flex gap-2 pl-2">
           <button 
             onClick={updateServiceWorker}
-            className="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-bold py-2.5 rounded-xl transition-colors active:scale-95 shadow-sm flex items-center justify-center gap-2"
+            disabled={isUpdating}
+            className="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-bold py-2.5 rounded-xl transition-colors active:scale-95 shadow-sm flex items-center justify-center gap-2 disabled:opacity-80 disabled:cursor-wait"
           >
-            <RefreshCw className="w-4 h-4" />
-            <span>Update & Muat Ulang</span>
+            <RefreshCw className={`w-4 h-4 ${isUpdating ? 'animate-spin' : ''}`} />
+            <span>{isUpdating ? 'Sedang Memperbarui...' : 'Update & Muat Ulang'}</span>
           </button>
         </div>
       </div>

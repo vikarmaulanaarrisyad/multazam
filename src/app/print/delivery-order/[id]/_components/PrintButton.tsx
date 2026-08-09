@@ -37,19 +37,32 @@ export function PrintButton({ invoiceNumber }: { invoiceNumber?: string }) {
       });
       
       if (buttons) buttons.style.display = 'flex';
-
       const orientation = searchParams.get('orientation') === 'landscape' ? 'landscape' : 'portrait';
-      const pdf = new jsPDF({
-        orientation: orientation,
-        unit: 'mm',
-        format: orientation === 'landscape' ? [330, 210] : [210, 330]
-      });
       
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const imgProps = pdf.getImageProperties(dataUrl);
-      const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+      const dummyPdf = new jsPDF({ unit: 'mm' });
+      const imgProps = dummyPdf.getImageProperties(dataUrl);
       
-      pdf.addImage(dataUrl, 'PNG', 0, 0, pdfWidth, pdfHeight);
+      let pdf;
+      let printWidth;
+      let printHeight;
+      
+      if (orientation === 'portrait') {
+        // Mode Portrait: Kertas A4 standar (tegak)
+        pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+        printWidth = 210; // Lebar A4
+        printHeight = (imgProps.height * printWidth) / imgProps.width;
+      } else {
+        // Mode Landscape: Dipotong presisi sesuai ukuran faktur
+        printWidth = 215; // 21.5cm
+        printHeight = (imgProps.height * printWidth) / imgProps.width;
+        pdf = new jsPDF({
+          orientation: printWidth > printHeight ? 'landscape' : 'portrait',
+          unit: 'mm',
+          format: [printWidth, printHeight]
+        });
+      }
+      
+      pdf.addImage(dataUrl, 'PNG', 0, 0, printWidth, printHeight);
       pdf.save(`Surat_Jalan_${invoiceNumber || 'Document'}.pdf`);
       
       // Navigate back after download if it was auto-triggered

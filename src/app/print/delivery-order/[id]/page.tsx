@@ -60,9 +60,9 @@ function SuratJalanCopy({ transaction, setting, isDivider = false }: any) {
   const totalKeseluruhan = totalItemAmount + shippingCost;
 
   return (
-    <div style={{ fontFamily: 'Calibri, sans-serif' }} className={`w-full h-[14cm] print:h-[14cm] bg-white p-4 print:px-[1.5cm] print:pt-[0.7cm] print:pb-[1cm] relative flex flex-col justify-between text-xs leading-tight text-slate-900 ${isDivider ? 'border-b-2 border-dashed border-slate-300 print:border-slate-400 pb-12 mb-12 print:pb-12 print:mb-12' : ''}`}>
+    <div style={{ fontFamily: 'Calibri, sans-serif' }} className={`w-full min-h-[14cm] print:min-h-0 bg-white p-4 print:px-[1.5cm] print:pt-[0.7cm] print:pb-[1cm] relative flex flex-col text-xs leading-tight text-slate-900 ${isDivider ? 'border-b-2 border-dashed border-slate-300 print:border-slate-400 pb-12 mb-12 print:pb-12 print:mb-12' : ''}`}>
       
-      <div className="grow">
+      <div className="w-full">
         {/* HEADER SECTION */}
       <div className="flex justify-between w-full mb-2 uppercase font-semibold">
         {/* Kiri */}
@@ -169,8 +169,8 @@ function SuratJalanCopy({ transaction, setting, isDivider = false }: any) {
         </tbody>
       </table>
       </div>
-
-      <div className="mt-auto">
+      
+      <div className="mt-8">
       {/* FOOTER */}
       <div className="flex justify-between items-center py-1 uppercase text-xs font-semibold border-b-4 border-double border-slate-900 text-slate-900">
         <div className="flex flex-1 pl-12">
