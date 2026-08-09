@@ -2,11 +2,35 @@
 
 import React, { useState, useEffect } from 'react';
 import { RefreshCw, X, ArrowUpCircle } from 'lucide-react';
+import Swal from 'sweetalert2';
+import withReactContent from 'sweetalert2-react-content';
+
+const MySwal = withReactContent(Swal);
 
 export function PwaUpdatePrompt() {
   const [needRefresh, setNeedRefresh] = useState(false);
   const [swRegistration, setSwRegistration] = useState<ServiceWorkerRegistration | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
+
+  // Cek apakah baru saja berhasil update setelah reload
+  useEffect(() => {
+    const isUpdated = localStorage.getItem('pwa_update_success');
+    if (isUpdated) {
+      localStorage.removeItem('pwa_update_success');
+      
+      MySwal.fire({
+        title: <span className="text-xl font-extrabold text-slate-800">Berhasil Diperbarui!</span>,
+        html: <p className="text-sm text-slate-500 font-medium mt-1">Aplikasi Anda sekarang menggunakan versi terbaru.</p>,
+        icon: 'success',
+        confirmButtonText: 'Lanjutkan',
+        confirmButtonColor: '#10b981', // emerald-500
+        customClass: {
+          popup: 'rounded-3xl shadow-2xl pb-6',
+          confirmButton: 'rounded-xl font-bold px-8 py-3 shadow-md'
+        }
+      });
+    }
+  }, []);
 
   useEffect(() => {
     if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
@@ -38,6 +62,9 @@ export function PwaUpdatePrompt() {
   const updateServiceWorker = () => {
     if (swRegistration && swRegistration.waiting) {
       setIsUpdating(true); // Memulai animasi loading
+      
+      // Set penanda di local storage agar muncul popup swal setelah reload
+      localStorage.setItem('pwa_update_success', 'true');
       
       // Berikan jeda sedikit agar user bisa melihat animasi "Sedang Memperbarui..."
       setTimeout(() => {
