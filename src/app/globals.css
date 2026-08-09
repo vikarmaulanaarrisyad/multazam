@@ -153,13 +153,15 @@
 
 /* Leaflet Polyline Flow Animation */
 .animated-route-completed {
-  stroke-dasharray: 8, 12;
-  animation: route-flow 2s linear infinite;
+  stroke-dasharray: 4, 16;
+  animation: route-flow 1.5s linear infinite;
+  filter: drop-shadow(0 0 4px #16a34a);
 }
 
 .animated-route-scheduled {
-  stroke-dasharray: 8, 12;
-  animation: route-flow 3s linear infinite;
+  stroke-dasharray: 4, 16;
+  animation: route-flow 2.5s linear infinite;
+  filter: drop-shadow(0 0 4px #3b82f6);
 }
 
 @keyframes route-flow {
