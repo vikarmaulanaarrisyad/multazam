@@ -60,7 +60,7 @@ function SuratJalanCopy({ transaction, setting, isDivider = false }: any) {
   const totalKeseluruhan = totalItemAmount + shippingCost;
 
   return (
-    <div className={`w-full min-h-[14cm] print:min-h-screen bg-white print:p-0 relative flex flex-col justify-between font-mono text-xs leading-tight text-slate-900 ${isDivider ? 'border-b-2 border-dashed border-slate-300 print:border-slate-400 pb-12 mb-12 print:pb-12 print:mb-12' : ''}`}>
+    <div className={`w-full min-h-[14cm] print:min-h-screen bg-white p-4 print:px-[1.5cm] print:py-[1cm] relative flex flex-col justify-between font-mono text-xs leading-tight text-slate-900 ${isDivider ? 'border-b-2 border-dashed border-slate-300 print:border-slate-400 pb-12 mb-12 print:pb-12 print:mb-12' : ''}`}>
       
       <div className="grow">
         {/* HEADER SECTION */}

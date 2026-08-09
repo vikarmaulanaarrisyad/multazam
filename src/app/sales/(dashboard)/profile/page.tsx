@@ -22,7 +22,7 @@ export default async function SalesProfilePage() {
   return (
     <div className="flex flex-col w-full pb-20 font-sans">
       <div className="relative w-full pb-8 bg-blue-50/50">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent"></div>
+        <div className="absolute inset-0 bg-linear-to-br from-primary/10 to-transparent"></div>
         <div className="relative flex flex-col items-center pt-8 px-4">
           <div className="w-24 h-24 rounded-full shadow-md overflow-hidden mb-4 ring-4 ring-white bg-white flex items-center justify-center text-primary">
             <span className="text-4xl font-bold">{user.name?.charAt(0).toUpperCase() || 'U'}</span>
