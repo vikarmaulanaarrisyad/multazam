@@ -22,7 +22,11 @@ export default async function VisitsPage() {
       status: true,
       notes: true,
       store: {
-        select: { name: true }
+        select: { 
+          name: true,
+          latitude: true,
+          longitude: true
+        }
       }
     },
     orderBy: { scheduledAt: 'desc' },
@@ -32,6 +36,8 @@ export default async function VisitsPage() {
   const serializedVisits = visits.map(v => ({
     id: v.id,
     storeName: v.store.name,
+    latitude: v.store.latitude,
+    longitude: v.store.longitude,
     scheduledAt: v.scheduledAt.toISOString(),
     address: v.address,
     status: v.status as 'SCHEDULED' | 'COMPLETED' | 'CANCELLED',

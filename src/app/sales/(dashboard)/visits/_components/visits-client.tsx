@@ -9,10 +9,27 @@ import { cn } from '@/lib/utils';
 interface VisitItem {
   id: string;
   storeName: string;
+  latitude: number | null;
+  longitude: number | null;
   scheduledAt: string; // ISO string
   address: string;
   status: 'SCHEDULED' | 'COMPLETED' | 'CANCELLED';
   notes?: string | null;
+}
+
+// Haversine formula to calculate distance in meters
+function getDistanceInMeters(lat1: number, lon1: number, lat2: number, lon2: number) {
+  const R = 6371e3; // Earth radius in meters
+  const p1 = lat1 * Math.PI / 180;
+  const p2 = lat2 * Math.PI / 180;
+  const dp = (lat2 - lat1) * Math.PI / 180;
+  const dl = (lon2 - lon1) * Math.PI / 180;
+
+  const a = Math.sin(dp / 2) * Math.sin(dp / 2) +
+            Math.cos(p1) * Math.cos(p2) *
+            Math.sin(dl / 2) * Math.sin(dl / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c; 
 }
 
 export default function VisitsClient({ visits }: { visits: VisitItem[] }) {
@@ -51,17 +68,55 @@ export default function VisitsClient({ visits }: { visits: VisitItem[] }) {
     });
   }, [visits, searchTerm, filterStatus, selectedDate]);
 
-  const handleMarkCompleted = async (visitId: string) => {
+  const handleMarkCompleted = async (visit: VisitItem) => {
+    if (!visit.latitude || !visit.longitude) {
+      toast.error('Lokasi toko belum diatur di sistem.');
+      return;
+    }
+
+    if (!navigator.geolocation) {
+      toast.error('Browser perangkat Anda tidak mendukung GPS / Geolokasi.');
+      return;
+    }
+
     setIsSubmitting(true);
+    
+    // Create a promise wrapper for geolocation
+    const getCurrentPosition = () => new Promise<GeolocationPosition>((resolve, reject) => {
+      navigator.geolocation.getCurrentPosition(resolve, reject, {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0
+      });
+    });
+
     try {
-      const response = await markVisitCompleted(visitId);
+      toast.info('Memeriksa lokasi Anda saat ini...');
+      const position = await getCurrentPosition();
+      const currentLat = position.coords.latitude;
+      const currentLng = position.coords.longitude;
+
+      const distance = getDistanceInMeters(currentLat, currentLng, visit.latitude, visit.longitude);
+      const MAX_RADIUS = 100; // meters
+
+      if (distance > MAX_RADIUS) {
+        toast.error(`Anda terlalu jauh dari lokasi toko. Jarak Anda: ${Math.round(distance)}m (Maks: ${MAX_RADIUS}m). Harap check-in di dekat toko.`);
+        return;
+      }
+
+      toast.info('Lokasi sesuai! Sedang memproses Check-in...');
+      
+      const response = await markVisitCompleted(visit.id, currentLat, currentLng);
       if (response.success) {
         toast.success('Kunjungan ditandai selesai');
       } else {
         toast.error(response.error || 'Gagal menandai kunjungan');
       }
-    } catch (error) {
-      toast.error('Gagal menghubungi server');
+    } catch (error: any) {
+      if (error?.code === 1) toast.error('Akses lokasi ditolak. Tolong izinkan GPS.');
+      else if (error?.code === 2) toast.error('Posisi lokasi tidak tersedia. Coba aktifkan GPS.');
+      else if (error?.code === 3) toast.error('Waktu pencarian lokasi habis.');
+      else toast.error('Gagal menghubungi server');
     } finally {
       setIsSubmitting(false);
     }
@@ -200,7 +255,7 @@ export default function VisitsClient({ visits }: { visits: VisitItem[] }) {
                     </button>
                     {v.status === 'SCHEDULED' ? (
                       <button
-                        onClick={() => handleMarkCompleted(v.id)}
+                        onClick={() => handleMarkCompleted(v)}
                         disabled={isSubmitting}
                         className="flex-[1.5] h-9 flex items-center justify-center gap-2 bg-blue-600 text-white font-medium text-sm rounded-full shadow-sm hover:bg-blue-700 active:scale-95 transition-all disabled:opacity-50"
                       >

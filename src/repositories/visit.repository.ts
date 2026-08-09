@@ -13,10 +13,17 @@ export class VisitRepository {
     });
   }
 
-  static async updateStatus(id: string, status: 'COMPLETED' | 'CANCELLED' | 'SCHEDULED') {
+  static async updateStatus(id: string, status: 'COMPLETED' | 'CANCELLED' | 'SCHEDULED', actualLat?: number, actualLng?: number) {
     return prisma.visit.update({
       where: { id },
-      data: { status }
+      data: { 
+        status,
+        ...(status === 'COMPLETED' && actualLat !== undefined && actualLng !== undefined ? {
+          actualLat,
+          actualLng,
+          checkInTime: new Date()
+        } : {})
+      }
     });
   }
 

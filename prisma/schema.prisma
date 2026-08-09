@@ -267,6 +267,12 @@ model Visit {
   address     String      @db.Text
   status      VisitStatus @default(SCHEDULED)
   notes       String?     @db.Text
+  
+  // Geofencing data
+  actualLat   Float?
+  actualLng   Float?
+  checkInTime DateTime?
+
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
 }

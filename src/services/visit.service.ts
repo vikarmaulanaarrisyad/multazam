@@ -2,7 +2,7 @@ import { VisitRepository } from '../repositories/visit.repository';
 import { StoreRepository } from '../repositories/store.repository';
 
 export class VisitService {
-  static async markCompleted(visitId: string, userId: string) {
+  static async markCompleted(visitId: string, userId: string, lat?: number, lng?: number) {
     const visit = await VisitRepository.findById(visitId);
     if (!visit) {
       throw new Error('Visit not found');
@@ -10,7 +10,7 @@ export class VisitService {
     if (visit.store.userId !== userId) {
       throw new Error('FORBIDDEN');
     }
-    return VisitRepository.updateStatus(visitId, 'COMPLETED');
+    return VisitRepository.updateStatus(visitId, 'COMPLETED', lat, lng);
   }
 
   static async assignVisit(data: { storeId: string; scheduledAt: string; notes?: string | null }) {

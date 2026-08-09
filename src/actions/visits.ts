@@ -5,14 +5,14 @@ import { auth } from '@/auth';
 import { ApiResponse } from '../types/api-response';
 import { VisitService } from '@/services/visit.service';
 
-export async function markVisitCompleted(visitId: string): Promise<ApiResponse<void>> {
+export async function markVisitCompleted(visitId: string, lat?: number, lng?: number): Promise<ApiResponse<void>> {
   try {
     const session = await auth();
     if (!session?.user?.id) {
       return { success: false, error: 'UNAUTHORIZED' };
     }
 
-    await VisitService.markCompleted(visitId, session.user.id);
+    await VisitService.markCompleted(visitId, session.user.id, lat, lng);
 
     revalidatePath('/sales/visits');
     
