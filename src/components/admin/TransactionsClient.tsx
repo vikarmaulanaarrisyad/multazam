@@ -60,6 +60,8 @@ export function TransactionsClient({ transactions }: { transactions: Transaction
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [adminNotes, setAdminNotes] = useState('');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
 
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
@@ -254,9 +256,26 @@ export function TransactionsClient({ transactions }: { transactions: Transaction
       const activeTabObj = tabs.find(t => t.id === activeTab);
       const matchTab = activeTabObj ? activeTabObj.statuses.includes(tx.status) : false;
       
-      return matchSearch && matchTab;
+      let matchDate = true;
+      if (startDate || endDate) {
+        const txDate = new Date(tx.createdAt);
+        txDate.setHours(0, 0, 0, 0);
+        
+        if (startDate) {
+          const start = new Date(startDate);
+          start.setHours(0, 0, 0, 0);
+          if (txDate < start) matchDate = false;
+        }
+        if (endDate) {
+          const end = new Date(endDate);
+          end.setHours(23, 59, 59, 999);
+          if (txDate > end) matchDate = false;
+        }
+      }
+
+      return matchSearch && matchTab && matchDate;
     });
-  }, [transactions, searchTerm, activeTab, tabs]);
+  }, [transactions, searchTerm, activeTab, tabs, startDate, endDate]);
 
   const handleExportExcel = async () => {
     if (filteredTransactions.length === 0) {
@@ -274,13 +293,13 @@ export function TransactionsClient({ transactions }: { transactions: Transaction
       });
 
       // --- 1. TITLE SECTION ---
-      sheet.mergeCells('A1:J1');
+      sheet.mergeCells('A1:L1');
       const titleCell = sheet.getCell('A1');
       titleCell.value = 'LAPORAN TRANSAKSI PESANAN';
       titleCell.font = { name: 'Arial', size: 16, bold: true, color: { argb: 'FF1E3A8A' } };
       titleCell.alignment = { vertical: 'middle', horizontal: 'center' };
 
-      sheet.mergeCells('A2:J2');
+      sheet.mergeCells('A2:L2');
       const subtitleCell = sheet.getCell('A2');
       subtitleCell.value = `Tanggal Cetak: ${new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}`;
       subtitleCell.font = { name: 'Arial', size: 11, italic: true, color: { argb: 'FF64748B' } };
@@ -290,7 +309,7 @@ export function TransactionsClient({ transactions }: { transactions: Transaction
 
       // --- 2. HEADERS ---
       const headers = [
-        'No. Invoice', 'Tanggal', 'Pelanggan', 'Sales', 'Status', 
+        'No. Invoice', 'Tanggal', 'Nama Toko', 'Nama Sales', 'No. PO', 'Catatan', 'Status', 
         'Produk', 'Jml (Karton/Asal)', 'Total Satuan Terkecil', 'Harga Satuan', 'Subtotal'
       ];
       const headerRow = sheet.addRow(headers);
@@ -338,11 +357,26 @@ export function TransactionsClient({ transactions }: { transactions: Transaction
             totalAmountAll += Number(tx.totalAmount);
           }
 
+          let poNumber = '';
+          let catatan = tx.notes || '';
+          if (catatan) {
+            const poMatch = catatan.match(/PO\s*[:\-]?\s*([A-Za-z0-9\-\/]+)/i);
+            if (poMatch) {
+              poNumber = poMatch[1];
+              catatan = catatan.replace(poMatch[0], '').trim();
+              if (catatan.startsWith('-') || catatan.startsWith(':')) {
+                 catatan = catatan.substring(1).trim();
+              }
+            }
+          }
+
           const row = sheet.addRow([
             isFirstRowForTx ? tx.invoiceNumber : '',
             isFirstRowForTx ? new Date(tx.createdAt).toLocaleDateString('id-ID') : '',
             isFirstRowForTx ? (tx.customerName || 'Anonim') : '',
             isFirstRowForTx ? (tx.user.name || '-') : '',
+            isFirstRowForTx ? poNumber : '',
+            isFirstRowForTx ? catatan : '',
             isFirstRowForTx ? tx.status : '',
             item.productName,
             `${item.quantity}`,
@@ -353,7 +387,10 @@ export function TransactionsClient({ transactions }: { transactions: Transaction
 
           row.eachCell((cell, colNumber) => {
             cell.font = { name: 'Arial', size: 10, color: { argb: 'FF334155' } };
-            cell.alignment = { vertical: 'top', horizontal: [1, 2, 5, 7, 8].includes(colNumber) ? 'center' : 'left' };
+            // Update col number alignments since we added 2 columns
+            // Old: [1, 2, 5, 7, 8] => No. Inv(1), Tanggal(2), Status(5), Jml(7), Total Satuan(8)
+            // New Headers: 'No. Invoice'(1), 'Tanggal'(2), 'Nama Toko'(3), 'Nama Sales'(4), 'No. PO'(5), 'Catatan'(6), 'Status'(7), 'Produk'(8), 'Jml (Karton/Asal)'(9), 'Total Satuan Terkecil'(10), 'Harga Satuan'(11), 'Subtotal'(12)
+            cell.alignment = { vertical: 'top', horizontal: [1, 2, 5, 7, 9, 10].includes(colNumber) ? 'center' : 'left' };
             cell.border = {
               top: { style: 'thin', color: { argb: 'FFCBD5E1' } },
               left: { style: 'thin', color: { argb: 'FFCBD5E1' } },
@@ -380,7 +417,7 @@ export function TransactionsClient({ transactions }: { transactions: Transaction
         // If there's shipping cost, add a row for it
         if (tx.shippingCost) {
           const shipRow = sheet.addRow([
-            '', '', '', '', '', 'Ongkos Kirim', '', '', '', Number(tx.shippingCost)
+            '', '', '', '', '', '', '', 'Ongkos Kirim', '', '', '', Number(tx.shippingCost)
           ]);
           shipRow.eachCell((cell, colNumber) => {
             cell.font = { name: 'Arial', size: 10, italic: true, color: { argb: 'FF64748B' } };
@@ -388,7 +425,7 @@ export function TransactionsClient({ transactions }: { transactions: Transaction
               top: { style: 'thin', color: { argb: 'FFCBD5E1' } }, left: { style: 'thin', color: { argb: 'FFCBD5E1' } },
               bottom: { style: 'thin', color: { argb: 'FFCBD5E1' } }, right: { style: 'thin', color: { argb: 'FFCBD5E1' } }
             };
-            if (colNumber === 10) {
+            if (colNumber === 12) {
               cell.numFmt = 'Rp #,##0';
               cell.alignment = { horizontal: 'right' };
             }
@@ -399,9 +436,9 @@ export function TransactionsClient({ transactions }: { transactions: Transaction
 
       // --- 4. FOOTER SUMMARY ---
       const totalRow = sheet.addRow([
-        'TOTAL KESELURUHAN PENDAPATAN', '', '', '', '', '', '', '', '', totalAmountAll
+        'TOTAL KESELURUHAN PENDAPATAN', '', '', '', '', '', '', '', '', '', '', totalAmountAll
       ]);
-      sheet.mergeCells(`A${currentRowIdx}:I${currentRowIdx}`);
+      sheet.mergeCells(`A${currentRowIdx}:K${currentRowIdx}`);
       
       totalRow.eachCell((cell, colNumber) => {
         cell.fill = {
@@ -417,7 +454,7 @@ export function TransactionsClient({ transactions }: { transactions: Transaction
           right: { style: 'thin', color: { argb: 'FFCBD5E1' } }
         };
         if (colNumber === 1) cell.alignment = { horizontal: 'right' };
-        if (colNumber === 10) {
+        if (colNumber === 12) {
           cell.numFmt = 'Rp #,##0';
           cell.font = { name: 'Arial', size: 12, bold: true, color: { argb: 'FF15803D' } }; // Green-700
           cell.alignment = { horizontal: 'right' };
@@ -428,8 +465,10 @@ export function TransactionsClient({ transactions }: { transactions: Transaction
       sheet.columns = [
         { width: 22 }, // Invoice
         { width: 15 }, // Tanggal
-        { width: 25 }, // Pelanggan
-        { width: 20 }, // Sales
+        { width: 25 }, // Nama Toko
+        { width: 20 }, // Nama Sales
+        { width: 15 }, // No PO
+        { width: 25 }, // Catatan
         { width: 18 }, // Status
         { width: 35 }, // Produk
         { width: 18 }, // Jml Karton
@@ -522,7 +561,7 @@ export function TransactionsClient({ transactions }: { transactions: Transaction
   return (
     <div className="space-y-4">
       <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex flex-col gap-4">
-        <div className="flex gap-4">
+        <div className="flex flex-col md:flex-row gap-4">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
             <input 
@@ -533,9 +572,26 @@ export function TransactionsClient({ transactions }: { transactions: Transaction
               className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
             />
           </div>
+          <div className="flex items-center gap-2">
+            <input 
+              type="date"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+              className="px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              title="Dari Tanggal"
+            />
+            <span className="text-slate-400">-</span>
+            <input 
+              type="date"
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+              className="px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              title="Sampai Tanggal"
+            />
+          </div>
           <button 
             onClick={handleExportExcel} 
-            className="flex items-center gap-2 px-4 py-2.5 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 rounded-xl text-sm font-bold transition-all border border-emerald-200 whitespace-nowrap"
+            className="flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 rounded-xl text-sm font-bold transition-all border border-emerald-200 whitespace-nowrap"
           >
             <FileDown className="w-5 h-5" /> Export Excel
           </button>

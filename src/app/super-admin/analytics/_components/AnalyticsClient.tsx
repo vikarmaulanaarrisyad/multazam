@@ -38,7 +38,7 @@ export default function AnalyticsClient({ initialData }: { initialData: Analytic
     <div className="space-y-8">
       {/* 1. KPIs */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
+        <Card className="bg-linear-to-br from-blue-50 to-blue-100 border-blue-200">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-blue-800">Total Penjualan (Bulan Ini)</CardTitle>
             <TrendingUp className="h-4 w-4 text-blue-600" />
@@ -49,7 +49,7 @@ export default function AnalyticsClient({ initialData }: { initialData: Analytic
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-red-50 to-red-100 border-red-200">
+        <Card className="bg-linear-to-br from-red-50 to-red-100 border-red-200">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-red-800">Total HPP / Modal</CardTitle>
             <Package className="h-4 w-4 text-red-600" />
@@ -60,7 +60,7 @@ export default function AnalyticsClient({ initialData }: { initialData: Analytic
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200">
+        <Card className="bg-linear-to-br from-green-50 to-green-100 border-green-200">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-green-800">Laba Kotor (Gross Profit)</CardTitle>
             <DollarSign className="h-4 w-4 text-green-600" />
@@ -78,7 +78,7 @@ export default function AnalyticsClient({ initialData }: { initialData: Analytic
           <CardTitle>Tren Penjualan & Laba (6 Bulan Terakhir)</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="h-[400px] w-full">
+          <div className="h-100 w-full">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={data.trendData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} />
@@ -109,7 +109,7 @@ export default function AnalyticsClient({ initialData }: { initialData: Analytic
           <CardContent>
             <div className="space-y-4">
               {data.topProducts.map((p, idx) => (
-                <div key={idx} className="flex items-center justify-between border-b pb-2 last:border-0 last:pb-0">
+                <div key={idx} className="flex items-center justify-between border-b pb-2 last:border-0">
                   <div className="flex items-center gap-3">
                     <div className="h-8 w-8 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold text-sm">
                       {idx + 1}
@@ -137,7 +137,7 @@ export default function AnalyticsClient({ initialData }: { initialData: Analytic
           <CardContent>
             <div className="space-y-4">
               {data.topCustomers.map((c, idx) => (
-                <div key={idx} className="flex items-center justify-between border-b pb-2 last:border-0 last:pb-0">
+                <div key={idx} className="flex items-center justify-between border-b pb-2 last:border-0">
                   <div className="flex items-center gap-3">
                     <div className="h-8 w-8 rounded-full bg-teal-100 text-teal-700 flex items-center justify-center font-bold text-sm">
                       {idx + 1}

@@ -9,10 +9,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Trash2, Plus, Loader2 } from 'lucide-react';
-import { ReturnType, ReturnCondition } from '@/generated/prisma/client';
+
+type ReturnType = 'EXCHANGE' | 'REFUND';
+type ReturnCondition = 'GOOD' | 'BAD';
 
 export default function NewReturnClient({ products }: { products: any[] }) {
   const router = useRouter();
@@ -90,15 +91,14 @@ export default function NewReturnClient({ products }: { products: any[] }) {
             </div>
             <div className="space-y-2">
               <Label>Tipe Pengembalian</Label>
-              <Select value={type} onValueChange={(val: any) => setType(val)}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="EXCHANGE">Tukar Guling (Barang diganti baru)</SelectItem>
-                  <SelectItem value="REFUND">Refund (Kembali Uang/Potong Tagihan)</SelectItem>
-                </SelectContent>
-              </Select>
+              <select 
+                value={type} 
+                onChange={e => setType(e.target.value as ReturnType)}
+                className="w-full flex h-10 items-center justify-between rounded-md border border-slate-200 bg-white px-3 py-2 text-sm ring-offset-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-950 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <option value="EXCHANGE">Tukar Guling (Ganti Barang)</option>
+                <option value="REFUND">Refund / Potong Tagihan</option>
+              </select>
             </div>
           </div>
           <div className="space-y-2">
@@ -127,16 +127,16 @@ export default function NewReturnClient({ products }: { products: any[] }) {
               <div key={index} className="flex flex-col sm:flex-row gap-4 items-end bg-slate-50 p-4 rounded-lg">
                 <div className="flex-1 space-y-2 w-full">
                   <Label>Produk</Label>
-                  <Select value={item.productId} onValueChange={v => updateItem(index, 'productId', v)}>
-                    <SelectTrigger className="bg-white">
-                      <SelectValue placeholder="Pilih Produk" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {products.map(p => (
-                        <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <select 
+                    value={item.productId} 
+                    onChange={e => updateItem(index, 'productId', e.target.value)}
+                    className="w-full flex h-10 items-center justify-between rounded-md border border-slate-200 bg-white px-3 py-2 text-sm ring-offset-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-950 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    <option value="" disabled>Pilih Produk</option>
+                    {products.map(p => (
+                      <option key={p.id} value={p.id}>{p.name}</option>
+                    ))}
+                  </select>
                 </div>
                 
                 <div className="w-full sm:w-24 space-y-2">
@@ -152,22 +152,21 @@ export default function NewReturnClient({ products }: { products: any[] }) {
 
                 <div className="w-full sm:w-40 space-y-2">
                   <Label>Kondisi</Label>
-                  <Select value={item.condition} onValueChange={v => updateItem(index, 'condition', v)}>
-                    <SelectTrigger className="bg-white">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="BAD">Rusak / Basi</SelectItem>
-                      <SelectItem value="GOOD">Bagus / Utuh</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <select 
+                    value={item.condition} 
+                    onChange={e => updateItem(index, 'condition', e.target.value)}
+                    className="w-full flex h-10 items-center justify-between rounded-md border border-slate-200 bg-white px-3 py-2 text-sm ring-offset-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-950 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    <option value="BAD">Rusak / Basi</option>
+                    <option value="GOOD">Bagus / Utuh</option>
+                  </select>
                 </div>
 
                 <Button 
                   type="button" 
                   variant="destructive" 
                   size="icon" 
-                  className="mb-[2px] shrink-0"
+                  className="mb-0.5 shrink-0"
                   onClick={() => removeItem(index)}
                   disabled={items.length === 1}
                 >
