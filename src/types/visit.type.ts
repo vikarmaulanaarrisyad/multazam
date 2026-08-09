@@ -4,6 +4,7 @@ export type Visit = PrismaVisit;
 
 export interface CreateVisitDTO {
   storeId: string;
+  userId: string;
   scheduledAt: Date;
   notes?: string | null;
   address: string;

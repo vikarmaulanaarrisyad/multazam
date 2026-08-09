@@ -43,6 +43,7 @@ model User {
   stockMovements StockMovement[]
   paymentHistories PaymentHistory[]
   stores        Store[]
+  visits        Visit[]
 }
 
 model Account {
@@ -265,6 +266,8 @@ model Visit {
   id          String      @id @default(cuid())
   storeId     String
   store       Store       @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  userId      String?
+  user        User?       @relation(fields: [userId], references: [id])
   scheduledAt DateTime
   address     String      @db.Text
   status      VisitStatus @default(SCHEDULED)

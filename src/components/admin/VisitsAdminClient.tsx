@@ -8,6 +8,7 @@ import dynamic from 'next/dynamic';
 import { DataTable } from '@/components/datatable/DataTable';
 import { ColumnDef } from '@tanstack/react-table';
 import { cn } from '@/lib/utils';
+import Select from 'react-select';
 
 // Dynamically import StoreMap to avoid SSR issues with Leaflet
 const StoreMap = dynamic(() => import('./StoreMap'), { 
@@ -219,31 +220,42 @@ export function VisitsAdminClient({ salesUsers, allVisits, mapLocations, initial
                   
                   {!isNewStore ? (
                     <div className="relative">
-                      <Store className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
-                      <select 
-                        name="storeId" 
-                        required={!isNewStore} 
-                        className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm"
-                      >
-                        <option value="">-- Pilih Toko --</option>
-                        {initialStoresBySales[selectedSalesId] && initialStoresBySales[selectedSalesId].length > 0 && (
-                          <optgroup label="Toko Milik Sales Ini">
-                            {initialStoresBySales[selectedSalesId].map(store => (
-                              <option key={store.id} value={store.id}>{store.name} ({store.address})</option>
-                            ))}
-                          </optgroup>
-                        )}
-                        <optgroup label="Toko Lain (Lintas Sales)">
-                          {Object.entries(initialStoresBySales)
-                            .filter(([salesId]) => salesId !== selectedSalesId)
-                            .flatMap(([_, stores]) => stores)
-                            .sort((a, b) => a.name.localeCompare(b.name))
-                            .map(store => (
-                              <option key={store.id} value={store.id}>{store.name} ({store.address})</option>
-                            ))
+                      {/* react-select handles search and optgroups perfectly */}
+                      <Select 
+                        name="storeId"
+                        required={!isNewStore}
+                        placeholder="-- Cari dan Pilih Toko --"
+                        noOptionsMessage={() => "Toko tidak ditemukan"}
+                        className="text-sm w-full"
+                        styles={{
+                          control: (base, state) => ({
+                            ...base,
+                            borderRadius: '0.75rem',
+                            borderColor: state.isFocused ? '#3b82f6' : '#e2e8f0',
+                            boxShadow: state.isFocused ? '0 0 0 2px rgba(59, 130, 246, 0.5)' : 'none',
+                            padding: '1px',
+                            minHeight: '44px',
+                            backgroundColor: '#f8fafc',
+                            '&:hover': {
+                              borderColor: state.isFocused ? '#3b82f6' : '#cbd5e1'
+                            }
+                          })
+                        }}
+                        options={[
+                          ...(initialStoresBySales[selectedSalesId] && initialStoresBySales[selectedSalesId].length > 0 ? [{
+                            label: 'Toko Milik Sales Ini',
+                            options: initialStoresBySales[selectedSalesId].map(store => ({ value: store.id, label: `${store.name} (${store.address})` }))
+                          }] : []),
+                          {
+                            label: 'Toko Lain (Lintas Sales)',
+                            options: Object.entries(initialStoresBySales)
+                              .filter(([salesId]) => salesId !== selectedSalesId)
+                              .flatMap(([_, stores]) => stores)
+                              .sort((a, b) => a.name.localeCompare(b.name))
+                              .map(store => ({ value: store.id, label: `${store.name} (${store.address})` }))
                           }
-                        </optgroup>
-                      </select>
+                        ]}
+                      />
                     </div>
                   ) : (
                     <div className="space-y-3 p-4 bg-blue-50/50 rounded-xl border border-blue-100">

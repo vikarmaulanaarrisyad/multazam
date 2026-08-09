@@ -47,6 +47,26 @@ export default async function SalesDashboardPage() {
     take: 5
   });
 
+  // 5. Kunjungan Hari Ini
+  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const endOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+  
+  const todaysVisits = await prisma.visit.findMany({
+    where: {
+      userId: session.user.id,
+      scheduledAt: {
+        gte: startOfToday,
+        lte: endOfToday,
+      }
+    },
+    include: {
+      store: true
+    },
+    orderBy: {
+      scheduledAt: 'asc'
+    }
+  });
+
   return (
     <main className="flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-6 pb-24 h-full">
       {/* Target Progress Card */}
@@ -133,6 +153,42 @@ export default async function SalesDashboardPage() {
             </div>
             <span className="text-xs font-medium text-slate-900 text-center leading-tight">Riwayat<br/>Pesanan</span>
           </Link>
+        </div>
+      </section>
+
+      {/* Today's Visits */}
+      <section className="flex flex-col gap-4">
+        <div className="flex justify-between items-center">
+          <h2 className="text-sm font-semibold text-slate-900">Kunjungan Hari Ini</h2>
+          <Link href="/sales/visits" className="text-primary text-xs font-medium px-2 py-1 bg-primary/10 rounded-md hover:bg-primary/20 transition-colors">Lihat Jadwal Lengkap</Link>
+        </div>
+        
+        <div className="flex flex-col gap-2">
+          {todaysVisits.length > 0 ? (
+            todaysVisits.map((visit) => (
+              <div key={visit.id} className="bg-white rounded-xl p-4 shadow-sm flex items-start gap-4 border border-slate-200">
+                <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center shrink-0">
+                  <MapPin className="text-blue-600 w-5 h-5" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-sm font-bold text-slate-900 truncate">{visit.store.name}</h3>
+                  <p className="text-xs text-slate-500 mt-1 line-clamp-1">{visit.store.address}</p>
+                </div>
+                <div className="flex flex-col items-end gap-1.5 shrink-0">
+                  <span className="text-xs font-bold text-slate-900">
+                    {new Date(visit.scheduledAt).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })} WIB
+                  </span>
+                  <span className={`px-2 py-0.5 text-[10px] font-bold rounded-full uppercase ${visit.status === 'COMPLETED' ? 'bg-emerald-100 text-emerald-700' : visit.status === 'CANCELLED' ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'}`}>
+                    {visit.status === 'COMPLETED' ? 'Selesai' : visit.status === 'CANCELLED' ? 'Batal' : 'Terjadwal'}
+                  </span>
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="text-center py-6 bg-slate-50 rounded-xl border border-dashed border-slate-300 text-slate-500 text-sm">
+              Tidak ada jadwal kunjungan hari ini.
+            </div>
+          )}
         </div>
       </section>
 

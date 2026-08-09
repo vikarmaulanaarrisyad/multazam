@@ -13,12 +13,13 @@ export class VisitService {
     return VisitRepository.updateStatus(visitId, 'COMPLETED', lat, lng);
   }
 
-  static async assignVisit(data: { storeId: string; scheduledAt: string; notes?: string | null }) {
+  static async assignVisit(data: { storeId: string; scheduledAt: string; notes?: string | null; userId: string }) {
     const store = await StoreRepository.findById(data.storeId);
     if (!store) throw new Error("Toko tidak ditemukan");
 
     return VisitRepository.create({
       storeId: data.storeId,
+      userId: data.userId,
       scheduledAt: new Date(data.scheduledAt),
       notes: data.notes,
       address: store.address,

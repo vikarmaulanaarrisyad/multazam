@@ -19,7 +19,6 @@ export default async function SalesDashboardLayout({ children }: { children: Rea
             </div>
             <div className="flex flex-col justify-center">
               <h1 className="text-base font-bold text-slate-900 tracking-tight leading-tight">Halo, {session?.user?.name?.split(' ')[0] || 'Sales'}!</h1>
-              <p className="text-[11px] font-medium text-slate-500 leading-tight mt-0.5">Sales Rep • Jakarta</p>
             </div>
           </div>
           <div className="flex items-center gap-1">

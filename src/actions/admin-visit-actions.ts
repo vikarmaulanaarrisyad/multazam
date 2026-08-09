@@ -61,7 +61,8 @@ export async function assignVisit(formData: FormData) {
     await VisitService.assignVisit({
       storeId,
       scheduledAt,
-      notes
+      notes,
+      userId: salesId
     });
 
     revalidatePath('/admin/visits');
