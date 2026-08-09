@@ -130,7 +130,7 @@ export default function VisitsClient({ visits }: { visits: VisitItem[] }) {
         <h2 className="text-xl font-bold text-slate-900 mb-4">Jadwal Kunjungan</h2>
         
         {/* Date Selector */}
-        <div className="flex gap-3 overflow-x-auto snap-x pb-2 [&::-webkit-scrollbar]:hidden">
+        <div className="flex gap-3 overflow-x-auto snap-x pb-2 no-scrollbar">
           {days.map((d, i) => {
             const isActive = selectedDate.getTime() === d.date.getTime();
             return (
@@ -158,7 +158,7 @@ export default function VisitsClient({ visits }: { visits: VisitItem[] }) {
         <div className="mt-4 relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
           <input 
-            className="w-full h-11 pl-10 pr-4 bg-white border border-slate-200 text-slate-900 rounded-full text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-shadow shadow-sm" 
+            className="w-full h-11 pl-10 pr-4 bg-white border border-slate-200 rounded-full text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-shadow shadow-sm" 
             placeholder="Cari toko atau alamat..." 
             type="text"
             value={searchTerm}
@@ -167,7 +167,7 @@ export default function VisitsClient({ visits }: { visits: VisitItem[] }) {
         </div>
 
         {/* Filters */}
-        <div className="mt-4 flex gap-2 overflow-x-auto pb-1 [&::-webkit-scrollbar]:hidden">
+        <div className="mt-4 flex gap-2 overflow-x-auto pb-1 no-scrollbar">
           {(['ALL', 'SCHEDULED', 'COMPLETED'] as const).map(f => (
             <button 
               key={f}
