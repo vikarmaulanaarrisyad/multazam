@@ -15,7 +15,7 @@ export function BottomNav() {
     { name: 'Visits', href: '/sales/visits', icon: Calendar },
     { name: 'Requests', href: '/sales/requests', icon: ClipboardList },
     { name: 'Products', href: '/sales/products', icon: Tags },
-    { name: 'Profile', href: '/sales/reports', icon: User },
+    { name: 'Profile', href: '/sales/profile', icon: User },
   ];
 
   return (
