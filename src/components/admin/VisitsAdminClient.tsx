@@ -226,9 +226,23 @@ export function VisitsAdminClient({ salesUsers, allVisits, mapLocations, initial
                         className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm"
                       >
                         <option value="">-- Pilih Toko --</option>
-                        {initialStoresBySales[selectedSalesId]?.map(store => (
-                          <option key={store.id} value={store.id}>{store.name} ({store.address})</option>
-                        ))}
+                        {initialStoresBySales[selectedSalesId] && initialStoresBySales[selectedSalesId].length > 0 && (
+                          <optgroup label="Toko Milik Sales Ini">
+                            {initialStoresBySales[selectedSalesId].map(store => (
+                              <option key={store.id} value={store.id}>{store.name} ({store.address})</option>
+                            ))}
+                          </optgroup>
+                        )}
+                        <optgroup label="Toko Lain (Lintas Sales)">
+                          {Object.entries(initialStoresBySales)
+                            .filter(([salesId]) => salesId !== selectedSalesId)
+                            .flatMap(([_, stores]) => stores)
+                            .sort((a, b) => a.name.localeCompare(b.name))
+                            .map(store => (
+                              <option key={store.id} value={store.id}>{store.name} ({store.address})</option>
+                            ))
+                          }
+                        </optgroup>
                       </select>
                     </div>
                   ) : (

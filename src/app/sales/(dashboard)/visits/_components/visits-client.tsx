@@ -5,6 +5,7 @@ import { Calendar, CheckCircle, Search, MapPin, Navigation, Store, Map as MapIco
 import { toast } from 'sonner';
 import { markVisitCompleted } from '@/actions/visits';
 import { cn } from '@/lib/utils';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 interface VisitItem {
   id: string;
@@ -36,6 +37,8 @@ export default function VisitsClient({ visits }: { visits: VisitItem[] }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [filterStatus, setFilterStatus] = useState<'ALL' | 'SCHEDULED' | 'COMPLETED' | 'PENDING'>('ALL');
+  const [selectedVisit, setSelectedVisit] = useState<VisitItem | null>(null);
+  const [isDetailOpen, setIsDetailOpen] = useState(false);
   
   // Generate a simple next 5 days for the date selector
   const days = useMemo(() => {
@@ -248,7 +251,10 @@ export default function VisitsClient({ visits }: { visits: VisitItem[] }) {
                   {/* Actions */}
                   <div className="flex gap-2 mt-2 pt-3 border-t border-slate-100">
                     <button 
-                      onClick={() => toast.info('Fitur detail kunjungan akan segera tersedia')}
+                      onClick={() => {
+                        setSelectedVisit(v);
+                        setIsDetailOpen(true);
+                      }}
                       className="flex-1 h-9 flex items-center justify-center bg-slate-100 text-slate-700 font-medium text-sm rounded-full hover:bg-slate-200 transition-colors"
                     >
                       Detail
@@ -284,6 +290,73 @@ export default function VisitsClient({ visits }: { visits: VisitItem[] }) {
         )}
 
       </div>
+
+      {/* Detail Modal */}
+      <Dialog open={isDetailOpen} onOpenChange={setIsDetailOpen}>
+        <DialogContent className="max-w-md w-[95vw] rounded-2xl p-0 overflow-hidden bg-white">
+          <DialogHeader className="p-4 border-b border-slate-100 bg-slate-50/50">
+            <DialogTitle className="text-lg font-bold text-slate-900">Detail Kunjungan</DialogTitle>
+          </DialogHeader>
+          
+          {selectedVisit && (
+            <div className="p-4 space-y-4 max-h-[70vh] overflow-y-auto">
+              <div>
+                <h3 className="text-sm font-medium text-slate-500 mb-1">Nama Toko</h3>
+                <p className="text-base font-bold text-slate-900">{selectedVisit.storeName}</p>
+              </div>
+              
+              <div>
+                <h3 className="text-sm font-medium text-slate-500 mb-1">Alamat Lengkap</h3>
+                <div className="flex items-start gap-2 bg-slate-50 p-3 rounded-xl border border-slate-100">
+                  <MapPin className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
+                  <p className="text-sm text-slate-700 leading-relaxed">{selectedVisit.address}</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <h3 className="text-sm font-medium text-slate-500 mb-1">Status</h3>
+                  <div className={cn(
+                    "inline-flex px-2.5 py-1 rounded-md text-xs font-bold uppercase tracking-wider",
+                    selectedVisit.status === 'SCHEDULED' ? "bg-blue-50 text-blue-600" :
+                    selectedVisit.status === 'COMPLETED' ? "bg-green-50 text-green-600" :
+                    "bg-slate-100 text-slate-600"
+                  )}>
+                    {selectedVisit.status === 'SCHEDULED' ? 'TERJADWAL' : selectedVisit.status === 'COMPLETED' ? 'SELESAI' : 'BATAL'}
+                  </div>
+                </div>
+                <div>
+                  <h3 className="text-sm font-medium text-slate-500 mb-1">Jadwal</h3>
+                  <p className="text-sm font-bold text-slate-900">
+                    {new Date(selectedVisit.scheduledAt).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })} WIB
+                  </p>
+                </div>
+              </div>
+
+              <div>
+                <h3 className="text-sm font-medium text-slate-500 mb-1">Catatan Kunjungan</h3>
+                <div className="bg-amber-50/50 text-amber-900 text-sm p-3 rounded-xl border border-amber-100 min-h-15">
+                  {selectedVisit.notes || 'Kunjungan rutin reguler.'}
+                </div>
+              </div>
+
+              {selectedVisit.latitude && selectedVisit.longitude && (
+                <div>
+                  <h3 className="text-sm font-medium text-slate-500 mb-1">Titik Kordinat GPS</h3>
+                  <a 
+                    href={`https://www.google.com/maps/search/?api=1&query=${selectedVisit.latitude},${selectedVisit.longitude}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-center gap-2 w-full py-2.5 bg-blue-50 text-blue-700 font-semibold text-sm rounded-xl hover:bg-blue-100 transition-colors"
+                  >
+                    <MapIcon className="w-4 h-4" /> Buka di Google Maps
+                  </a>
+                </div>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

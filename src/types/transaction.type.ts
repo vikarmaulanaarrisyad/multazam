@@ -5,7 +5,7 @@ export type Transaction = PrismaTransaction;
 
 export const PreOrderSchema = z.object({
   customerName: z.string().min(1),
-  customerPhone: z.string().min(1),
+  customerPhone: z.string().optional(),
   shippingAddress: z.string().optional(),
   shippingCost: z.number().nonnegative().optional(),
   dpAmount: z.number().nonnegative().optional(),

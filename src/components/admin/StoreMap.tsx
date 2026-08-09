@@ -89,9 +89,6 @@ export default function StoreMap({ locations, officeLocation }: { locations: Sto
       if (container) {
         (container as any)._leaflet_id = null;
       }
-      if (map) {
-        map.remove();
-      }
     };
   }, [map]);
   
