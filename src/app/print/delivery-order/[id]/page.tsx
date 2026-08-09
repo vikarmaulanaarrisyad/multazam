@@ -60,7 +60,7 @@ function SuratJalanCopy({ transaction, setting, isDivider = false }: any) {
   const totalKeseluruhan = totalItemAmount + shippingCost;
 
   return (
-    <div className={`w-full min-h-[12cm] print:min-h-[120mm] bg-white print:p-0 relative flex flex-col justify-between font-sans text-[13px] leading-tight text-slate-900 ${isDivider ? 'border-b-2 border-dashed border-slate-300 print:border-slate-400 pb-12 mb-12 print:pb-12 print:mb-12' : ''}`}>
+    <div className={`w-full min-h-[14cm] print:min-h-screen bg-white print:p-0 relative flex flex-col justify-between font-sans text-[13px] leading-tight text-slate-900 ${isDivider ? 'border-b-2 border-dashed border-slate-300 print:border-slate-400 pb-12 mb-12 print:pb-12 print:mb-12' : ''}`}>
       
       <div className="grow">
         {/* HEADER SECTION */}
@@ -238,12 +238,12 @@ export default async function PrintDeliveryOrderPage({ params, searchParams }: {
       <style dangerouslySetInnerHTML={{__html: `
         @media print {
           @page {
-            size: 210mm 140mm;
-            margin: 10mm 15mm 10mm 15mm;
+            size: 21.5cm 14cm;
+            margin: 0;
           }
         }
       `}} />
-      <div id="print-container" className={`w-full max-w-[210mm] print:max-w-none shrink-0 bg-white relative print:w-full shadow-sm print:shadow-none p-4 print:p-0`}>
+      <div id="print-container" className={`w-full max-w-[21.5cm] print:max-w-none shrink-0 bg-white relative print:w-full shadow-sm print:shadow-none p-4 print:p-0`}>
         {/* Floating Print Button (Hidden on Print) */}
         <Suspense fallback={<div />}>
           <PrintButton invoiceNumber={transaction.invoiceNumber} />
