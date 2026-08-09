@@ -32,8 +32,12 @@ export default async function VisitsPage() {
 
   // Serialize dates for client component
   const serializedVisits = visits.map(v => ({
-    ...v,
+    id: v.id,
+    storeId: v.storeId,
     scheduledAt: v.scheduledAt.toISOString(),
+    address: v.address,
+    status: v.status as 'SCHEDULED' | 'COMPLETED' | 'CANCELLED',
+    notes: v.notes,
   }));
   return <VisitsClient visits={serializedVisits} />;
 }
