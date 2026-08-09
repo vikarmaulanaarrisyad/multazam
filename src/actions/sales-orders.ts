@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import prisma from '@/lib/prisma';
 import { auth } from '@/auth';
-import { PreOrderSchema } from './preorder.schema.ts';
+import { PreOrderSchema } from './preorder.schema';
 import { ApiResponse } from '../types/api-response';
 
 export interface PreOrderData {

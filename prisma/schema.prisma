@@ -13,6 +13,12 @@ enum Role {
   SALES
 }
 
+enum VisitStatus {
+  SCHEDULED
+  COMPLETED
+  CANCELLED
+}
+
 enum MovementType {
   IN
   OUT
@@ -249,6 +255,20 @@ model Store {
   longitude Float?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  visits    Visit[]
+}
+
+model Visit {
+  id          String      @id @default(cuid())
+  storeId     String
+  store       Store       @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  scheduledAt DateTime
+  address     String      @db.Text
+  status      VisitStatus @default(SCHEDULED)
+  notes       String?     @db.Text
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
 }
 
 model InvoiceCounter {
