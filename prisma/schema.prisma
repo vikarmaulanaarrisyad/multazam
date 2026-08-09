@@ -23,6 +23,24 @@ enum MovementType {
   IN
   OUT
   ADJUSTMENT
+  RETURN
+}
+
+enum ReturnStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  COMPLETED
+}
+
+enum ReturnType {
+  EXCHANGE
+  REFUND
+}
+
+enum ReturnCondition {
+  GOOD
+  BAD
 }
 
 model User {
@@ -44,6 +62,7 @@ model User {
   paymentHistories PaymentHistory[]
   stores        Store[]
   visits        Visit[]
+  returns       ReturnTransaction[]
 }
 
 model Account {
@@ -108,6 +127,7 @@ model Product {
   contents        String?  // for 'ISI' e.g. 48btl
   retailPriceNote String?  // for 'BTL,RTG,PCS,BAG'
   stock           Int      @default(0)
+  badStock        Int      @default(0)
   categoryId  String
   category    Category @relation(fields: [categoryId], references: [id])
   unitId      String?
@@ -118,6 +138,7 @@ model Product {
   transactionItems TransactionItem[]
   stockMovements   StockMovement[]
   purchaseItems    PurchaseItem[]
+  returnItems      ReturnItem[]
 }
 
 model Transaction {
@@ -144,6 +165,7 @@ model Transaction {
 
   items           TransactionItem[]
   paymentHistories PaymentHistory[]
+  returns         ReturnTransaction[]
 }
 
 model TransactionItem {
@@ -155,6 +177,7 @@ model TransactionItem {
   quantity      Int
   price         Decimal     @db.Decimal(10, 2)
   originalPrice Decimal?    @db.Decimal(10, 2)
+  purchasePrice Decimal?    @db.Decimal(10, 2)
 }
 
 model StockMovement {
@@ -286,4 +309,33 @@ model InvoiceCounter {
   id      Int    @id @default(autoincrement())
   date    String @unique
   counter Int    @default(1)
+}
+
+model ReturnTransaction {
+  id            String       @id @default(cuid())
+  returnNumber  String       @unique
+  transactionId String?
+  transaction   Transaction? @relation(fields: [transactionId], references: [id])
+  customerName  String
+  userId        String
+  user          User         @relation(fields: [userId], references: [id])
+  status        ReturnStatus @default(PENDING)
+  type          ReturnType
+  notes         String?      @db.Text
+  adminNotes    String?      @db.Text
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  items         ReturnItem[]
+}
+
+model ReturnItem {
+  id                  String            @id @default(cuid())
+  returnTransactionId String
+  returnTransaction   ReturnTransaction @relation(fields: [returnTransactionId], references: [id], onDelete: Cascade)
+  productId           String
+  product             Product           @relation(fields: [productId], references: [id])
+  quantity            Int
+  condition           ReturnCondition
+  price               Decimal           @db.Decimal(10, 2)
 }

@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Package, ClipboardList, User, Tags, Calendar } from 'lucide-react';
+import { Home, Package, ClipboardList, User, Tags, Calendar, RefreshCcw } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export function BottomNav() {
@@ -11,9 +11,9 @@ export function BottomNav() {
 
   const navItems = [
     { name: 'Home', href: '/sales', icon: Home },
-    // { name: 'Orders', href: '/sales/orders', icon: Package },
     { name: 'Visits', href: '/sales/visits', icon: Calendar },
     { name: 'Requests', href: '/sales/requests', icon: ClipboardList },
+    { name: 'Retur', href: '/sales/returns', icon: RefreshCcw },
     { name: 'Products', href: '/sales/products', icon: Tags },
     { name: 'Profile', href: '/sales/profile', icon: User },
   ];

@@ -67,6 +67,12 @@ export function AdminSidebar({ role, className, onNavigate, logoUrl }: SidebarPr
       visible: true,
     },
     {
+      title: 'Persetujuan Retur',
+      href: `${basePath}/returns`,
+      icon: ClipboardCheck,
+      visible: true,
+    },
+    {
       title: 'Pembelian (Restock)',
       href: `${basePath}/purchases`,
       icon: ShoppingCart,
@@ -94,6 +100,12 @@ export function AdminSidebar({ role, className, onNavigate, logoUrl }: SidebarPr
       title: 'Sinkronisasi',
       href: `${basePath}/sync`,
       icon: DatabaseZap,
+      visible: role === 'SUPER_ADMIN',
+    },
+    {
+      title: 'Analisis & Laba Rugi',
+      href: `${basePath}/analytics`,
+      icon: BarChart3,
       visible: role === 'SUPER_ADMIN',
     },
     {
