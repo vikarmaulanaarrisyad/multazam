@@ -30,10 +30,11 @@ export function ImportExcelDialog({ open, onOpenChange, onSuccess }: ImportExcel
     try {
 
       const data = [{
+        'KODE PRODUK': 'PRD-001',
         'PRODUK': 'Contoh Produk A',
         'KATEGORI': 'Minuman',
-        'ISI': '48btl',
-        'BTL,RTG,PCS,BAG': '27.500 per 4 pcs',
+        'QTY': '48',
+        'SATUAN ECER (BTL/RTG/PCS)': 'Botol',
         'HARGA KARTON': 150000,
         'HARGA BELI': 130000,
         'STOK': 100,
@@ -44,10 +45,11 @@ export function ImportExcelDialog({ open, onOpenChange, onSuccess }: ImportExcel
       
       // Set column widths
       worksheet['!cols'] = [
+        { wch: 15 }, // KODE PRODUK
         { wch: 30 }, // PRODUK
         { wch: 15 }, // KATEGORI
-        { wch: 10 }, // ISI
-        { wch: 20 }, // BTL,RTG,PCS,BAG
+        { wch: 10 }, // QTY
+        { wch: 25 }, // SATUAN ECER
         { wch: 15 }, // HARGA KARTON
         { wch: 15 }, // HARGA BELI
         { wch: 10 }, // STOK

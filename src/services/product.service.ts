@@ -206,8 +206,8 @@ export const productService = {
           if (!isNaN(parsed) && parsed >= 0) purchasePrice = parsed;
         }
 
-        const contents = (row['ISI'] || row['isi'] || '')?.toString() || null;
-        let retailPriceNote = (row['BTL,RTG,PCS,BAG'] || row['Eceran'] || '')?.toString() || null;
+        const contents = (row['QTY'] || row['Qty'] || row['qty'] || row['ISI'] || row['isi'] || '')?.toString() || null;
+        let retailPriceNote = (row['SATUAN ECER (BTL/RTG/PCS)'] || row['Satuan Ecer'] || row['BTL,RTG,PCS,BAG'] || row['Eceran'] || '')?.toString() || null;
         if (!retailPriceNote && price > 0) {
           retailPriceNote = price.toString();
         }
@@ -220,7 +220,7 @@ export const productService = {
 
         const description = row['DESKRIPSI'] || row['Deskripsi'] || row['deskripsi'] || row['description'] || null;
 
-        let code = row['Kode Produk'] || row['kode_produk'] || row['code'];
+        let code = row['KODE PRODUK'] || row['Kode Produk'] || row['kode_produk'] || row['code'];
         if (code && typeof code === 'string') {
           code = code.trim();
         } else {
