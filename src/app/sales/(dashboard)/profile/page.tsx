@@ -2,6 +2,7 @@ import React from 'react';
 import { auth, signOut } from '@/auth';
 import prisma from '@/lib/prisma';
 import { LogOut, Activity, Wallet, TrendingUp, Shield, Smartphone, HelpCircle, ChevronRight } from 'lucide-react';
+import Link from 'next/link';
 
 export const metadata = {
   title: 'Profil Saya - DIA MAKMUR ABADI',
@@ -73,9 +74,9 @@ export default async function SalesProfilePage() {
           </div>
           <h2 className="text-2xl font-bold text-slate-900 mb-1">{user.name}</h2>
           <p className="text-sm text-slate-500 mb-4 uppercase tracking-wide font-medium">{user.role?.replace('_', ' ') || 'SALES REPRESENTATIVE'}</p>
-          <button className="bg-primary text-white font-semibold text-sm px-6 py-2 rounded-full shadow-sm hover:bg-primary/90 transition-colors">
+          <Link href="/sales/profile/edit" className="bg-primary text-white font-semibold text-sm px-6 py-2 rounded-full shadow-sm hover:bg-primary/90 transition-colors">
             Edit Profile
-          </button>
+          </Link>
         </div>
       </div>
 
