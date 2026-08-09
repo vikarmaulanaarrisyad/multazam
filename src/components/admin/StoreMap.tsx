@@ -63,6 +63,12 @@ export default function StoreMap({ locations, officeLocation }: { locations: Sto
 
   useEffect(() => {
     return () => {
+      // Fix for Next.js Fast Refresh / React Strict Mode
+      // Leaflet complains if the container is reused without clearing the internal ID
+      const container = document.getElementById('map-container');
+      if (container) {
+        (container as any)._leaflet_id = null;
+      }
       if (map) {
         map.remove();
       }
@@ -96,7 +102,7 @@ export default function StoreMap({ locations, officeLocation }: { locations: Sto
         />
       </div>
 
-      <div className="h-150 w-full rounded-xl overflow-hidden border border-slate-200 shadow-sm relative z-0">
+      <div id="map-container" className="h-150 w-full rounded-xl overflow-hidden border border-slate-200 shadow-sm relative z-0">
         <MapContainer ref={setMap} center={center} zoom={13} style={{ height: '100%', width: '100%' }}>
           <TileLayer
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
