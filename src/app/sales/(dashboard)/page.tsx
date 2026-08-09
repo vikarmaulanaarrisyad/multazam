@@ -1,5 +1,5 @@
 import React from 'react';
-import { CalendarCheck, TrendingUp, Clock, AlertCircle, MapPin, ShoppingCart, PackageSearch, Receipt } from 'lucide-react';
+import { CalendarCheck, TrendingUp, Clock, AlertCircle, MapPin, ShoppingCart, PackageSearch, Receipt, RefreshCcw } from 'lucide-react';
 import prisma from '@/lib/prisma';
 import { auth } from '@/auth';
 import Link from 'next/link';
@@ -152,6 +152,20 @@ export default async function SalesDashboardPage() {
               <Receipt className="text-blue-700 w-6 h-6" />
             </div>
             <span className="text-xs font-medium text-slate-900 text-center leading-tight">Riwayat<br/>Pesanan</span>
+          </Link>
+
+          <Link href="/sales/products" className="snap-start flex-none w-28 bg-slate-100 hover:bg-slate-200 transition-colors rounded-xl p-4 flex flex-col items-center gap-2 shadow-sm group">
+            <div className="w-12 h-12 rounded-full bg-amber-100 flex items-center justify-center group-hover:bg-amber-200 transition-colors">
+              <PackageSearch className="text-amber-700 w-6 h-6" />
+            </div>
+            <span className="text-xs font-medium text-slate-900 text-center leading-tight">Katalog<br/>Produk</span>
+          </Link>
+
+          <Link href="/sales/returns" className="snap-start flex-none w-28 bg-slate-100 hover:bg-slate-200 transition-colors rounded-xl p-4 flex flex-col items-center gap-2 shadow-sm group">
+            <div className="w-12 h-12 rounded-full bg-rose-100 flex items-center justify-center group-hover:bg-rose-200 transition-colors">
+              <RefreshCcw className="text-rose-700 w-6 h-6" />
+            </div>
+            <span className="text-xs font-medium text-slate-900 text-center leading-tight">Ajukan<br/>Retur</span>
           </Link>
         </div>
       </section>

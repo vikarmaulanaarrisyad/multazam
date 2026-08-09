@@ -13,8 +13,6 @@ export function BottomNav() {
     { name: 'Home', href: '/sales', icon: Home },
     { name: 'Visits', href: '/sales/visits', icon: Calendar },
     { name: 'Requests', href: '/sales/requests', icon: ClipboardList },
-    { name: 'Retur', href: '/sales/returns', icon: RefreshCcw },
-    { name: 'Products', href: '/sales/products', icon: Tags },
     { name: 'Profile', href: '/sales/profile', icon: User },
   ];
 
