@@ -60,9 +60,9 @@ function SuratJalanCopy({ transaction, setting, isDivider = false }: any) {
   const totalKeseluruhan = totalItemAmount + shippingCost;
 
   return (
-    <div className={`w-full h-[13.5cm] overflow-hidden bg-white print:p-0 relative flex flex-col justify-between font-mono text-sm leading-tight text-black ${isDivider ? 'border-b-2 border-dashed border-slate-300 print:border-slate-400 pb-12 mb-12 print:pb-12 print:mb-12' : ''}`}>
+    <div className={`w-full min-h-[12cm] print:min-h-screen bg-white print:p-0 relative flex flex-col justify-between font-mono text-sm leading-tight text-black ${isDivider ? 'border-b-2 border-dashed border-slate-300 print:border-slate-400 pb-12 mb-12 print:pb-12 print:mb-12' : ''}`}>
       
-      <div>
+      <div className="grow">
         {/* HEADER SECTION */}
       <div className="flex justify-between w-full mb-4 uppercase">
         {/* Kiri */}
@@ -168,7 +168,7 @@ function SuratJalanCopy({ transaction, setting, isDivider = false }: any) {
       </table>
       </div>
 
-      <div className="mt-auto">
+      <div className="mt-auto pt-4">
       {/* FOOTER */}
       <div className="flex justify-between items-center py-1 uppercase text-sm font-semibold border-b-4 border-double border-black">
         <div className="flex gap-2">
@@ -225,16 +225,16 @@ export default async function PrintDeliveryOrderPage({ params, searchParams }: {
   }
 
   return (
-    <div className="min-h-screen bg-white print:bg-white flex flex-col items-start p-8 print:p-0 w-full">
+    <div className="min-h-screen bg-slate-50 print:bg-white flex flex-col items-center p-8 print:p-0 w-full">
       <style dangerouslySetInnerHTML={{__html: `
         @media print {
           @page {
-            size: 21.5cm 14cm;
-            margin: 0.5cm;
+            size: 21cm 14cm;
+            margin: 1cm 2cm 1cm 2cm;
           }
         }
       `}} />
-      <div id="print-container" className={`w-full ${orientation === 'landscape' ? 'max-w-[330mm]' : 'max-w-[210mm]'} print:max-w-none shrink-0 bg-white relative print:w-full`}>
+      <div id="print-container" className={`w-full max-w-[21cm] print:max-w-none shrink-0 bg-white relative print:w-full shadow-sm print:shadow-none p-4 print:p-0`}>
         {/* Floating Print Button (Hidden on Print) */}
         <Suspense fallback={<div />}>
           <PrintButton invoiceNumber={transaction.invoiceNumber} />
