@@ -12,7 +12,7 @@ export class SettingService {
     return SettingRepository.getSettings();
   }
 
-  static async updateSettings(companyName: string, companyAddress: string, logoFile: File | null) {
+  static async updateSettings(companyName: string, companyAddress: string, logoFile: File | null, officeLat?: number | null, officeLng?: number | null) {
     const setting = await SettingRepository.getSettings();
     if (!setting) throw new Error("Failed to load settings");
 
@@ -47,6 +47,8 @@ export class SettingService {
       companyAddress,
       logoUrl: newLogoUrl,
       logoPublicId: newLogoPublicId,
+      ...(officeLat !== undefined ? { officeLat } : {}),
+      ...(officeLng !== undefined ? { officeLng } : {}),
     });
   }
 

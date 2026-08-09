@@ -20,9 +20,10 @@ interface VisitsAdminClientProps {
   allVisits: any[];
   mapLocations: any[];
   initialStoresBySales: Record<string, any[]>;
+  officeLocation?: { lat: number; lng: number };
 }
 
-export function VisitsAdminClient({ salesUsers, allVisits, mapLocations, initialStoresBySales }: VisitsAdminClientProps) {
+export function VisitsAdminClient({ salesUsers, allVisits, mapLocations, initialStoresBySales, officeLocation }: VisitsAdminClientProps) {
   const [activeTab, setActiveTab] = useState<'LIST' | 'MAP'>('LIST');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -163,7 +164,7 @@ export function VisitsAdminClient({ salesUsers, allVisits, mapLocations, initial
         </div>
       ) : (
         <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100">
-          <StoreMap locations={mapLocations} />
+          <StoreMap locations={mapLocations} officeLocation={officeLocation} />
         </div>
       )}
 

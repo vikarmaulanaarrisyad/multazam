@@ -15,10 +15,11 @@ export default async function SuperAdminVisitsPage() {
     redirect('/unauthorized');
   }
 
-  const [salesUsers, allVisits, mapLocations] = await Promise.all([
+  const [salesUsers, allVisits, mapLocations, setting] = await Promise.all([
     getSalesUsers(),
     getAllVisits(),
     getMapLocations(),
+    prisma.setting.findUnique({ where: { id: "1" } })
   ]);
 
   // Pre-fetch stores grouped by sales for the dropdown
@@ -33,6 +34,10 @@ export default async function SuperAdminVisitsPage() {
     initialStoresBySales[s.userId].push(s);
   });
 
+  const officeLocation = setting?.officeLat && setting?.officeLng 
+    ? { lat: setting.officeLat, lng: setting.officeLng } 
+    : undefined;
+
   return (
     <div className="max-w-7xl mx-auto space-y-6">
       <VisitsAdminClient 
@@ -40,6 +45,7 @@ export default async function SuperAdminVisitsPage() {
         allVisits={allVisits} 
         mapLocations={mapLocations}
         initialStoresBySales={initialStoresBySales}
+        officeLocation={officeLocation}
       />
     </div>
   );

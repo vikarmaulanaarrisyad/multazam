@@ -152,6 +152,31 @@ export function SettingsClient({ initialSetting }: { initialSetting: any }) {
               />
             </div>
           </div>
+          
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Titik Lokasi (Latitude)</label>
+              <input
+                type="number"
+                step="any"
+                name="officeLat"
+                defaultValue={initialSetting?.officeLat || ''}
+                className="block w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-blue-500 sm:text-sm"
+                placeholder="-6.200000"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Titik Lokasi (Longitude)</label>
+              <input
+                type="number"
+                step="any"
+                name="officeLng"
+                defaultValue={initialSetting?.officeLng || ''}
+                className="block w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-blue-500 sm:text-sm"
+                placeholder="106.816666"
+              />
+            </div>
+          </div>
         </div>
 
         <div className="pt-4 flex justify-end">

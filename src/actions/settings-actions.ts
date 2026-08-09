@@ -18,7 +18,12 @@ export async function updateSettings(formData: FormData) {
     const companyAddress = formData.get('companyAddress') as string;
     const logoFile = formData.get('logoFile') as File | null;
     
-    await SettingService.updateSettings(companyName, companyAddress, logoFile);
+    const latRaw = formData.get('officeLat');
+    const lngRaw = formData.get('officeLng');
+    const officeLat = latRaw ? parseFloat(latRaw as string) : null;
+    const officeLng = lngRaw ? parseFloat(lngRaw as string) : null;
+    
+    await SettingService.updateSettings(companyName, companyAddress, logoFile, officeLat, officeLng);
     
     revalidatePath('/print/delivery-order/[id]', 'page');
     revalidatePath('/super-admin/settings');

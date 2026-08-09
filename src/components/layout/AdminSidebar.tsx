@@ -27,9 +27,10 @@ interface SidebarProps {
   role: 'ADMIN' | 'SUPER_ADMIN';
   className?: string;
   onNavigate?: () => void; // Used to close sheet on mobile
+  logoUrl?: string | null;
 }
 
-export function AdminSidebar({ role, className, onNavigate }: SidebarProps) {
+export function AdminSidebar({ role, className, onNavigate, logoUrl }: SidebarProps) {
   const pathname = usePathname();
   const basePath = role === 'SUPER_ADMIN' ? '/super-admin' : '/admin';
 
@@ -125,8 +126,12 @@ export function AdminSidebar({ role, className, onNavigate }: SidebarProps) {
     <div className={cn("flex h-full flex-col bg-slate-900 text-slate-100", className)}>
       <div className="p-6">
         <h2 className="text-2xl font-bold tracking-tight text-white flex items-center gap-2">
-          <span className="bg-primary text-primary-foreground p-1 rounded-md">M</span>
-          DIA MAKMUR ABADI
+          {logoUrl ? (
+            <img src={logoUrl} alt="Logo" className="h-8 w-auto rounded object-contain bg-white p-1" />
+          ) : (
+            <span className="bg-primary text-primary-foreground p-1 rounded-md">M</span>
+          )}
+          <span className="truncate">DIA MAKMUR ABADI</span>
         </h2>
         <p className="text-xs text-slate-400 mt-1 uppercase tracking-wider font-semibold">
           {role.replace('_', ' ')}

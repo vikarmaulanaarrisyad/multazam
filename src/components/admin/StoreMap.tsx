@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, useMap, Polyline } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import { Search } from 'lucide-react';
@@ -27,6 +27,16 @@ const visitedIcon = new L.Icon({
   shadowSize: [41, 41]
 });
 
+// Fix for office Leaflet icons
+const officeIcon = new L.Icon({
+  iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-gold.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41]
+});
+
 interface StoreLocation {
   id: string;
   name: string;
@@ -42,12 +52,12 @@ interface StoreLocation {
 function MapUpdater({ center }: { center: [number, number] }) {
   const map = useMap();
   useEffect(() => {
-    map.setView(center, 13);
+    map.setView(center, map.getZoom() || 13);
   }, [center, map]);
   return null;
 }
 
-export default function StoreMap({ locations }: { locations: StoreLocation[] }) {
+export default function StoreMap({ locations, officeLocation }: { locations: StoreLocation[], officeLocation?: { lat: number; lng: number } }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [map, setMap] = useState<L.Map | null>(null);
 
@@ -67,9 +77,11 @@ export default function StoreMap({ locations }: { locations: StoreLocation[] }) 
     loc.salesName.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const center: [number, number] = filteredLocations.length > 0 && filteredLocations[0].lat && filteredLocations[0].lng
-    ? [filteredLocations[0].lat, filteredLocations[0].lng] 
-    : defaultCenter;
+  const center: [number, number] = officeLocation 
+    ? [officeLocation.lat, officeLocation.lng]
+    : (filteredLocations.length > 0 && filteredLocations[0].lat && filteredLocations[0].lng
+      ? [filteredLocations[0].lat, filteredLocations[0].lng] 
+      : defaultCenter);
 
   return (
     <div className="flex flex-col gap-4">
@@ -92,35 +104,69 @@ export default function StoreMap({ locations }: { locations: StoreLocation[] }) 
           />
           <MapUpdater center={center} />
           
-          {filteredLocations.map(loc => (
-            <Marker 
-              key={loc.id} 
-              position={[loc.lat, loc.lng]} 
-              icon={loc.lastVisitStatus === 'COMPLETED' ? visitedIcon : customIcon}
-            >
+          {/* Office Marker */}
+          {officeLocation && (
+            <Marker position={[officeLocation.lat, officeLocation.lng]} icon={officeIcon} zIndexOffset={1000}>
               <Popup>
-                <div className="p-1 min-w-50">
-                  <h3 className="font-bold text-sm text-slate-900 mb-1">{loc.name}</h3>
-                  <div className="text-xs text-slate-600 space-y-1">
-                    <p><span className="font-medium text-slate-700">Pemilik:</span> {loc.ownerName}</p>
-                    <p><span className="font-medium text-slate-700">Sales:</span> {loc.salesName}</p>
-                    <p><span className="font-medium text-slate-700">Alamat:</span> {loc.address}</p>
-                    <div className="mt-2 pt-2 border-t border-slate-100">
-                      <p className="font-medium text-slate-700">Kunjungan Terakhir:</p>
-                      <p className={`font-semibold ${loc.lastVisitStatus === 'COMPLETED' ? 'text-green-600' : loc.lastVisitStatus === 'SCHEDULED' ? 'text-blue-600' : 'text-slate-500'}`}>
-                        {loc.lastVisitStatus} 
-                        {loc.lastVisitDate && ` (${new Date(loc.lastVisitDate).toLocaleDateString('id-ID')})`}
-                      </p>
-                    </div>
-                  </div>
+                <div className="p-1">
+                  <h3 className="font-bold text-sm text-yellow-700">🏢 LOKASI KANTOR</h3>
+                  <p className="text-xs text-slate-600">Pusat Distribusi</p>
                 </div>
               </Popup>
             </Marker>
+          )}
+
+          {/* Store Markers and Routes */}
+          {filteredLocations.map(loc => (
+            <React.Fragment key={loc.id}>
+              {/* Spiderweb route line */}
+              {officeLocation && (
+                <Polyline 
+                  positions={[
+                    [officeLocation.lat, officeLocation.lng], 
+                    [loc.lat, loc.lng]
+                  ]} 
+                  pathOptions={{ 
+                    color: loc.lastVisitStatus === 'COMPLETED' ? '#16a34a' : '#3b82f6', 
+                    weight: 2, 
+                    opacity: 0.4,
+                    dashArray: '5, 10'
+                  }} 
+                />
+              )}
+              
+              <Marker 
+                position={[loc.lat, loc.lng]} 
+                icon={loc.lastVisitStatus === 'COMPLETED' ? visitedIcon : customIcon}
+              >
+                <Popup>
+                  <div className="p-1 min-w-50">
+                    <h3 className="font-bold text-sm text-slate-900 mb-1">{loc.name}</h3>
+                    <div className="text-xs text-slate-600 space-y-1">
+                      <p><span className="font-medium text-slate-700">Pemilik:</span> {loc.ownerName}</p>
+                      <p><span className="font-medium text-slate-700">Sales:</span> {loc.salesName}</p>
+                      <p><span className="font-medium text-slate-700">Alamat:</span> {loc.address}</p>
+                      <div className="mt-2 pt-2 border-t border-slate-100">
+                        <p className="font-medium text-slate-700">Kunjungan Terakhir:</p>
+                        <p className={`font-semibold ${loc.lastVisitStatus === 'COMPLETED' ? 'text-green-600' : loc.lastVisitStatus === 'SCHEDULED' ? 'text-blue-600' : 'text-slate-500'}`}>
+                          {loc.lastVisitStatus} 
+                          {loc.lastVisitDate && ` (${new Date(loc.lastVisitDate).toLocaleDateString('id-ID')})`}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </Popup>
+              </Marker>
+            </React.Fragment>
           ))}
         </MapContainer>
       </div>
       
-      <div className="flex gap-4 text-xs text-slate-500 justify-end">
+      <div className="flex gap-4 text-xs text-slate-500 justify-end flex-wrap">
+        <div className="flex items-center gap-1">
+          <img src="https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-gold.png" className="w-4 h-6" alt="gold" />
+          <span className="font-bold text-yellow-700">Lokasi Kantor</span>
+        </div>
         <div className="flex items-center gap-1">
           <img src="https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png" className="w-4 h-6" alt="green" />
           <span>Sudah Dikunjungi</span>

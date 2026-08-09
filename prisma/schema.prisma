@@ -229,6 +229,8 @@ model Setting {
   companyAddress String  @default("Jl. Contoh Alamat No. 123, Kota, Provinsi")
   logoUrl        String?
   logoPublicId   String?
+  officeLat      Float?
+  officeLng      Float?
   updatedAt      DateTime @updatedAt
 }
 
