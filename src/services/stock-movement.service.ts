@@ -4,11 +4,13 @@ export const stockMovementService = {
   async getPaginatedMovements(
     page: number,
     limit: number,
-    search?: string
+    search?: string,
+    startDate?: string,
+    endDate?: string
   ): Promise<{ success: boolean; data?: StockMovementWithProduct[]; metadata?: { total: number; pageCount: number }; message?: string }> {
     try {
       const skip = (page - 1) * limit;
-      const [data, total] = await stockMovementRepository.findPaginated(skip, limit, search);
+      const [data, total] = await stockMovementRepository.findPaginated(skip, limit, search, startDate, endDate);
       
       const pageCount = Math.ceil(total / limit);
       return { success: true, data, metadata: { total, pageCount } };
@@ -19,10 +21,12 @@ export const stockMovementService = {
   },
 
   async getAllMovements(
-    search?: string
+    search?: string,
+    startDate?: string,
+    endDate?: string
   ): Promise<{ success: boolean; data?: StockMovementWithProduct[]; message?: string }> {
     try {
-      const data = await stockMovementRepository.findAll(search);
+      const data = await stockMovementRepository.findAll(search, startDate, endDate);
       return { success: true, data };
     } catch (error) {
       console.error('Failed to get all stock movements:', error);

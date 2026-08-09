@@ -25,20 +25,27 @@ export function StockMovementsClient({ initialData, metadata }: StockMovementsCl
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [searchTerm, setSearchTerm] = useState(searchParams.get('search') || '');
+  const [startDate, setStartDate] = useState(searchParams.get('startDate') || '');
+  const [endDate, setEndDate] = useState(searchParams.get('endDate') || '');
   const [isExporting, setIsExporting] = useState(false);
   
   const page = parseInt(searchParams.get('page') || '1');
   const limit = parseInt(searchParams.get('limit') || '10');
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSearch = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     const params = new URLSearchParams(searchParams);
-    if (searchTerm) {
-      params.set('search', searchTerm);
-      params.set('page', '1');
-    } else {
-      params.delete('search');
-    }
+    
+    if (searchTerm) params.set('search', searchTerm);
+    else params.delete('search');
+    
+    if (startDate) params.set('startDate', startDate);
+    else params.delete('startDate');
+    
+    if (endDate) params.set('endDate', endDate);
+    else params.delete('endDate');
+    
+    params.set('page', '1');
     router.push(`${pathname}?${params.toString()}`);
   };
 
@@ -53,7 +60,7 @@ export function StockMovementsClient({ initialData, metadata }: StockMovementsCl
   const handleExportExcel = async () => {
     setIsExporting(true);
     try {
-      const result = await exportAllStockMovements(searchTerm);
+      const result = await exportAllStockMovements(searchTerm, startDate, endDate);
       if (!result.success || !result.data || result.data.length === 0) {
         alert('Tidak ada data untuk diekspor atau gagal memuat data.');
         setIsExporting(false);
@@ -265,9 +272,9 @@ export function StockMovementsClient({ initialData, metadata }: StockMovementsCl
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col sm:flex-row justify-between gap-4">
-        <div className="flex gap-4 w-full">
-          <form onSubmit={handleSearch} className="relative flex-1 sm:max-w-md">
+      <div className="flex flex-col gap-4">
+        <div className="flex flex-col md:flex-row gap-4 w-full">
+          <form onSubmit={handleSearch} className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
             <Input 
               placeholder="Cari nama atau kode produk..." 
@@ -276,10 +283,33 @@ export function StockMovementsClient({ initialData, metadata }: StockMovementsCl
               className="pl-9 bg-white"
             />
           </form>
+          <div className="flex items-center gap-2">
+            <Input 
+              type="date"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+              className="bg-white w-auto"
+              title="Dari Tanggal"
+            />
+            <span className="text-slate-400">-</span>
+            <Input 
+              type="date"
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+              className="bg-white w-auto"
+              title="Sampai Tanggal"
+            />
+            <button 
+              onClick={(e) => handleSearch(e as any)}
+              className="px-4 py-2 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-lg text-sm font-bold border border-blue-200 transition-all whitespace-nowrap"
+            >
+              Filter
+            </button>
+          </div>
           <button 
             onClick={handleExportExcel}
             disabled={isExporting}
-            className="flex items-center gap-2 px-4 py-2.5 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 rounded-lg text-sm font-bold transition-all border border-emerald-200 whitespace-nowrap disabled:opacity-50"
+            className="flex items-center justify-center gap-2 px-4 py-2 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 rounded-lg text-sm font-bold transition-all border border-emerald-200 whitespace-nowrap disabled:opacity-50"
           >
             {isExporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileDown className="w-4 h-4" />} 
             Export Excel

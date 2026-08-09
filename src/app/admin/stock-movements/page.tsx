@@ -16,8 +16,10 @@ export default async function StockMovementsPage({
   const page = typeof resolvedParams.page === 'string' ? parseInt(resolvedParams.page) : 1;
   const limit = typeof resolvedParams.limit === 'string' ? parseInt(resolvedParams.limit) : 10;
   const search = typeof resolvedParams.search === 'string' ? resolvedParams.search : undefined;
+  const startDate = typeof resolvedParams.startDate === 'string' ? resolvedParams.startDate : undefined;
+  const endDate = typeof resolvedParams.endDate === 'string' ? resolvedParams.endDate : undefined;
 
-  const result = await getStockMovementsPaginated(page, limit, search);
+  const result = await getStockMovementsPaginated(page, limit, search, startDate, endDate);
 
   return (
     <div className="space-y-6">

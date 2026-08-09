@@ -18,15 +18,21 @@ export type StockMovementWithProduct = StockMovementType & {
 };
 
 export const stockMovementRepository = {
-  async findPaginated(skip: number, take: number, search?: string): Promise<[StockMovementWithProduct[], number]> {
-    const where = search ? {
-      product: {
+  async findPaginated(skip: number, take: number, search?: string, startDate?: string, endDate?: string): Promise<[StockMovementWithProduct[], number]> {
+    const where: any = {};
+    if (search) {
+      where.product = {
         OR: [
           { name: { contains: search, mode: 'insensitive' as const } },
           { code: { contains: search, mode: 'insensitive' as const } },
         ]
-      }
-    } : {};
+      };
+    }
+    if (startDate || endDate) {
+      where.createdAt = {};
+      if (startDate) where.createdAt.gte = new Date(`${startDate}T00:00:00Z`);
+      if (endDate) where.createdAt.lte = new Date(`${endDate}T23:59:59.999Z`);
+    }
 
     const [data, total] = await prisma.$transaction([
       prisma.stockMovement.findMany({
@@ -44,15 +50,21 @@ export const stockMovementRepository = {
     return [data as StockMovementWithProduct[], total];
   },
 
-  async findAll(search?: string): Promise<StockMovementWithProduct[]> {
-    const where = search ? {
-      product: {
+  async findAll(search?: string, startDate?: string, endDate?: string): Promise<StockMovementWithProduct[]> {
+    const where: any = {};
+    if (search) {
+      where.product = {
         OR: [
           { name: { contains: search, mode: 'insensitive' as const } },
           { code: { contains: search, mode: 'insensitive' as const } },
         ]
-      }
-    } : {};
+      };
+    }
+    if (startDate || endDate) {
+      where.createdAt = {};
+      if (startDate) where.createdAt.gte = new Date(`${startDate}T00:00:00Z`);
+      if (endDate) where.createdAt.lte = new Date(`${endDate}T23:59:59.999Z`);
+    }
 
     const data = await prisma.stockMovement.findMany({
       where,
