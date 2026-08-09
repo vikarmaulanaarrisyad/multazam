@@ -49,6 +49,15 @@ function MapUpdater({ center }: { center: [number, number] }) {
 
 export default function StoreMap({ locations }: { locations: StoreLocation[] }) {
   const [searchTerm, setSearchTerm] = useState('');
+  const [map, setMap] = useState<L.Map | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (map) {
+        map.remove();
+      }
+    };
+  }, [map]);
   
   // Default to Indonesia (Jakarta roughly)
   const defaultCenter: [number, number] = [-6.200000, 106.816666];
@@ -76,7 +85,7 @@ export default function StoreMap({ locations }: { locations: StoreLocation[] }) 
       </div>
 
       <div className="h-150 w-full rounded-xl overflow-hidden border border-slate-200 shadow-sm relative z-0">
-        <MapContainer center={center} zoom={13} style={{ height: '100%', width: '100%' }}>
+        <MapContainer ref={setMap} center={center} zoom={13} style={{ height: '100%', width: '100%' }}>
           <TileLayer
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
