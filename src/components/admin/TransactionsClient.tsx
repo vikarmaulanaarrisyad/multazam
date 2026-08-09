@@ -535,12 +535,23 @@ export function TransactionsClient({ transactions }: { transactions: Transaction
       id: 'actions',
       header: 'Aksi',
       cell: ({ row }) => (
-        <button 
-          onClick={() => handleOpenModal(row.original)}
-          className="text-sm bg-slate-100 hover:bg-blue-50 text-blue-600 font-bold px-3 py-1.5 rounded-lg transition-colors border border-slate-200 hover:border-blue-200"
-        >
-          {row.original.status === 'PENDING_APPROVAL' ? 'Tinjau Pengajuan' : 'Kelola'}
-        </button>
+        <div className="flex flex-col xl:flex-row items-center gap-2">
+          <button 
+            onClick={() => handleOpenModal(row.original)}
+            className="text-sm bg-slate-100 hover:bg-blue-50 text-blue-600 font-bold px-3 py-1.5 rounded-lg transition-colors border border-slate-200 hover:border-blue-200 w-full xl:w-auto"
+          >
+            {row.original.status === 'PENDING_APPROVAL' ? 'Tinjau Pengajuan' : 'Kelola'}
+          </button>
+          <a
+            href={`/print/delivery-order/${row.original.id}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-sm bg-white hover:bg-slate-50 text-slate-700 font-bold px-3 py-1.5 rounded-lg transition-colors border border-slate-200 flex items-center justify-center gap-1.5 w-full xl:w-auto"
+            title="Cetak Faktur"
+          >
+            <Printer className="w-4 h-4" /> Cetak
+          </a>
+        </div>
       )
     }
   ];
