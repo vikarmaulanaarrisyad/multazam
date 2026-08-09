@@ -1,4 +1,4 @@
-import { Transaction as PrismaTransaction, TransactionStatus, PaymentStatus } from '@/generated/prisma/client';
+import { Transaction as PrismaTransaction } from '@/generated/prisma/client';
 import { z } from 'zod';
 
 export type Transaction = PrismaTransaction;

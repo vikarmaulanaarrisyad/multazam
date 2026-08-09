@@ -20,6 +20,7 @@ import {
   Truck,
   ClipboardCheck,
   Store,
+  MapPin,
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -95,9 +96,21 @@ export function AdminSidebar({ role, className, onNavigate }: SidebarProps) {
       visible: role === 'SUPER_ADMIN',
     },
     {
+      title: 'Tugaskan Kunjungan',
+      href: `${basePath}/visits`,
+      icon: MapPin,
+      visible: true,
+    },
+    {
       title: 'Data Toko',
       href: `${basePath}/stores`,
       icon: Store,
+      visible: true,
+    },
+    {
+      title: 'Persetujuan Harga',
+      href: `${basePath}/approvals`,
+      icon: ClipboardCheck,
       visible: true,
     },
     {
