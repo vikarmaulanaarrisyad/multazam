@@ -6,7 +6,7 @@ import { NewOrderStoreClient } from './_components/new-order-store-client';
 import { redirect } from 'next/navigation';
 
 export const metadata: Metadata = {
-  title: 'Pilih Toko - Multazam',
+  title: 'Pilih Toko - DIA MAKMUR ABADI',
   description: 'Pilih pelanggan/toko untuk pesanan baru',
 };
 

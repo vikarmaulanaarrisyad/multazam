@@ -15,14 +15,14 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Sistem Inventori Multazam",
-  description: "Aplikasi Manajemen Inventori Multazam",
+  title: "Sistem Inventori DIA MAKMUR ABADI",
+  description: "Aplikasi Manajemen Inventori DIA MAKMUR ABADI",
   manifest: "/manifest.json",
   themeColor: "#ffffff",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "Multazam",
+    title: "DIA MAKMUR ABADI",
   },
   icons: {
     apple: "/icon-192x192.png",

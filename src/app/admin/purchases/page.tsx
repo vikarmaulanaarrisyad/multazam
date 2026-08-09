@@ -3,7 +3,7 @@ import { PurchasesClient } from './_components/purchases-client';
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Pembelian (Restock) | Multazam',
+  title: 'Pembelian (Restock) | DIA MAKMUR ABADI',
   description: 'Manajemen pembelian dan restock barang',
 };
 

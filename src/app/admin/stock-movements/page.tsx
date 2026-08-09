@@ -3,7 +3,7 @@ import { StockMovementsClient } from './_components/stock-movements-client';
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Riwayat Stok | Multazam',
+  title: 'Riwayat Stok | DIA MAKMUR ABADI',
   description: 'Manajemen riwayat pergerakan stok gudang',
 };
 

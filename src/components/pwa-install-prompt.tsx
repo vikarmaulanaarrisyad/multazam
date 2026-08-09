@@ -86,7 +86,7 @@ export function PwaInstallPrompt() {
           </div>
           
           <div className="flex flex-col flex-1 pr-4">
-            <h3 className="text-[15px] font-extrabold text-slate-900 leading-tight">Install Aplikasi Multazam</h3>
+            <h3 className="text-[15px] font-extrabold text-slate-900 leading-tight">Install Aplikasi DIA MAKMUR ABADI</h3>
             <p className="text-[11px] text-slate-500 mt-1 leading-snug">
               Dapatkan pengalaman lebih cepat, akses offline, dan tampilan penuh selayaknya aplikasi native.
             </p>

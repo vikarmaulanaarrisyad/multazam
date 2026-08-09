@@ -100,7 +100,7 @@ export default function LoginPage() {
         {/* Footer info left */}
         <div className="relative z-10 mt-12">
           <p className="text-sm text-slate-500">
-            Sistem Inventori Multazam © {new Date().getFullYear()}. Hak Cipta Dilindungi.
+            Sistem Inventori DIA MAKMUR ABADI © {new Date().getFullYear()}. Hak Cipta Dilindungi.
           </p>
         </div>
       </div>
@@ -213,7 +213,7 @@ export default function LoginPage() {
           {/* Mobile Footer */}
           <div className="lg:hidden mt-12 text-center">
             <p className="text-xs text-slate-400">
-              Multazam © {new Date().getFullYear()}
+              DIA MAKMUR ABADI © {new Date().getFullYear()}
             </p>
           </div>
         </div>

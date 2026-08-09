@@ -113,7 +113,7 @@ export function AdminSidebar({ role, className, onNavigate }: SidebarProps) {
       <div className="p-6">
         <h2 className="text-2xl font-bold tracking-tight text-white flex items-center gap-2">
           <span className="bg-primary text-primary-foreground p-1 rounded-md">M</span>
-          MULTAZAM
+          DIA MAKMUR ABADI
         </h2>
         <p className="text-xs text-slate-400 mt-1 uppercase tracking-wider font-semibold">
           {role.replace('_', ' ')}
@@ -158,7 +158,7 @@ export function AdminSidebar({ role, className, onNavigate }: SidebarProps) {
         <div className="rounded-lg bg-slate-800 p-4">
           <p className="text-sm font-medium text-white">Butuh bantuan?</p>
           <p className="mt-1 text-xs text-slate-400">
-            Hubungi dukungan teknis Multazam.
+            Hubungi dukungan teknis DIA MAKMUR ABADI.
           </p>
         </div>
       </div>

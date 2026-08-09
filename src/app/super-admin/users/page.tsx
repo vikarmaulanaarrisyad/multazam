@@ -4,7 +4,7 @@ import prisma from '@/lib/prisma';
 import { UsersClient } from '@/components/super-admin/UsersClient';
 
 export const metadata = {
-  title: 'Manajemen Pengguna | Multazam',
+  title: 'Manajemen Pengguna | DIA MAKMUR ABADI',
   description: 'Kelola akses akun Karyawan dan Sales',
 };
 

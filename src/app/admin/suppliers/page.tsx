@@ -3,7 +3,7 @@ import { SuppliersClient } from './_components/suppliers-client';
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Data Supplier | Multazam',
+  title: 'Data Supplier | DIA MAKMUR ABADI',
   description: 'Manajemen data pemasok (supplier)',
 };
 

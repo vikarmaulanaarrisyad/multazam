@@ -6,7 +6,7 @@ import { auth } from '@/auth';
 import { redirect } from 'next/navigation';
 
 export const metadata: Metadata = {
-  title: 'Buat Restock Baru | Multazam',
+  title: 'Buat Restock Baru | DIA MAKMUR ABADI',
   description: 'Buat transaksi penerimaan barang baru',
 };
 

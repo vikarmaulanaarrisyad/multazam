@@ -119,7 +119,7 @@ function ResetPasswordForm() {
                   <div className="h-12 w-12 rounded-xl flex items-center justify-center bg-white shadow-sm border text-primary">
                     <PackageSearch className="w-6 h-6" />
                   </div>
-                  <h2 className="text-xl font-bold text-slate-900">Multazam</h2>
+                  <h2 className="text-xl font-bold text-slate-900">DIA MAKMUR ABADI</h2>
                 </div>
                 
                 <div className="mb-8">
@@ -206,7 +206,7 @@ function ResetPasswordForm() {
               {/* Footer */}
               <div className="absolute bottom-6 left-0 right-0 text-center px-4">
                 <p className="text-xs text-slate-500">
-                  Sistem Inventori Multazam © {new Date().getFullYear()}. Hak Cipta Dilindungi.
+                  Sistem Inventori DIA MAKMUR ABADI © {new Date().getFullYear()}. Hak Cipta Dilindungi.
                 </p>
               </div>
             </div>

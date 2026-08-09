@@ -2,7 +2,7 @@ import { DashboardClient } from '@/components/admin/DashboardClient';
 import { getDashboardStats } from '@/actions/dashboard-actions';
 
 export const metadata = {
-  title: 'Dashboard Super Admin | Multazam',
+  title: 'Dashboard Super Admin | DIA MAKMUR ABADI',
   description: 'Ringkasan analitik dan aktivitas toko (Super Admin)',
 };
 

@@ -124,7 +124,7 @@ function SuratJalanCopy({ transaction, setting, isDivider = false }: any) {
             }
 
             return (
-              <tr key={item.id}>
+              <tr key={item.id} className="break-inside-avoid">
                 <td className="py-1 px-1 text-center align-top">{index + 1}</td>
                 <td className="py-1 px-1 align-top">{item.product.code}</td>
                 <td className="py-1 px-1 align-top">{item.product.name}</td>
@@ -145,7 +145,7 @@ function SuratJalanCopy({ transaction, setting, isDivider = false }: any) {
             );
           })}
           {shippingCost > 0 && (
-             <tr>
+             <tr className="break-inside-avoid">
               <td className="py-1 px-1 text-center align-top"></td>
               <td className="py-1 px-1 align-top"></td>
               <td className="py-1 px-1 align-top">BIAYA ONGKIR PENGIRIMAN</td>
@@ -230,7 +230,7 @@ export default async function PrintDeliveryOrderPage({ params, searchParams }: {
         @media print {
           @page {
             size: 21cm 14cm;
-            margin: 1cm 2cm 1cm 2cm;
+            margin: 1cm 1.5cm 1cm 1.5cm;
           }
         }
       `}} />

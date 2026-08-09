@@ -225,7 +225,7 @@ model PurchaseItem {
 
 model Setting {
   id             String  @id @default("1")
-  companyName    String  @default("MULTAZAM")
+  companyName    String  @default("DIA MAKMUR ABADI")
   companyAddress String  @default("Jl. Contoh Alamat No. 123, Kota, Provinsi")
   logoUrl        String?
   logoPublicId   String?

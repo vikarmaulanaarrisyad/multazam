@@ -1,7 +1,7 @@
 {
-  "name": "Multazam Sales",
-  "short_name": "Multazam",
-  "description": "Sistem Inventori Multazam - Aplikasi Sales",
+  "name": "DIA MAKMUR ABADI Sales",
+  "short_name": "DMA",
+  "description": "Sistem Inventori DIA MAKMUR ABADI - Aplikasi Sales",
   "start_url": "/sales",
   "display": "standalone",
   "background_color": "#ffffff",

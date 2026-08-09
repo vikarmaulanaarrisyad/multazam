@@ -1,7 +1,7 @@
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Sinkronisasi | Multazam',
+  title: 'Sinkronisasi | DIA MAKMUR ABADI',
   description: 'Halaman Sinkronisasi Data',
 };
 

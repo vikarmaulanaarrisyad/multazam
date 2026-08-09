@@ -26,7 +26,7 @@ export default async function DashboardLayout({ children, role }: DashboardLayou
       {/* Sidebar */}
       <aside className="w-64 bg-white border-r hidden md:flex flex-col">
         <div className="h-16 flex items-center px-6 border-b">
-          <h1 className="text-xl font-bold text-primary">Multazam</h1>
+          <h1 className="text-xl font-bold text-primary">DIA MAKMUR ABADI</h1>
         </div>
         <nav className="flex-1 p-4 space-y-1">
           {menuItems.map((item) => {

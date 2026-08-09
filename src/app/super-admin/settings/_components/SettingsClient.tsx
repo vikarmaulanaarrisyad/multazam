@@ -131,7 +131,7 @@ export function SettingsClient({ initialSetting }: { initialSetting: any }) {
                 defaultValue={initialSetting?.companyName}
                 required
                 className="block w-full pl-10 pr-3 py-2 border border-slate-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                placeholder="Contoh: PT. Multazam Maju Bersama"
+                placeholder="Contoh: PT. DIA MAKMUR ABADI Maju Bersama"
               />
             </div>
           </div>
