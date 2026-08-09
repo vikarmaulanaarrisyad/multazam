@@ -60,6 +60,26 @@ function MapUpdater({ center }: { center: [number, number] }) {
 export default function StoreMap({ locations, officeLocation }: { locations: StoreLocation[], officeLocation?: { lat: number; lng: number } }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [map, setMap] = useState<L.Map | null>(null);
+  const [activeRoute, setActiveRoute] = useState<{ path: [number, number][], storeId: string } | null>(null);
+
+  const fetchRoadRoute = async (storeLoc: StoreLocation) => {
+    if (!officeLocation) return;
+    try {
+      // OSRM coordinates are in Lng,Lat order
+      const response = await fetch(
+        `https://router.project-osrm.org/route/v1/driving/${officeLocation.lng},${officeLocation.lat};${storeLoc.lng},${storeLoc.lat}?overview=full&geometries=geojson`
+      );
+      const data = await response.json();
+      if (data.routes && data.routes.length > 0) {
+        const coordinates = data.routes[0].geometry.coordinates;
+        // Convert [Lng, Lat] from GeoJSON to [Lat, Lng] for Leaflet Polyline
+        const latLngPath = coordinates.map((coord: number[]) => [coord[1], coord[0]]);
+        setActiveRoute({ path: latLngPath, storeId: storeLoc.id });
+      }
+    } catch (error) {
+      console.error("Failed to fetch route", error);
+    }
+  };
 
   useEffect(() => {
     return () => {
@@ -123,48 +143,58 @@ export default function StoreMap({ locations, officeLocation }: { locations: Sto
           )}
 
           {/* Store Markers and Routes */}
-          {filteredLocations.map(loc => (
-            <React.Fragment key={loc.id}>
-              {/* Spiderweb route line */}
-              {officeLocation && (
-                <Polyline 
-                  positions={[
-                    [officeLocation.lat, officeLocation.lng], 
-                    [loc.lat, loc.lng]
-                  ]} 
-                  pathOptions={{ 
-                    color: loc.lastVisitStatus === 'COMPLETED' ? '#16a34a' : '#3b82f6', 
-                    weight: 2, 
-                    opacity: 0.4,
-                    dashArray: '5, 10'
-                  }} 
-                />
-              )}
-              
-              <Marker 
-                position={[loc.lat, loc.lng]} 
-                icon={loc.lastVisitStatus === 'COMPLETED' ? visitedIcon : customIcon}
-              >
-                <Popup>
-                  <div className="p-1 min-w-50">
-                    <h3 className="font-bold text-sm text-slate-900 mb-1">{loc.name}</h3>
-                    <div className="text-xs text-slate-600 space-y-1">
-                      <p><span className="font-medium text-slate-700">Pemilik:</span> {loc.ownerName}</p>
-                      <p><span className="font-medium text-slate-700">Sales:</span> {loc.salesName}</p>
-                      <p><span className="font-medium text-slate-700">Alamat:</span> {loc.address}</p>
-                      <div className="mt-2 pt-2 border-t border-slate-100">
-                        <p className="font-medium text-slate-700">Kunjungan Terakhir:</p>
-                        <p className={`font-semibold ${loc.lastVisitStatus === 'COMPLETED' ? 'text-green-600' : loc.lastVisitStatus === 'SCHEDULED' ? 'text-blue-600' : 'text-slate-500'}`}>
-                          {loc.lastVisitStatus} 
-                          {loc.lastVisitDate && ` (${new Date(loc.lastVisitDate).toLocaleDateString('id-ID')})`}
-                        </p>
+          {filteredLocations.map(loc => {
+            const isActive = activeRoute?.storeId === loc.id;
+            
+            return (
+              <React.Fragment key={loc.id}>
+                {/* Spiderweb route line or Actual Road Route */}
+                {officeLocation && (
+                  <Polyline 
+                    positions={isActive ? activeRoute.path : [
+                      [officeLocation.lat, officeLocation.lng], 
+                      [loc.lat, loc.lng]
+                    ]} 
+                    pathOptions={{ 
+                      color: loc.lastVisitStatus === 'COMPLETED' ? '#16a34a' : '#3b82f6', 
+                      weight: isActive ? 5 : 3, 
+                      opacity: isActive ? 0.9 : 0.7,
+                      className: isActive 
+                        ? 'animated-route-completed' // We can reuse the animation for the road route too!
+                        : (loc.lastVisitStatus === 'COMPLETED' ? 'animated-route-completed' : 'animated-route-scheduled')
+                    }} 
+                  />
+                )}
+                
+                <Marker 
+                  position={[loc.lat, loc.lng]} 
+                  icon={loc.lastVisitStatus === 'COMPLETED' ? visitedIcon : customIcon}
+                  eventHandlers={{
+                    popupopen: () => fetchRoadRoute(loc),
+                    popupclose: () => setActiveRoute(null),
+                  }}
+                >
+                  <Popup>
+                    <div className="p-1 min-w-50">
+                      <h3 className="font-bold text-sm text-slate-900 mb-1">{loc.name}</h3>
+                      <div className="text-xs text-slate-600 space-y-1">
+                        <p><span className="font-medium text-slate-700">Pemilik:</span> {loc.ownerName}</p>
+                        <p><span className="font-medium text-slate-700">Sales:</span> {loc.salesName}</p>
+                        <p><span className="font-medium text-slate-700">Alamat:</span> {loc.address}</p>
+                        <div className="mt-2 pt-2 border-t border-slate-100">
+                          <p className="font-medium text-slate-700">Kunjungan Terakhir:</p>
+                          <p className={`font-semibold ${loc.lastVisitStatus === 'COMPLETED' ? 'text-green-600' : loc.lastVisitStatus === 'SCHEDULED' ? 'text-blue-600' : 'text-slate-500'}`}>
+                            {loc.lastVisitStatus} 
+                            {loc.lastVisitDate && ` (${new Date(loc.lastVisitDate).toLocaleDateString('id-ID')})`}
+                          </p>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </Popup>
-              </Marker>
-            </React.Fragment>
-          ))}
+                  </Popup>
+                </Marker>
+              </React.Fragment>
+            );
+          })}
         </MapContainer>
       </div>
       

@@ -150,3 +150,23 @@
     display: none;
   }
 }
+
+/* Leaflet Polyline Flow Animation */
+.animated-route-completed {
+  stroke-dasharray: 8, 12;
+  animation: route-flow 2s linear infinite;
+}
+
+.animated-route-scheduled {
+  stroke-dasharray: 8, 12;
+  animation: route-flow 3s linear infinite;
+}
+
+@keyframes route-flow {
+  0% {
+    stroke-dashoffset: 100;
+  }
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
