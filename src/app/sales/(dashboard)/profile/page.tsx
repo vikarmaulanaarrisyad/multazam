@@ -123,7 +123,7 @@ export default async function SalesProfilePage() {
             </div>
             <ChevronRight className="w-5 h-5 text-slate-400" />
           </button>
-          <button className="flex items-center w-full p-4 hover:bg-slate-50 transition-colors text-left">
+          <Link href="/sales/profile/support" className="flex items-center w-full p-4 hover:bg-slate-50 transition-colors text-left">
             <div className="w-10 h-10 rounded-full bg-blue-50 text-primary flex items-center justify-center mr-4">
               <HelpCircle className="w-5 h-5" />
             </div>
@@ -132,7 +132,7 @@ export default async function SalesProfilePage() {
               <div className="text-xs text-slate-500 font-medium">FAQ, Hubungi kami</div>
             </div>
             <ChevronRight className="w-5 h-5 text-slate-400" />
-          </button>
+          </Link>
         </div>
       </div>
 
