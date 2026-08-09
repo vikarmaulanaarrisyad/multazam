@@ -19,18 +19,37 @@ export default function VisitsClient({ visits }: { visits: VisitItem[] }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [filterStatus, setFilterStatus] = useState<'ALL' | 'SCHEDULED' | 'COMPLETED' | 'PENDING'>('ALL');
+  
+  // Generate a simple next 5 days for the date selector
+  const days = useMemo(() => {
+    return Array.from({ length: 5 }).map((_, i) => {
+      const d = new Date();
+      d.setHours(0, 0, 0, 0); // Start of day
+      d.setDate(d.getDate() + i);
+      return {
+        date: d,
+        dayStr: d.toLocaleDateString('id-ID', { weekday: 'short' }),
+        dateNum: d.getDate(),
+      };
+    });
+  }, []);
+
+  const [selectedDate, setSelectedDate] = useState<Date>(days[0].date);
 
   const filteredVisits = useMemo(() => {
     return visits.filter(v => {
+      const visitDate = new Date(v.scheduledAt);
+      const isSameDate = visitDate.toDateString() === selectedDate.toDateString();
+
       const matchesSearch = v.storeName.toLowerCase().includes(searchTerm.toLowerCase()) || 
                             v.address.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesFilter = filterStatus === 'ALL' || 
                             (filterStatus === 'SCHEDULED' && v.status === 'SCHEDULED') ||
                             (filterStatus === 'COMPLETED' && v.status === 'COMPLETED') ||
                             (filterStatus === 'PENDING' && v.status === 'CANCELLED'); // Map CANCELLED to PENDING visually for now if needed, or omit
-      return matchesSearch && matchesFilter;
+      return isSameDate && matchesSearch && matchesFilter;
     });
-  }, [visits, searchTerm, filterStatus]);
+  }, [visits, searchTerm, filterStatus, selectedDate]);
 
   const handleMarkCompleted = async (visitId: string) => {
     setIsSubmitting(true);
@@ -48,17 +67,6 @@ export default function VisitsClient({ visits }: { visits: VisitItem[] }) {
     }
   };
 
-  // Generate a simple next 5 days for the date selector
-  const days = Array.from({ length: 5 }).map((_, i) => {
-    const d = new Date();
-    d.setDate(d.getDate() + i);
-    return {
-      dayStr: d.toLocaleDateString('en-US', { weekday: 'short' }),
-      dateNum: d.getDate(),
-      isActive: i === 0
-    };
-  });
-
   return (
     <div className="flex flex-col w-full pb-24 bg-slate-50 min-h-screen">
       
@@ -68,20 +76,24 @@ export default function VisitsClient({ visits }: { visits: VisitItem[] }) {
         
         {/* Date Selector */}
         <div className="flex gap-3 overflow-x-auto snap-x pb-2 [&::-webkit-scrollbar]:hidden">
-          {days.map((d, i) => (
-            <div 
-              key={i} 
-              className={cn(
-                "snap-start shrink-0 flex flex-col items-center justify-center w-12 h-16 rounded-xl cursor-pointer transition-all active:scale-95",
-                d.isActive 
-                  ? "bg-blue-600 text-white shadow-sm shadow-blue-600/30" 
-                  : "bg-white border border-slate-200 text-slate-500 hover:bg-slate-50"
-              )}
-            >
-              <span className="text-[10px] uppercase font-medium opacity-90">{d.dayStr}</span>
-              <span className="text-lg font-bold mt-0.5">{d.dateNum}</span>
-            </div>
-          ))}
+          {days.map((d, i) => {
+            const isActive = selectedDate.getTime() === d.date.getTime();
+            return (
+              <div 
+                key={i} 
+                onClick={() => setSelectedDate(d.date)}
+                className={cn(
+                  "snap-start shrink-0 flex flex-col items-center justify-center w-12 h-16 rounded-xl cursor-pointer transition-all active:scale-95",
+                  isActive 
+                    ? "bg-blue-600 text-white shadow-sm shadow-blue-600/30" 
+                    : "bg-white border border-slate-200 text-slate-500 hover:bg-slate-50"
+                )}
+              >
+                <span className="text-[10px] uppercase font-medium opacity-90">{d.dayStr}</span>
+                <span className="text-lg font-bold mt-0.5">{d.dateNum}</span>
+              </div>
+            );
+          })}
           <div className="snap-start shrink-0 flex items-center justify-center w-12 h-16 rounded-xl bg-white border border-slate-200 text-slate-500 cursor-pointer transition-all hover:bg-slate-50 active:scale-95">
             <Calendar className="w-5 h-5" />
           </div>
@@ -166,7 +178,7 @@ export default function VisitsClient({ visits }: { visits: VisitItem[] }) {
                   </div>
 
                   <div className="flex items-start gap-1.5 mb-3 text-slate-500">
-                    <MapPin className="w-4 h-4 mt-0.5 flex-shrink-0 text-slate-400" />
+                    <MapPin className="w-4 h-4 mt-0.5 shrink-0 text-slate-400" />
                     <span className="text-sm line-clamp-2">{v.address}</span>
                   </div>
 
@@ -180,7 +192,10 @@ export default function VisitsClient({ visits }: { visits: VisitItem[] }) {
 
                   {/* Actions */}
                   <div className="flex gap-2 mt-2 pt-3 border-t border-slate-100">
-                    <button className="flex-1 h-9 flex items-center justify-center bg-slate-100 text-slate-700 font-medium text-sm rounded-full hover:bg-slate-200 transition-colors">
+                    <button 
+                      onClick={() => toast.info('Fitur detail kunjungan akan segera tersedia')}
+                      className="flex-1 h-9 flex items-center justify-center bg-slate-100 text-slate-700 font-medium text-sm rounded-full hover:bg-slate-200 transition-colors"
+                    >
                       Detail
                     </button>
                     {v.status === 'SCHEDULED' ? (
