@@ -30,6 +30,8 @@ export default async function SuperAdminTransactionsPage() {
           product: {
             select: {
               name: true,
+              contents: true,
+              retailPriceNote: true,
             }
           }
         }
@@ -64,6 +66,8 @@ export default async function SuperAdminTransactionsPage() {
     items: tx.items.map(item => ({
       id: item.id,
       productName: item.product.name,
+      contents: item.product.contents,
+      retailPriceNote: item.product.retailPriceNote,
       quantity: item.quantity,
       price: Number(item.price),
       originalPrice: item.originalPrice ? Number(item.originalPrice) : Number(item.price),
