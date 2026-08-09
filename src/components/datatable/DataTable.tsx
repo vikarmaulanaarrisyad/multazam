@@ -25,13 +25,14 @@ import { Button } from "@/components/ui/button"
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
   data: TData[]
-  pageCount: number
-  onPaginationChange: OnChangeFn<PaginationState>
-  pagination: PaginationState
+  pageCount?: number
+  onPaginationChange?: OnChangeFn<PaginationState>
+  pagination?: PaginationState
   isLoading?: boolean
   toolbar?: React.ReactNode
   rowSelection?: RowSelectionState
   onRowSelectionChange?: OnChangeFn<RowSelectionState>
+  emptyMessage?: React.ReactNode
 }
 
 export function DataTable<TData, TValue>({
@@ -40,23 +41,24 @@ export function DataTable<TData, TValue>({
   pageCount,
   onPaginationChange,
   pagination,
-  isLoading,
+  isLoading = false,
   toolbar,
   rowSelection,
   onRowSelectionChange,
+  emptyMessage,
 }: DataTableProps<TData, TValue>) {
   const table = useReactTable({
     data,
     columns,
-    pageCount,
+    ...(pageCount !== undefined ? { pageCount } : {}),
     state: {
-      pagination,
+      ...(pagination !== undefined ? { pagination } : {}),
       ...(rowSelection !== undefined ? { rowSelection } : {})
     },
-    onPaginationChange,
+    ...(onPaginationChange ? { onPaginationChange } : {}),
     ...(onRowSelectionChange ? { onRowSelectionChange } : {}),
     getCoreRowModel: getCoreRowModel(),
-    manualPagination: true,
+    ...(pagination !== undefined ? { manualPagination: true } : {}),
     getRowId: (row: any) => row.id || row.key || Math.random().toString(),
   })
 
@@ -115,7 +117,7 @@ export function DataTable<TData, TValue>({
             ) : (
               <TableRow>
                 <TableCell colSpan={columns.length} className="h-24 text-center">
-                  No results.
+                  {emptyMessage || "No results."}
                 </TableCell>
               </TableRow>
             )}
@@ -124,30 +126,32 @@ export function DataTable<TData, TValue>({
         </div>
         
         {/* Pagination Controls inside the Card */}
-        <div className="flex items-center justify-between px-4 py-4 border-t bg-slate-50/50 rounded-b-md">
-        <div className="text-sm text-muted-foreground">
-          Page {table.getState().pagination.pageIndex + 1} of{" "}
-          {table.getPageCount()}
-        </div>
-        <div className="flex items-center space-x-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => table.previousPage()}
-            disabled={!table.getCanPreviousPage() || isLoading}
-          >
-            Previous
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => table.nextPage()}
-            disabled={!table.getCanNextPage() || isLoading}
-          >
-            Next
-          </Button>
-        </div>
-        </div>
+        {pagination !== undefined && (
+          <div className="flex items-center justify-between px-4 py-4 border-t bg-slate-50/50 rounded-b-md">
+            <div className="text-sm text-muted-foreground">
+              Page {table.getState().pagination.pageIndex + 1} of{" "}
+              {table.getPageCount()}
+            </div>
+            <div className="flex items-center space-x-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => table.previousPage()}
+                disabled={!table.getCanPreviousPage() || isLoading}
+              >
+                Previous
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => table.nextPage()}
+                disabled={!table.getCanNextPage() || isLoading}
+              >
+                Next
+              </Button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )

@@ -1,6 +1,6 @@
 import { Metadata } from 'next';
 import NewReturnClient from './_components/NewReturnClient';
-import { getProducts } from '@/services/product.service';
+import { productService } from '@/services/product.service';
 
 export const metadata: Metadata = {
   title: 'Buat Retur - Multazam App',
@@ -9,7 +9,8 @@ export const metadata: Metadata = {
 export const dynamic = 'force-dynamic';
 
 export default async function NewReturnPage() {
-  const products = await getProducts();
+  const result = await productService.getAllProducts();
+  const products = result.success && result.data ? result.data : [];
   
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
