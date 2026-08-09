@@ -60,15 +60,15 @@ function SuratJalanCopy({ transaction, setting, isDivider = false }: any) {
   const totalKeseluruhan = totalItemAmount + shippingCost;
 
   return (
-    <div className={`w-full min-h-[14cm] print:min-h-screen bg-white print:p-0 relative flex flex-col justify-between font-sans text-[13px] leading-tight text-slate-900 ${isDivider ? 'border-b-2 border-dashed border-slate-300 print:border-slate-400 pb-12 mb-12 print:pb-12 print:mb-12' : ''}`}>
+    <div className={`w-full min-h-[14cm] print:min-h-screen bg-white print:p-0 relative flex flex-col justify-between font-mono text-xs leading-tight text-slate-900 ${isDivider ? 'border-b-2 border-dashed border-slate-300 print:border-slate-400 pb-12 mb-12 print:pb-12 print:mb-12' : ''}`}>
       
       <div className="grow">
         {/* HEADER SECTION */}
       <div className="flex justify-between w-full mb-2 uppercase font-semibold">
         {/* Kiri */}
         <div className="flex flex-col w-1/2">
-          <span className="text-xl font-bold tracking-wider">{setting?.companyName || 'E - DIA MAKMUR ABADI'}</span>
-          <span className="text-sm font-semibold tracking-wide">FAKTUR PENJUALAN TUNAI</span>
+          <span className="text-lg font-bold tracking-wider">{setting?.companyName || 'E - DIA MAKMUR ABADI'}</span>
+          <span className="text-xs font-semibold tracking-wide">FAKTUR PENJUALAN TUNAI</span>
           
           <div className="flex mt-auto pt-6">
             <span className="w-24">TANGGAL</span>
@@ -87,7 +87,7 @@ function SuratJalanCopy({ transaction, setting, isDivider = false }: any) {
       </div>
 
       {/* TABLE */}
-      <table className="w-full text-left uppercase border-collapse mt-1 text-[13px] font-semibold">
+      <table className="w-full text-left uppercase border-collapse mt-1 text-xs font-semibold">
         <thead>
           <tr className="border-t-4 border-b border-double border-slate-900">
             <th className="py-1 px-1 font-semibold text-center w-12">NO</th>
@@ -172,7 +172,7 @@ function SuratJalanCopy({ transaction, setting, isDivider = false }: any) {
 
       <div className="mt-auto">
       {/* FOOTER */}
-      <div className="flex justify-between items-center py-1 uppercase text-[13px] font-semibold border-b-4 border-double border-slate-900 text-slate-900">
+      <div className="flex justify-between items-center py-1 uppercase text-xs font-semibold border-b-4 border-double border-slate-900 text-slate-900">
         <div className="flex flex-1 pl-12">
           <span className="w-24">TERBILANG</span>
           <span className="mx-2">:</span>
@@ -185,7 +185,7 @@ function SuratJalanCopy({ transaction, setting, isDivider = false }: any) {
       </div>
 
       {/* SIGNATURES */}
-      <div className="flex justify-center gap-48 mt-8 mb-2 uppercase text-center text-[13px] font-semibold text-slate-900">
+      <div className="flex justify-center gap-48 mt-8 mb-2 uppercase text-center text-xs font-semibold text-slate-900">
         <div className="flex flex-col items-center w-40">
           <div className="w-full flex justify-between mb-8">
             <span>(</span>

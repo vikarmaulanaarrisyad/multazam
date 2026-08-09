@@ -1,6 +1,6 @@
 import React from 'react';
 import { auth, signOut } from '@/auth';
-import { User, Mail, Shield, LogOut } from 'lucide-react';
+import { LogOut, Activity, Wallet, TrendingUp, Shield, Smartphone, HelpCircle, ChevronRight } from 'lucide-react';
 
 export const metadata = {
   title: 'Profil Saya - DIA MAKMUR ABADI',
@@ -20,73 +20,96 @@ export default async function SalesProfilePage() {
   const user = session.user;
 
   return (
-    <div className="flex flex-col h-full bg-slate-50">
-      <div className="bg-primary text-primary-foreground p-6 pb-12 rounded-b-3xl shadow-sm">
-        <h1 className="text-2xl font-bold">Profil Saya</h1>
-        <p className="opacity-80 text-sm mt-1">Kelola akun dan sesi Anda</p>
-      </div>
-
-      <div className="px-4 -mt-6">
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 flex flex-col items-center">
-          <div className="w-20 h-20 rounded-full bg-primary/10 text-primary flex items-center justify-center mb-4 shadow-sm">
-            <span className="text-3xl font-bold">{user.name?.charAt(0).toUpperCase() || 'U'}</span>
+    <div className="flex flex-col w-full pb-20 font-sans">
+      <div className="relative w-full pb-8 bg-blue-50/50">
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent"></div>
+        <div className="relative flex flex-col items-center pt-8 px-4">
+          <div className="w-24 h-24 rounded-full shadow-md overflow-hidden mb-4 ring-4 ring-white bg-white flex items-center justify-center text-primary">
+            <span className="text-4xl font-bold">{user.name?.charAt(0).toUpperCase() || 'U'}</span>
           </div>
-          <h2 className="text-xl font-bold text-slate-900">{user.name}</h2>
-          <span className="px-3 py-1 bg-slate-100 text-slate-600 rounded-full text-xs font-semibold mt-2 uppercase tracking-wider">
-            {user.role?.replace('_', ' ') || 'SALES'}
-          </span>
+          <h2 className="text-2xl font-bold text-slate-900 mb-1">{user.name}</h2>
+          <p className="text-sm text-slate-500 mb-4 uppercase tracking-wide font-medium">{user.role?.replace('_', ' ') || 'SALES REPRESENTATIVE'}</p>
+          <button className="bg-primary text-white font-semibold text-sm px-6 py-2 rounded-full shadow-sm hover:bg-primary/90 transition-colors">
+            Edit Profile
+          </button>
         </div>
       </div>
 
-      <div className="p-4 mt-2 flex-1">
-        <div className="bg-white rounded-2xl shadow-sm border divide-y divide-slate-100">
-          <div className="flex items-center p-4 gap-4">
-            <div className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-500">
-              <User size={20} />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-xs text-slate-500 font-medium">Nama Lengkap</p>
-              <p className="text-sm font-semibold text-slate-900 truncate">{user.name}</p>
-            </div>
+      <div className="px-4 -mt-4 relative z-10">
+        <div className="grid grid-cols-3 gap-2">
+          <div className="bg-white rounded-xl p-3 shadow-sm flex flex-col items-center text-center">
+            <Activity className="text-primary mb-1 w-5 h-5" />
+            <span className="text-lg font-bold text-slate-900">8/10</span>
+            <span className="text-[11px] font-semibold text-slate-500 mt-1">Visits Today</span>
           </div>
-          
-          <div className="flex items-center p-4 gap-4">
-            <div className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-500">
-              <Mail size={20} />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-xs text-slate-500 font-medium">Alamat Email</p>
-              <p className="text-sm font-semibold text-slate-900 truncate">{user.email}</p>
-            </div>
+          <div className="bg-white rounded-xl p-3 shadow-sm flex flex-col items-center text-center">
+            <Wallet className="text-green-600 mb-1 w-5 h-5" />
+            <span className="text-lg font-bold text-slate-900">45.2M</span>
+            <span className="text-[11px] font-semibold text-slate-500 mt-1">Total Sales</span>
           </div>
-
-          <div className="flex items-center p-4 gap-4">
-            <div className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-500">
-              <Shield size={20} />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-xs text-slate-500 font-medium">Hak Akses</p>
-              <p className="text-sm font-semibold text-slate-900 truncate">{user.role?.replace('_', ' ') || 'SALES'}</p>
-            </div>
+          <div className="bg-white rounded-xl p-3 shadow-sm flex flex-col items-center text-center">
+            <TrendingUp className="text-primary mb-1 w-5 h-5" />
+            <span className="text-lg font-bold text-slate-900">98%</span>
+            <span className="text-[11px] font-semibold text-slate-500 mt-1">Performance</span>
           </div>
         </div>
+      </div>
 
-        <div className="mt-8">
-          <form
-            action={async () => {
-              'use server';
-              await signOut();
-            }}
+      <div className="px-4 mt-8">
+        <h3 className="text-[12px] font-bold text-slate-500 uppercase tracking-wider mb-3 px-2">Akun & Pengaturan</h3>
+        <div className="bg-white rounded-xl shadow-sm overflow-hidden flex flex-col">
+          <button className="flex items-center w-full p-4 hover:bg-slate-50 transition-colors text-left border-b border-slate-100">
+            <div className="w-10 h-10 rounded-full bg-blue-50 text-primary flex items-center justify-center mr-4">
+              <Shield className="w-5 h-5" />
+            </div>
+            <div className="flex-1">
+              <div className="text-sm font-bold text-slate-900">Keamanan Akun</div>
+              <div className="text-xs text-slate-500 font-medium">Kata Sandi, PIN, 2FA</div>
+            </div>
+            <ChevronRight className="w-5 h-5 text-slate-400" />
+          </button>
+          <button className="flex items-center w-full p-4 hover:bg-slate-50 transition-colors text-left border-b border-slate-100">
+            <div className="w-10 h-10 rounded-full bg-blue-50 text-primary flex items-center justify-center mr-4">
+              <Smartphone className="w-5 h-5" />
+            </div>
+            <div className="flex-1">
+              <div className="text-sm font-bold text-slate-900">Pengaturan Perangkat</div>
+              <div className="text-xs text-slate-500 font-medium">Biometrik, Notifikasi</div>
+            </div>
+            <ChevronRight className="w-5 h-5 text-slate-400" />
+          </button>
+          <button className="flex items-center w-full p-4 hover:bg-slate-50 transition-colors text-left">
+            <div className="w-10 h-10 rounded-full bg-blue-50 text-primary flex items-center justify-center mr-4">
+              <HelpCircle className="w-5 h-5" />
+            </div>
+            <div className="flex-1">
+              <div className="text-sm font-bold text-slate-900">Bantuan & Dukungan</div>
+              <div className="text-xs text-slate-500 font-medium">FAQ, Hubungi kami</div>
+            </div>
+            <ChevronRight className="w-5 h-5 text-slate-400" />
+          </button>
+        </div>
+      </div>
+
+      <div className="px-4 mt-6">
+        <form
+          action={async () => {
+            'use server';
+            await signOut();
+          }}
+        >
+          <button
+            type="submit"
+            className="flex items-center w-full p-4 bg-red-50 text-red-600 rounded-xl shadow-sm hover:bg-red-100 transition-colors active:scale-[0.98]"
           >
-            <button
-              type="submit"
-              className="w-full flex items-center justify-center gap-2 bg-red-50 text-red-600 font-bold py-4 rounded-2xl hover:bg-red-100 transition-colors active:scale-[0.98]"
-            >
-              <LogOut size={20} />
-              <span>Keluar dari Aplikasi</span>
-            </button>
-          </form>
-        </div>
+            <LogOut className="w-5 h-5 mr-3" />
+            <span className="text-sm font-bold flex-1 text-left">Keluar Akun</span>
+          </button>
+        </form>
+      </div>
+
+      <div className="mt-8 pb-8 flex justify-center">
+        <span className="text-[11px] font-medium text-slate-400">v1.0.0 (Build 001) - DIA MAKMUR ABADI</span>
       </div>
     </div>
   );
