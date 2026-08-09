@@ -3,6 +3,8 @@
 import { revalidatePath } from 'next/cache';
 import prisma from '@/lib/prisma';
 import { auth } from '@/auth';
+import { PreOrderSchema } from './preorder.schema.ts';
+import { ApiResponse } from '../types/api-response';
 
 export interface PreOrderData {
   customerName: string;
@@ -24,29 +26,39 @@ export interface PreOrderData {
   clonedFromId?: string;
 }
 
-export async function createPreOrder(data: PreOrderData) {
+export async function createPreOrder(data: PreOrderData): Promise<ApiResponse<{ id: string }>> {
   try {
     const session = await auth();
     if (!session || !session.user || !session.user.id) {
-      return { success: false, error: 'Unauthorized' };
+      return { success: false, error: 'UNAUTHORIZED' };
     }
 
-    // Generate Invoice Number (e.g. PO-YYYYMMDD-XXXX)
+    // Validate input data
+    const parseResult = PreOrderSchema.safeParse(data);
+    if (!parseResult.success) {
+      return { success: false, error: parseResult.error.message };
+    }
+    data = parseResult.data;
+
+    // Generate unique Invoice Number using atomic upsert on InvoiceCounter
     const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-    const count = await prisma.transaction.count({
-      where: {
-        invoiceNumber: {
-          startsWith: `PO-${dateStr}`
-        }
-      }
+    const counter = await prisma.$transaction(async (tx) => {
+      return await tx.invoiceCounter.upsert({
+        where: { date: dateStr },
+        update: { counter: { increment: 1 } },
+        create: { date: dateStr, counter: 1 },
+      });
     });
-    const invoiceNumber = `PO-${dateStr}-${(count + 1).toString().padStart(4, '0')}`;
+    const invoiceNumber = `PO-${dateStr}-${counter.counter.toString().padStart(4, '0')}`;
 
     // Calculate total amount and original amount
     const totalAmount = data.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-    const totalOriginalAmount = data.items.reduce((sum, item) => sum + ((item.originalPrice || item.price) * item.quantity), 0);
+    const totalOriginalAmount = data.items.reduce((sum, item) => sum + ((item.originalPrice ?? item.price) * item.quantity), 0);
     
     const isPriceProposal = totalAmount < totalOriginalAmount;
+
+    // Ensure dpAmount is a number
+    const dpAmount = Number(data.dpAmount ?? 0);
 
     // Create the transaction inside a Prisma transaction block to ensure data consistency
     const transaction = await prisma.$transaction(async (tx) => {
@@ -86,8 +98,8 @@ export async function createPreOrder(data: PreOrderData) {
           notes: data.notes,
           latitude: data.latitude,
           longitude: data.longitude,
-          paidAmount: data.dpAmount || 0,
-          paymentStatus: (data.dpAmount && data.dpAmount >= totalAmount) ? 'PAID' : (data.dpAmount && data.dpAmount > 0) ? 'PARTIAL' : 'UNPAID',
+          paidAmount: dpAmount,
+          paymentStatus: (dpAmount && dpAmount >= Number(totalAmount)) ? 'PAID' : (dpAmount && dpAmount > 0) ? 'PARTIAL' : 'UNPAID',
           items: {
             create: data.items.map(item => ({
               productId: item.productId,
@@ -127,20 +139,22 @@ export async function createPreOrder(data: PreOrderData) {
           throw new Error('ID Produk tidak valid pada salah satu pesanan.');
         }
 
-        // Find product to ensure enough stock
+        // Find product
         const product = await tx.product.findUnique({
           where: { id: item.productId }
         });
-        
-        if (!product || product.stock < item.quantity) {
-          throw new Error(`Stok produk ${product?.name || 'tidak diketahui'} tidak mencukupi.`);
+        if (!product) {
+          throw new Error(`Produk dengan ID ${item.productId} tidak ditemukan.`);
         }
-
+        
         // Decrement stock
-        await tx.product.update({
-          where: { id: item.productId },
+        const updated = await tx.product.updateMany({
+          where: { id: item.productId, stock: { gte: item.quantity } },
           data: { stock: { decrement: item.quantity } }
         });
+        if (updated.count === 0) {
+          throw new Error(`Stok produk ${product.name} tidak mencukupi.`);
+        }
 
         // Record stock movement
         await tx.stockMovement.create({
