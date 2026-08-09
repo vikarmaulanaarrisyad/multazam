@@ -1,3 +1,5 @@
+'use client';
+
 import React from 'react';
 import { Calendar, CheckCircle, XCircle, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
