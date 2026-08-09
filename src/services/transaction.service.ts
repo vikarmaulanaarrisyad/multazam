@@ -48,6 +48,15 @@ export class TransactionService {
       throw new Error('Pesanan tidak ditemukan');
     }
 
+    if (data.amount <= 0) {
+      throw new Error('Jumlah pembayaran harus lebih dari 0.');
+    }
+
+    const remainingBill = Number(tx.totalAmount) - Number(tx.paidAmount);
+    if (data.amount > remainingBill) {
+      throw new Error(`Jumlah pembayaran melebihi sisa tagihan.`);
+    }
+
     const newPaidAmount = Number(tx.paidAmount) + data.amount;
     let paymentStatus = 'PARTIAL';
     if (newPaidAmount >= Number(tx.totalAmount)) {

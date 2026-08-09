@@ -7,7 +7,7 @@ export class VisitService {
     if (!visit) {
       throw new Error('Visit not found');
     }
-    if (visit.store.userId !== userId) {
+    if (visit.userId !== userId) {
       throw new Error('FORBIDDEN');
     }
     return VisitRepository.updateStatus(visitId, 'COMPLETED', lat, lng);
@@ -41,3 +41,4 @@ export class VisitService {
     }));
   }
 }
+ 

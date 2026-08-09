@@ -39,8 +39,8 @@ export class TransactionRepository {
     });
     const invoiceNumber = `PO-${dateStr}-${counter.counter.toString().padStart(4, '0')}`;
 
-    const totalAmount = data.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-    const totalOriginalAmount = data.items.reduce((sum, item) => sum + ((item.originalPrice ?? item.price) * item.quantity), 0);
+    const totalAmount = data.items.reduce((sum, item) => sum + (item.price * item.quantity), 0) + (data.shippingCost || 0);
+    const totalOriginalAmount = data.items.reduce((sum, item) => sum + ((item.originalPrice ?? item.price) * item.quantity), 0) + (data.shippingCost || 0);
     
     const isPriceProposal = totalAmount < totalOriginalAmount;
     const dpAmount = Number(data.dpAmount ?? 0);

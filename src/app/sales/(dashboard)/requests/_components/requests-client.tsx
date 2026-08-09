@@ -90,10 +90,23 @@ export default function RequestsClient({ requests }: { requests: RequestItem[] }
     e.preventDefault();
     if (!paymentAmount) return;
     
+    const amount = Number(paymentAmount.replace(/\D/g, ''));
+    const remainingBill = req.totalAmount - req.paidAmount;
+
+    if (amount <= 0) {
+      toast.error('Jumlah pembayaran harus lebih dari 0.');
+      return;
+    }
+
+    if (amount > remainingBill) {
+      toast.error(`Jumlah pembayaran (Rp ${amount.toLocaleString('id-ID')}) melebihi sisa tagihan (Rp ${remainingBill.toLocaleString('id-ID')}).`);
+      return;
+    }
+
     setIsSubmitting(true);
     const res = await addPayment({
       transactionId: req.id,
-      amount: Number(paymentAmount.replace(/\D/g, ''))
+      amount: amount
     });
     
     if (res.success) {
@@ -131,6 +144,7 @@ export default function RequestsClient({ requests }: { requests: RequestItem[] }
         const dueDate = new Date(req.dueDate);
         return dueDate < today && (req.status === 'PENDING' || req.status === 'PENDING_APPROVAL');
       }
+      if (activeTab === 'Dibatalkan') return req.status === 'CANCELLED' || req.status === 'REJECTED';
       return true;
     });
   }, [requests, searchTerm, activeTab, today]);
@@ -215,7 +229,7 @@ export default function RequestsClient({ requests }: { requests: RequestItem[] }
 
       {/* Filters / Tabs */}
       <div className="flex gap-2 overflow-x-auto px-4 pb-1 hide-scrollbar">
-        {['Semua', 'Menunggu', 'Disetujui', 'Selesai/Dikirim', 'Terlambat'].map(tab => (
+        {['Semua', 'Menunggu', 'Disetujui', 'Selesai/Dikirim', 'Terlambat', 'Dibatalkan'].map(tab => (
           <button 
             key={tab}
             onClick={() => setActiveTab(tab)}

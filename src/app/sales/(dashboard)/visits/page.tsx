@@ -13,7 +13,7 @@ export default async function VisitsPage() {
 
   const visits = await prisma.visit.findMany({
     where: {
-      store: { userId: session.user.id },
+      userId: session.user.id,
     },
     select: {
       id: true,
@@ -45,3 +45,4 @@ export default async function VisitsPage() {
   }));
   return <VisitsClient visits={serializedVisits} />;
 }
+  
