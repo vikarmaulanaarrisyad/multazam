@@ -542,15 +542,13 @@ export function TransactionsClient({ transactions }: { transactions: Transaction
           >
             {row.original.status === 'PENDING_APPROVAL' ? 'Tinjau Pengajuan' : 'Kelola'}
           </button>
-          <a
-            href={`/print/delivery-order/${row.original.id}`}
-            target="_blank"
-            rel="noopener noreferrer"
+          <button
+            onClick={() => setShowPrintModalFor(row.original.id)}
             className="text-sm bg-white hover:bg-slate-50 text-slate-700 font-bold px-3 py-1.5 rounded-lg transition-colors border border-slate-200 flex items-center justify-center gap-1.5 w-full xl:w-auto"
             title="Cetak Faktur"
           >
             <Printer className="w-4 h-4" /> Cetak
-          </a>
+          </button>
         </div>
       )
     }

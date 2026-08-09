@@ -60,7 +60,7 @@ function SuratJalanCopy({ transaction, setting, isDivider = false }: any) {
   const totalKeseluruhan = totalItemAmount + shippingCost;
 
   return (
-    <div style={{ fontFamily: 'Calibri, sans-serif' }} className={`w-full h-[14cm] print:h-[14cm] bg-white p-4 print:px-[1.5cm] print:py-[1cm] relative flex flex-col justify-between text-xs leading-tight text-slate-900 ${isDivider ? 'border-b-2 border-dashed border-slate-300 print:border-slate-400 pb-12 mb-12 print:pb-12 print:mb-12' : ''}`}>
+    <div style={{ fontFamily: 'Calibri, sans-serif' }} className={`w-full h-[14cm] print:h-[14cm] bg-white p-4 print:px-[1.5cm] print:pt-[0.7cm] print:pb-[1cm] relative flex flex-col justify-between text-xs leading-tight text-slate-900 ${isDivider ? 'border-b-2 border-dashed border-slate-300 print:border-slate-400 pb-12 mb-12 print:pb-12 print:mb-12' : ''}`}>
       
       <div className="grow">
         {/* HEADER SECTION */}
@@ -87,7 +87,7 @@ function SuratJalanCopy({ transaction, setting, isDivider = false }: any) {
       </div>
 
       {/* TABLE */}
-      <table className="w-full text-left uppercase border-collapse mt-1 text-xs font-semibold">
+      <table className="w-full text-left uppercase border-collapse mt-1 text-[13px] font-semibold">
         <thead>
           <tr className="border-t-4 border-b border-double border-slate-900">
             <th className="py-1 px-1 font-semibold text-center w-12">NO</th>
