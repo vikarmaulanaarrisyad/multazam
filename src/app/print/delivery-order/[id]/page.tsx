@@ -60,14 +60,14 @@ function SuratJalanCopy({ transaction, setting, isDivider = false }: any) {
   const totalKeseluruhan = totalItemAmount + shippingCost;
 
   return (
-    <div className={`w-full min-h-[14cm] print:min-h-screen bg-white p-4 print:px-[1.5cm] print:py-[1cm] relative flex flex-col justify-between font-mono text-xs leading-tight text-slate-900 ${isDivider ? 'border-b-2 border-dashed border-slate-300 print:border-slate-400 pb-12 mb-12 print:pb-12 print:mb-12' : ''}`}>
+    <div style={{ fontFamily: 'Calibri, sans-serif' }} className={`w-full h-[14cm] print:h-[14cm] bg-white p-4 print:px-[1.5cm] print:py-[1cm] relative flex flex-col justify-between text-xs leading-tight text-slate-900 ${isDivider ? 'border-b-2 border-dashed border-slate-300 print:border-slate-400 pb-12 mb-12 print:pb-12 print:mb-12' : ''}`}>
       
       <div className="grow">
         {/* HEADER SECTION */}
       <div className="flex justify-between w-full mb-2 uppercase font-semibold">
         {/* Kiri */}
         <div className="flex flex-col w-1/2">
-          <span className="text-lg font-bold tracking-wider">{setting?.companyName || 'E - DIA MAKMUR ABADI'}</span>
+          <span className="text-[22px] font-bold tracking-wider">{setting?.companyName || 'E - DIA MAKMUR ABADI'}</span>
           <span className="text-xs font-semibold tracking-wide">FAKTUR PENJUALAN TUNAI</span>
           
           <div className="flex mt-auto pt-6">
@@ -238,12 +238,17 @@ export default async function PrintDeliveryOrderPage({ params, searchParams }: {
       <style dangerouslySetInnerHTML={{__html: `
         @media print {
           @page {
-            size: 21.5cm 14cm;
             margin: 0;
+          }
+          * {
+            -webkit-font-smoothing: none !important;
+            -moz-osx-font-smoothing: grayscale !important;
+            text-rendering: optimizeSpeed !important;
+            color: #000 !important;
           }
         }
       `}} />
-      <div id="print-container" className={`w-full max-w-[21.5cm] print:max-w-none shrink-0 bg-white relative print:w-full shadow-sm print:shadow-none p-4 print:p-0`}>
+      <div id="print-container" className={`w-full ${orientation === 'landscape' ? 'max-w-[21.5cm]' : 'max-w-[21cm]'} print:max-w-none shrink-0 bg-white relative print:w-full shadow-sm print:shadow-none p-4 print:p-0`}>
         {/* Floating Print Button (Hidden on Print) */}
         <Suspense fallback={<div />}>
           <PrintButton invoiceNumber={transaction.invoiceNumber} />

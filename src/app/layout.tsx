@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import { PwaInstallPrompt } from "@/components/pwa-install-prompt";
+import { PwaUpdatePrompt } from "@/components/pwa-update-prompt";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -42,6 +43,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {children}
         <Toaster position="top-center" richColors />
         <PwaInstallPrompt />
+        <PwaUpdatePrompt />
       </body>
     </html>
   );
