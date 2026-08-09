@@ -2,7 +2,6 @@ import React from 'react';
 import { auth } from '@/auth';
 import prisma from '@/lib/prisma';
 import VisitsClient from './_components/visits-client';
-import { Visit } from '@/generated/prisma/client';
 
 export const dynamic = 'force-dynamic';
 
@@ -12,8 +11,7 @@ export default async function VisitsPage() {
     return <div>Unauthorized</div>;
   }
 
-  // Fetch visits for stores belonging to the current sales user
-  const visits: Visit[] = await prisma.visit.findMany({
+  const visits = await prisma.visit.findMany({
     where: {
       store: { userId: session.user.id },
     },
@@ -23,9 +21,9 @@ export default async function VisitsPage() {
       address: true,
       status: true,
       notes: true,
-      storeId: true,
-      createdAt: true,
-      updatedAt: true,
+      store: {
+        select: { name: true }
+      }
     },
     orderBy: { scheduledAt: 'desc' },
   });
@@ -33,7 +31,7 @@ export default async function VisitsPage() {
   // Serialize dates for client component
   const serializedVisits = visits.map(v => ({
     id: v.id,
-    storeId: v.storeId,
+    storeName: v.store.name,
     scheduledAt: v.scheduledAt.toISOString(),
     address: v.address,
     status: v.status as 'SCHEDULED' | 'COMPLETED' | 'CANCELLED',

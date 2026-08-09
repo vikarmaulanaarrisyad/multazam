@@ -7,7 +7,7 @@ import { markVisitCompleted } from '@/actions/visits';
 
 interface VisitItem {
   id: string;
-  storeId: string;
+  storeName: string;
   scheduledAt: string; // ISO string
   address: string;
   status: 'SCHEDULED' | 'COMPLETED' | 'CANCELLED';
@@ -20,7 +20,7 @@ export default function VisitsClient({ visits }: { visits: VisitItem[] }) {
 
   const filteredVisits = React.useMemo(() => {
     return visits.filter(v =>
-      v.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      v.storeName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       v.address.toLowerCase().includes(searchTerm.toLowerCase())
     );
   }, [visits, searchTerm]);
@@ -61,7 +61,7 @@ export default function VisitsClient({ visits }: { visits: VisitItem[] }) {
           filteredVisits.map(v => (
             <div key={v.id} className="bg-white rounded-xl shadow-sm border p-4 flex justify-between items-center">
               <div>
-                <p className="text-sm font-medium text-slate-800">Store: {v.storeId}</p>
+                <p className="text-sm font-bold text-slate-800">{v.storeName}</p>
                 <p className="text-xs text-slate-500">{new Date(v.scheduledAt).toLocaleString('id-ID')}</p>
                 <p className="text-sm text-slate-700 mt-1">{v.address}</p>
               </div>
