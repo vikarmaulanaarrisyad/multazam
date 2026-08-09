@@ -14,7 +14,7 @@ export type StockMovementType = {
 };
 
 export type StockMovementWithProduct = StockMovementType & {
-  product: { id: string; name: string; code: string };
+  product: { id: string; name: string; code: string; contents: string | null; retailPriceNote: string | null; };
 };
 
 export const stockMovementRepository = {
@@ -34,7 +34,7 @@ export const stockMovementRepository = {
         skip,
         take,
         include: {
-          product: { select: { id: true, name: true, code: true } },
+          product: { select: { id: true, name: true, code: true, contents: true, retailPriceNote: true } },
         },
         orderBy: { createdAt: 'desc' },
       }),
@@ -42,6 +42,27 @@ export const stockMovementRepository = {
     ]);
 
     return [data as StockMovementWithProduct[], total];
+  },
+
+  async findAll(search?: string): Promise<StockMovementWithProduct[]> {
+    const where = search ? {
+      product: {
+        OR: [
+          { name: { contains: search, mode: 'insensitive' as const } },
+          { code: { contains: search, mode: 'insensitive' as const } },
+        ]
+      }
+    } : {};
+
+    const data = await prisma.stockMovement.findMany({
+      where,
+      include: {
+        product: { select: { id: true, name: true, code: true, contents: true, retailPriceNote: true } },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return data as StockMovementWithProduct[];
   },
 
   async create(data: {

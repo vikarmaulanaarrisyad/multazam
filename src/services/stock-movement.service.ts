@@ -16,5 +16,17 @@ export const stockMovementService = {
       console.error('Failed to get paginated stock movements:', error);
       return { success: false, message: 'Gagal memuat riwayat pergerakan stok.' };
     }
+  },
+
+  async getAllMovements(
+    search?: string
+  ): Promise<{ success: boolean; data?: StockMovementWithProduct[]; message?: string }> {
+    try {
+      const data = await stockMovementRepository.findAll(search);
+      return { success: true, data };
+    } catch (error) {
+      console.error('Failed to get all stock movements:', error);
+      return { success: false, message: 'Gagal memuat seluruh riwayat pergerakan stok.' };
+    }
   }
 };

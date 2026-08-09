@@ -7,6 +7,8 @@ import { updateTransactionStatus, cancelTransaction, addPayment } from '@/action
 import { approvePriceRequest, rejectPriceRequest } from '@/actions/approval-actions';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import ExcelJS from 'exceljs';
+import { saveAs } from 'file-saver';
 
 export type TransactionDetail = {
   id: string;
@@ -32,6 +34,8 @@ export type TransactionDetail = {
   items: {
     id: string;
     productName: string;
+    contents: string | null;
+    retailPriceNote: string | null;
     quantity: number;
     price: number;
     originalPrice: number;
@@ -254,6 +258,198 @@ export function TransactionsClient({ transactions }: { transactions: Transaction
     });
   }, [transactions, searchTerm, activeTab, tabs]);
 
+  const handleExportExcel = async () => {
+    if (filteredTransactions.length === 0) {
+      toast.error('Tidak ada data untuk diekspor');
+      return;
+    }
+
+    try {
+      const workbook = new ExcelJS.Workbook();
+      workbook.creator = 'DIA MAKMUR ABADI';
+      workbook.created = new Date();
+      
+      const sheet = workbook.addWorksheet('Transaksi', {
+        views: [{ showGridLines: false }]
+      });
+
+      // --- 1. TITLE SECTION ---
+      sheet.mergeCells('A1:J1');
+      const titleCell = sheet.getCell('A1');
+      titleCell.value = 'LAPORAN TRANSAKSI PESANAN';
+      titleCell.font = { name: 'Arial', size: 16, bold: true, color: { argb: 'FF1E3A8A' } };
+      titleCell.alignment = { vertical: 'middle', horizontal: 'center' };
+
+      sheet.mergeCells('A2:J2');
+      const subtitleCell = sheet.getCell('A2');
+      subtitleCell.value = `Tanggal Cetak: ${new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}`;
+      subtitleCell.font = { name: 'Arial', size: 11, italic: true, color: { argb: 'FF64748B' } };
+      subtitleCell.alignment = { vertical: 'middle', horizontal: 'center' };
+
+      sheet.addRow([]); // empty row 3
+
+      // --- 2. HEADERS ---
+      const headers = [
+        'No. Invoice', 'Tanggal', 'Pelanggan', 'Sales', 'Status', 
+        'Produk', 'Jml (Karton/Asal)', 'Total Satuan Terkecil', 'Harga Satuan', 'Subtotal'
+      ];
+      const headerRow = sheet.addRow(headers);
+      
+      headerRow.eachCell((cell) => {
+        cell.fill = {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: 'FF2563EB' } // Blue-600
+        };
+        cell.font = { name: 'Arial', size: 11, bold: true, color: { argb: 'FFFFFFFF' } };
+        cell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
+        cell.border = {
+          top: { style: 'thin', color: { argb: 'FFCBD5E1' } },
+          left: { style: 'thin', color: { argb: 'FFCBD5E1' } },
+          bottom: { style: 'thin', color: { argb: 'FFCBD5E1' } },
+          right: { style: 'thin', color: { argb: 'FFCBD5E1' } }
+        };
+      });
+      headerRow.height = 30;
+
+      // --- 3. DATA ROWS ---
+      let totalAmountAll = 0;
+      let currentRowIdx = 5;
+
+      filteredTransactions.forEach(tx => {
+        let isFirstRowForTx = true;
+        
+        tx.items.forEach((item) => {
+          let multiplier = 1;
+          let smallestUnit = item.retailPriceNote || 'Pcs';
+          
+          if (item.contents) {
+            const match = item.contents.match(/(\d+)/);
+            if (match) multiplier = parseInt(match[1], 10);
+            
+            const unitMatch = item.contents.match(/[a-zA-Z]+/);
+            if (unitMatch) smallestUnit = unitMatch[0];
+          }
+
+          const totalSmallestUnit = item.quantity * multiplier;
+          const subtotal = item.price * item.quantity;
+          
+          if (isFirstRowForTx) {
+            totalAmountAll += Number(tx.totalAmount);
+          }
+
+          const row = sheet.addRow([
+            isFirstRowForTx ? tx.invoiceNumber : '',
+            isFirstRowForTx ? new Date(tx.createdAt).toLocaleDateString('id-ID') : '',
+            isFirstRowForTx ? (tx.customerName || 'Anonim') : '',
+            isFirstRowForTx ? (tx.user.name || '-') : '',
+            isFirstRowForTx ? tx.status : '',
+            item.productName,
+            `${item.quantity}`,
+            `${totalSmallestUnit} ${smallestUnit}`,
+            item.price,
+            subtotal
+          ]);
+
+          row.eachCell((cell, colNumber) => {
+            cell.font = { name: 'Arial', size: 10, color: { argb: 'FF334155' } };
+            cell.alignment = { vertical: 'top', horizontal: [1, 2, 5, 7, 8].includes(colNumber) ? 'center' : 'left' };
+            cell.border = {
+              top: { style: 'thin', color: { argb: 'FFCBD5E1' } },
+              left: { style: 'thin', color: { argb: 'FFCBD5E1' } },
+              bottom: { style: 'thin', color: { argb: 'FFCBD5E1' } },
+              right: { style: 'thin', color: { argb: 'FFCBD5E1' } }
+            };
+
+            // Currency formatting
+            if (colNumber === 9 || colNumber === 10) {
+              cell.numFmt = 'Rp #,##0';
+              cell.alignment = { vertical: 'top', horizontal: 'right' };
+            }
+            
+            // Highlight invoice number
+            if (colNumber === 1 && cell.value) {
+              cell.font = { name: 'Arial', size: 10, bold: true, color: { argb: 'FF0F172A' } };
+            }
+          });
+
+          isFirstRowForTx = false;
+          currentRowIdx++;
+        });
+
+        // If there's shipping cost, add a row for it
+        if (tx.shippingCost) {
+          const shipRow = sheet.addRow([
+            '', '', '', '', '', 'Ongkos Kirim', '', '', '', Number(tx.shippingCost)
+          ]);
+          shipRow.eachCell((cell, colNumber) => {
+            cell.font = { name: 'Arial', size: 10, italic: true, color: { argb: 'FF64748B' } };
+            cell.border = {
+              top: { style: 'thin', color: { argb: 'FFCBD5E1' } }, left: { style: 'thin', color: { argb: 'FFCBD5E1' } },
+              bottom: { style: 'thin', color: { argb: 'FFCBD5E1' } }, right: { style: 'thin', color: { argb: 'FFCBD5E1' } }
+            };
+            if (colNumber === 10) {
+              cell.numFmt = 'Rp #,##0';
+              cell.alignment = { horizontal: 'right' };
+            }
+          });
+          currentRowIdx++;
+        }
+      });
+
+      // --- 4. FOOTER SUMMARY ---
+      const totalRow = sheet.addRow([
+        'TOTAL KESELURUHAN PENDAPATAN', '', '', '', '', '', '', '', '', totalAmountAll
+      ]);
+      sheet.mergeCells(`A${currentRowIdx}:I${currentRowIdx}`);
+      
+      totalRow.eachCell((cell, colNumber) => {
+        cell.fill = {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: 'FFF1F5F9' } // Slate-100
+        };
+        cell.font = { name: 'Arial', size: 11, bold: true, color: { argb: 'FF0F172A' } };
+        cell.border = {
+          top: { style: 'medium', color: { argb: 'FF94A3B8' } },
+          bottom: { style: 'medium', color: { argb: 'FF94A3B8' } },
+          left: { style: 'thin', color: { argb: 'FFCBD5E1' } },
+          right: { style: 'thin', color: { argb: 'FFCBD5E1' } }
+        };
+        if (colNumber === 1) cell.alignment = { horizontal: 'right' };
+        if (colNumber === 10) {
+          cell.numFmt = 'Rp #,##0';
+          cell.font = { name: 'Arial', size: 12, bold: true, color: { argb: 'FF15803D' } }; // Green-700
+          cell.alignment = { horizontal: 'right' };
+        }
+      });
+
+      // --- 5. COLUMN WIDTHS ---
+      sheet.columns = [
+        { width: 22 }, // Invoice
+        { width: 15 }, // Tanggal
+        { width: 25 }, // Pelanggan
+        { width: 20 }, // Sales
+        { width: 18 }, // Status
+        { width: 35 }, // Produk
+        { width: 18 }, // Jml Karton
+        { width: 22 }, // Jml Terkecil
+        { width: 18 }, // Harga Satuan
+        { width: 20 }, // Subtotal
+      ];
+
+      // --- 6. EXPORT FILE ---
+      const buffer = await workbook.xlsx.writeBuffer();
+      const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      saveAs(blob, `Laporan_Transaksi_${new Date().toISOString().slice(0, 10)}.xlsx`);
+      
+      toast.success('Laporan berhasil diekspor dengan format rapi!');
+    } catch (error) {
+      console.error(error);
+      toast.error('Terjadi kesalahan saat memproses Excel');
+    }
+  };
+
   const [{ pageIndex, pageSize }, setPagination] = useState({ pageIndex: 0, pageSize: 10 });
 
   const columns: ColumnDef<TransactionDetail>[] = [
@@ -325,17 +521,24 @@ export function TransactionsClient({ transactions }: { transactions: Transaction
 
   return (
     <div className="space-y-4">
-      {/* Search and Filters */}
       <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex flex-col gap-4">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-          <input 
-            type="text" 
-            placeholder="Cari No. Invoice, Pelanggan, atau Sales..." 
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
-          />
+        <div className="flex gap-4">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+            <input 
+              type="text" 
+              placeholder="Cari No. Invoice, Pelanggan, atau Sales..." 
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+            />
+          </div>
+          <button 
+            onClick={handleExportExcel} 
+            className="flex items-center gap-2 px-4 py-2.5 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 rounded-xl text-sm font-bold transition-all border border-emerald-200 whitespace-nowrap"
+          >
+            <FileDown className="w-5 h-5" /> Export Excel
+          </button>
         </div>
         
         <div className="flex overflow-x-auto pb-2 gap-2 hide-scrollbar">
