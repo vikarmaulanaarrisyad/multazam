@@ -64,7 +64,7 @@ export function SettingsClient({ initialSetting }: { initialSetting: any }) {
   };
 
   return (
-    <div className="max-w-3xl bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+    <div className="w-full bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
       <div className="p-6 border-b border-slate-200">
         <h2 className="text-lg font-semibold text-slate-800">Identitas Perusahaan</h2>
       </div>
@@ -78,7 +78,7 @@ export function SettingsClient({ initialSetting }: { initialSetting: any }) {
             <div className="relative w-32 h-32 rounded-xl border-2 border-dashed border-slate-300 flex items-center justify-center bg-slate-50 overflow-hidden group">
               {logoPreview ? (
                 <>
-                  <Image src={logoPreview} alt="Logo" fill className="object-contain p-2" />
+                  <img src={logoPreview} alt="Logo" className="w-full h-full object-contain p-2" />
                   <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                     <button type="button" onClick={handleRemoveLogo} className="p-2 bg-white rounded-full text-red-600 hover:scale-110 transition-transform">
                       <X className="w-5 h-5" />
@@ -130,7 +130,7 @@ export function SettingsClient({ initialSetting }: { initialSetting: any }) {
                 name="companyName"
                 defaultValue={initialSetting?.companyName}
                 required
-                className="block w-full pl-10 pr-3 py-2 border border-slate-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                className="block w-full pl-10 pr-3 py-2 border border-slate-300 rounded-lg focus:ring-blue-500 sm:text-sm"
                 placeholder="Contoh: PT. DIA MAKMUR ABADI Maju Bersama"
               />
             </div>
@@ -147,7 +147,7 @@ export function SettingsClient({ initialSetting }: { initialSetting: any }) {
                 defaultValue={initialSetting?.companyAddress}
                 required
                 rows={3}
-                className="block w-full pl-10 pr-3 py-2 border border-slate-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                className="block w-full pl-10 pr-3 py-2 border border-slate-300 rounded-lg focus:ring-blue-500 sm:text-sm"
                 placeholder="Alamat lengkap yang akan dicetak di kop surat..."
               />
             </div>

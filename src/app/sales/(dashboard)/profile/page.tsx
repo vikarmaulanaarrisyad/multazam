@@ -1,5 +1,6 @@
 import React from 'react';
 import { auth, signOut } from '@/auth';
+import prisma from '@/lib/prisma';
 import { LogOut, Activity, Wallet, TrendingUp, Shield, Smartphone, HelpCircle, ChevronRight } from 'lucide-react';
 
 export const metadata = {
@@ -18,6 +19,49 @@ export default async function SalesProfilePage() {
   }
 
   const user = session.user;
+
+  // 1. Tanggal hari ini untuk filter visits
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const tomorrow = new Date(today);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+
+  // 2. Ambil data kunjungan hari ini
+  const totalVisitsToday = await prisma.visit.count({
+    where: {
+      store: { userId: user.id },
+      scheduledAt: { gte: today, lt: tomorrow }
+    }
+  });
+
+  const completedVisitsToday = await prisma.visit.count({
+    where: {
+      store: { userId: user.id },
+      scheduledAt: { gte: today, lt: tomorrow },
+      status: 'COMPLETED'
+    }
+  });
+
+  // 3. Ambil data total penjualan sales ini
+  const salesResult = await prisma.transaction.aggregate({
+    _sum: { totalAmount: true },
+    where: {
+      userId: user.id,
+      status: 'COMPLETED'
+    }
+  });
+  
+  const totalSales = Number(salesResult._sum.totalAmount || 0);
+  const formattedSales = totalSales >= 1000000 
+    ? `${(totalSales / 1000000).toFixed(1)}M` 
+    : totalSales >= 1000 
+      ? `${(totalSales / 1000).toFixed(1)}K` 
+      : totalSales.toString();
+
+  // 4. Kalkulasi Performa
+  const performance = totalVisitsToday > 0 
+    ? Math.round((completedVisitsToday / totalVisitsToday) * 100) 
+    : 100; // default 100% jika belum ada jadwal
 
   return (
     <div className="flex flex-col w-full pb-20 font-sans">
@@ -39,17 +83,17 @@ export default async function SalesProfilePage() {
         <div className="grid grid-cols-3 gap-2">
           <div className="bg-white rounded-xl p-3 shadow-sm flex flex-col items-center text-center">
             <Activity className="text-primary mb-1 w-5 h-5" />
-            <span className="text-lg font-bold text-slate-900">8/10</span>
+            <span className="text-lg font-bold text-slate-900">{completedVisitsToday}/{totalVisitsToday}</span>
             <span className="text-[11px] font-semibold text-slate-500 mt-1">Visits Today</span>
           </div>
           <div className="bg-white rounded-xl p-3 shadow-sm flex flex-col items-center text-center">
             <Wallet className="text-green-600 mb-1 w-5 h-5" />
-            <span className="text-lg font-bold text-slate-900">45.2M</span>
+            <span className="text-lg font-bold text-slate-900">{formattedSales}</span>
             <span className="text-[11px] font-semibold text-slate-500 mt-1">Total Sales</span>
           </div>
           <div className="bg-white rounded-xl p-3 shadow-sm flex flex-col items-center text-center">
             <TrendingUp className="text-primary mb-1 w-5 h-5" />
-            <span className="text-lg font-bold text-slate-900">98%</span>
+            <span className="text-lg font-bold text-slate-900">{performance}%</span>
             <span className="text-[11px] font-semibold text-slate-500 mt-1">Performance</span>
           </div>
         </div>

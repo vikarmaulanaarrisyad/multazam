@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
@@ -18,7 +18,6 @@ export const metadata: Metadata = {
   title: "Sistem Inventori DIA MAKMUR ABADI",
   description: "Aplikasi Manajemen Inventori DIA MAKMUR ABADI",
   manifest: "/manifest.json",
-  themeColor: "#ffffff",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
@@ -27,6 +26,10 @@ export const metadata: Metadata = {
   icons: {
     apple: "/icon-192x192.png",
   },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#ffffff",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
