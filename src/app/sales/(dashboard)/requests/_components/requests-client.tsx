@@ -27,6 +27,7 @@ interface RequestItem {
     quantity: number;
     price: number;
     originalPrice: number;
+    unitNote: string | null;
     product: {
       id: string;
       name: string;
@@ -563,7 +564,8 @@ export default function RequestsClient({ requests }: { requests: RequestItem[] }
                       const cartData = selectedRequest.items.map(item => ({
                         product: item.product,
                         quantity: item.quantity,
-                        requestedPrice: item.product.price // Normal price
+                        requestedPrice: item.product.price, // Normal price
+                        unitNote: 'Karton' // Pesan ulang default to Karton unless they edit it
                       }));
                       
                       const formData = {

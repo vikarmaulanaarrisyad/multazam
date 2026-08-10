@@ -63,6 +63,7 @@ export default async function RequestsPage() {
       quantity: item.quantity,
       price: Number(item.price),
       originalPrice: item.originalPrice ? Number(item.originalPrice) : Number(item.price),
+      unitNote: item.unitNote,
       product: {
         id: item.product.id,
         name: item.product.name,

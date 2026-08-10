@@ -91,7 +91,8 @@ export function SalesProductsClient({ initialProducts, categories }: SalesProduc
       return { 
         product, 
         quantity,
-        requestedPrice: existing ? existing.requestedPrice : undefined
+        requestedPrice: existing ? existing.requestedPrice : undefined,
+        unitNote: existing ? existing.unitNote : undefined
       };
     }).filter(item => item.product !== undefined);
     
