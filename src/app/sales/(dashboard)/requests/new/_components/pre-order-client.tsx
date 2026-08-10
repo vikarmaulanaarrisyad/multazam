@@ -75,7 +75,7 @@ export function PreOrderClient({ stores }: PreOrderClientProps) {
           setCartItems(parsed.map(item => {
             let initialUnitNote = item.unitNote;
             if (!initialUnitNote) {
-              initialUnitNote = (item.product as any).unit?.name || 'Karton';
+              initialUnitNote = (item.product as any).purchaseUnit || (item.product as any).unit?.name || 'Karton';
               const eceran = getEceranPrice(item.product);
               if (eceran !== null && (item.requestedPrice === eceran || !item.requestedPrice)) {
                 // If it's empty, we just default to Karton.
@@ -221,7 +221,7 @@ export function PreOrderClient({ stores }: PreOrderClientProps) {
           quantity: item.quantity,
           price: item.requestedPrice || Number(item.product.price),
           originalPrice: Number(item.product.price),
-          unitNote: item.unitNote || (item.product as any).unit?.name || 'Karton'
+          unitNote: item.unitNote || (item.product as any).purchaseUnit || (item.product as any).unit?.name || 'Karton'
         }))
       });
       
@@ -440,7 +440,7 @@ export function PreOrderClient({ stores }: PreOrderClientProps) {
                       <div className="flex items-center justify-end gap-1.5 pl-2 -mt-1 mb-2">
                         <button
                           type="button"
-                          onClick={() => updateRequestedPrice(index, Number(item.product.price), (item.product as any).unit?.name || 'Karton')}
+                          onClick={() => updateRequestedPrice(index, Number(item.product.price), (item.product as any).purchaseUnit || (item.product as any).unit?.name || 'Karton')}
                           className={cn(
                             "text-[10px] font-bold px-2 py-1 rounded border transition-colors shadow-sm",
                             (item.requestedPrice === Number(item.product.price) || !item.requestedPrice)
@@ -448,9 +448,9 @@ export function PreOrderClient({ stores }: PreOrderClientProps) {
                               : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
                           )}
                         >
-                          Karton
+                          {(item.product as any).purchaseUnit || 'Karton'}
                         </button>
-                        {getEceranPrice(item.product) !== null && (
+                        {getEceranPrice(item.product) !== null && (item.product as any).salesMode !== 'WHOLESALE_ONLY' && (
                           <button
                             type="button"
                             onClick={() => {
@@ -511,7 +511,7 @@ export function PreOrderClient({ stores }: PreOrderClientProps) {
                             />
                             {(() => {
                               return (
-                                <span className="pr-1 text-sm font-bold text-slate-900">{item.unitNote || (item.product as any).unit?.name || 'Karton'}</span>
+                                <span className="pr-1 text-sm font-bold text-slate-900">{item.unitNote || (item.product as any).purchaseUnit || (item.product as any).unit?.name || 'Karton'}</span>
                               );
                             })()}
                           </div>

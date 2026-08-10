@@ -46,11 +46,22 @@ export const productService = {
   async createProduct(dataInput: { 
     code?: string;
     name: string;
+    brand?: string | null;
     description?: string | null;
     price: number;
+    purchasePrice?: number | null;
+    retailPriceNote?: string | null;
     stock: number;
     categoryId: string;
     unitId?: string | null;
+    purchaseUnit?: string | null;
+    stockBaseUnit?: string | null;
+    conversionQty?: number | null;
+    status?: string;
+    salesMode?: string | null;
+    allowUnitSale?: boolean;
+    allowFractional?: boolean;
+    legacyCode?: string | null;
   }): Promise<{ success: boolean; message: string }> {
     try {
       // Validasi
@@ -153,7 +164,8 @@ export const productService = {
       for (let i = 0; i < jsonData.length; i++) {
         const row = jsonData[i];
         const rowNum = i + 2; // Assuming header is row 1
-        const rawName = row['PRODUK'] || row['Nama Produk'] || row['nama_produk'] || row['name'];
+        
+        const rawName = row['NAMA PRODUK'] || row['PRODUK'] || row['Nama Produk'] || row['nama_produk'] || row['name'];
         if (!rawName || typeof rawName !== 'string') {
           errorDetails.push(`Baris ${rowNum}: Nama produk kosong`);
           skipped++;
@@ -187,13 +199,13 @@ export const productService = {
           }
         }
 
-        const unitName = row['Satuan'] || row['satuan'] || row['Unit'];
+        const unitName = row['SATUAN JUAL'] || row['Satuan Jual'] || row['Satuan'] || row['Unit'];
         let unitId = null;
         if (unitName && typeof unitName === 'string') {
           unitId = unitMap.get(unitName.trim().toLowerCase()) || null;
         }
 
-        const rawPrice = row['HARGA KARTON'] || row['Harga'] || row['harga'] || row['price'];
+        const rawPrice = row['HARGA JUAL'] || row['Harga Jual'] || row['HARGA KARTON'] || row['Harga'] || row['price'];
         let price = parseFloat(rawPrice);
         if (isNaN(price) || price < 0) {
           price = 0;
@@ -206,13 +218,38 @@ export const productService = {
           if (!isNaN(parsed) && parsed >= 0) purchasePrice = parsed;
         }
 
-        const contents = (row['QTY'] || row['Qty'] || row['qty'] || row['ISI'] || row['isi'] || '')?.toString() || null;
-        let retailPriceNote = (row['SATUAN ECER (BTL/RTG/PCS)'] || row['Satuan Ecer'] || row['BTL,RTG,PCS,BAG'] || row['Eceran'] || '')?.toString() || null;
+        // New specific fields
+        const brand = (row['BRAND'] || row['Brand'] || '')?.toString().trim() || null;
+        const status = (row['STATUS'] || row['Status'] || 'ACTIVE')?.toString().trim();
+        const purchaseUnit = (row['SATUAN BELI'] || row['Satuan Beli'] || '')?.toString().trim() || null;
+        const stockBaseUnit = (row['SATUAN DASAR'] || row['Satuan Dasar'] || '')?.toString().trim() || null;
+        
+        const rawConvQty = row['QTY KONVERSI'] || row['Qty Konversi'] || row['QTY'] || null;
+        let conversionQty = null;
+        if (rawConvQty !== null) {
+           const parsed = parseInt(rawConvQty);
+           if (!isNaN(parsed) && parsed > 0) conversionQty = parsed;
+        }
+
+        const salesMode = (row['SALES MODE'] || row['Sales Mode'] || 'WHOLESALE_AND_RETAIL')?.toString().trim();
+        
+        const rawAllowUnitSale = row['JUAL SATUAN?'] || row['Jual Satuan?'];
+        const allowUnitSale = rawAllowUnitSale === false || rawAllowUnitSale?.toString().trim().toUpperCase() === 'FALSE' ? false : true;
+
+        const rawAllowFractional = row['JUAL PECAHAN?'] || row['Jual Pecahan?'];
+        const allowFractional = rawAllowFractional === true || rawAllowFractional?.toString().trim().toUpperCase() === 'TRUE' ? true : false;
+        
+        const legacyCode = (row['LEGACY CODE'] || row['Legacy Code'] || '')?.toString().trim() || null;
+        
+        // Use either QTY KONVERSI or QTY for contents for backwards compatibility
+        const contents = conversionQty?.toString() || (row['QTY'] || row['Qty'] || row['qty'] || row['ISI'] || row['isi'] || '')?.toString() || null;
+        
+        let retailPriceNote = (row['REF ECER'] || row['Ref Ecer'] || row['SATUAN ECER (BTL/RTG/PCS)'] || row['Satuan Ecer'] || '')?.toString().trim() || null;
         if (!retailPriceNote && price > 0) {
           retailPriceNote = price.toString();
         }
 
-        const rawStock = row['STOK'] || row['Stok'] || row['stok'] || row['stock'];
+        const rawStock = row['STOK AWAL'] || row['Stok Awal'] || row['STOK'] || row['Stok'] || row['stok'] || row['stock'];
         let stock = parseInt(rawStock);
         if (isNaN(stock) || stock < 0) {
           stock = 0;
@@ -220,26 +257,30 @@ export const productService = {
 
         const description = row['DESKRIPSI'] || row['Deskripsi'] || row['deskripsi'] || row['description'] || null;
 
-        let code = row['KODE PRODUK'] || row['Kode Produk'] || row['kode_produk'] || row['code'];
-        if (code && typeof code === 'string') {
+        let code = row['SKU'] || row['Kode Produk'] || row['kode_produk'] || row['code'] || row['KODE PRODUK'];
+        if (code && typeof code === 'string' && code.trim().length > 0) {
           code = code.trim();
         } else {
-          // Check if product with same name exists
           const existingCode = productCodeMap.get(name.toLowerCase());
           if (existingCode) {
             code = existingCode;
           } else {
-            // Generate code
             code = generateSKU(name);
           }
         }
-
-        // Check if code already valid
-        // NOTE: Actually we can just try to push and let prisma createMany fail or skip duplicates
         
         validProducts.push({
           code,
           name,
+          brand,
+          status,
+          purchaseUnit,
+          stockBaseUnit,
+          conversionQty,
+          salesMode,
+          allowUnitSale,
+          allowFractional,
+          legacyCode,
           description,
           price,
           purchasePrice,
@@ -283,11 +324,22 @@ export const productService = {
   async updateProduct(id: string, dataInput: { 
     code?: string;
     name: string;
+    brand?: string | null;
     description?: string | null;
     price: number;
+    purchasePrice?: number | null;
+    retailPriceNote?: string | null;
     stock: number;
     categoryId: string;
     unitId?: string | null;
+    purchaseUnit?: string | null;
+    stockBaseUnit?: string | null;
+    conversionQty?: number | null;
+    status?: string;
+    salesMode?: string | null;
+    allowUnitSale?: boolean;
+    allowFractional?: boolean;
+    legacyCode?: string | null;
   }): Promise<{ success: boolean; message: string }> {
     try {
       // Validasi

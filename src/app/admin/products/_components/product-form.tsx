@@ -44,11 +44,15 @@ export function ProductForm({ open, onOpenChange, onSuccess, initialData }: Prod
   const initialPrice = initialData?.price 
     ? formatRupiah(parseFloat(initialData.price).toString()) 
     : '';
+  const initialPurchasePrice = initialData?.purchasePrice 
+    ? formatRupiah(parseFloat(initialData.purchasePrice).toString()) 
+    : '';
     
   const [loading, setLoading] = useState(false);
   const [categories, setCategories] = useState<{id: string, name: string}[]>([]);
   const [units, setUnits] = useState<{id: string, name: string}[]>([]);
   const [price, setPrice] = useState(initialPrice);
+  const [purchasePrice, setPurchasePrice] = useState(initialPurchasePrice);
   
   const [selectedCategory, setSelectedCategory] = useState<{value: string, label: string} | null>(null);
   const [selectedUnit, setSelectedUnit] = useState<{value: string, label: string} | null>(null);
@@ -76,12 +80,14 @@ export function ProductForm({ open, onOpenChange, onSuccess, initialData }: Prod
         }
       });
       setPrice(initialPrice);
+      setPurchasePrice(initialPurchasePrice);
     } else {
       setPrice('');
+      setPurchasePrice('');
       setSelectedCategory(null);
       setSelectedUnit(null);
     }
-  }, [open, initialPrice]);
+  }, [open, initialPrice, initialPurchasePrice]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -91,11 +97,18 @@ export function ProductForm({ open, onOpenChange, onSuccess, initialData }: Prod
     const data = {
       code: formData.get('code') as string || '',
       name: formData.get('name') as string,
+      brand: formData.get('brand') as string || null,
       description: formData.get('description') as string || '',
       price: parseFloat((formData.get('price') as string).replace(/\./g, '').replace(',', '.')) || 0,
+      purchasePrice: formData.get('purchasePrice') ? parseFloat((formData.get('purchasePrice') as string).replace(/\./g, '').replace(',', '.')) : null,
       stock: parseInt(formData.get('stock') as string) || 0,
       categoryId: selectedCategory?.value || '',
       unitId: selectedUnit?.value || null,
+      purchaseUnit: formData.get('purchaseUnit') as string || null,
+      stockBaseUnit: formData.get('stockBaseUnit') as string || null,
+      conversionQty: formData.get('conversionQty') ? parseInt(formData.get('conversionQty') as string) : null,
+      legacyCode: formData.get('legacyCode') as string || null,
+      retailPriceNote: formData.get('retailPriceNote') as string || null,
     };
 
     try {
@@ -122,7 +135,7 @@ export function ProductForm({ open, onOpenChange, onSuccess, initialData }: Prod
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-125">
+      <DialogContent className="sm:max-w-175 max-h-[90vh] overflow-y-auto">
         <form onSubmit={handleSubmit}>
           <DialogHeader>
             <DialogTitle>{isEditing ? 'Edit Produk' : 'Tambah Produk'}</DialogTitle>
@@ -137,7 +150,7 @@ export function ProductForm({ open, onOpenChange, onSuccess, initialData }: Prod
             
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="code">Kode / Barcode (Opsional)</Label>
+                <Label htmlFor="code">Kode SKU (Opsional)</Label>
                 <Input
                   id="code"
                   name="code"
@@ -147,22 +160,43 @@ export function ProductForm({ open, onOpenChange, onSuccess, initialData }: Prod
               </div>
               <div className="space-y-2">
                 <Label htmlFor="name">Nama Produk <span className="text-red-500">*</span></Label>
-                <textarea
+                <Input
                   id="name"
                   name="name"
                   defaultValue={initialData?.name}
                   placeholder="Masukkan nama produk..."
                   required
                   maxLength={100}
-                  rows={2}
-                  className="flex w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm ring-offset-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950 focus-visible:ring-offset-2"
                 />
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="price">Harga (Rp) <span className="text-red-500">*</span></Label>
+                <Label htmlFor="brand">Merek / Brand (Opsional)</Label>
+                <Input
+                  id="brand"
+                  name="brand"
+                  defaultValue={initialData?.brand || ''}
+                  placeholder="Contoh: Wings, Indofood..."
+                  maxLength={50}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="legacyCode">Legacy Code (Opsional)</Label>
+                <Input
+                  id="legacyCode"
+                  name="legacyCode"
+                  defaultValue={initialData?.legacyCode || ''}
+                  placeholder="Kode pada sistem lama"
+                  maxLength={50}
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="price">Harga Jual per Satuan Jual (Rp) <span className="text-red-500">*</span></Label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                     <span className="text-slate-500 sm:text-sm">Rp</span>
@@ -180,18 +214,24 @@ export function ProductForm({ open, onOpenChange, onSuccess, initialData }: Prod
                 </div>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="stock">Stok Awal <span className="text-red-500">*</span></Label>
-                <Input
-                  id="stock"
-                  name="stock"
-                  type="number"
-                  defaultValue={initialData?.stock ?? ''}
-                  placeholder="0"
-                  required
-                  min="0"
-                />
+                <Label htmlFor="purchasePrice">Harga Beli per Satuan Beli (Rp)</Label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <span className="text-slate-500 sm:text-sm">Rp</span>
+                  </div>
+                  <Input
+                    id="purchasePrice"
+                    name="purchasePrice"
+                    type="text"
+                    value={purchasePrice}
+                    onChange={(e) => setPurchasePrice(formatRupiah(e.target.value))}
+                    placeholder="0"
+                    className="pl-10"
+                  />
+                </div>
               </div>
             </div>
+
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
@@ -220,7 +260,7 @@ export function ProductForm({ open, onOpenChange, onSuccess, initialData }: Prod
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="unitId">Satuan (Opsional)</Label>
+                <Label htmlFor="unitId">Satuan Jual (Opsional)</Label>
                 <Select
                   id="unitId"
                   name="unitId"
@@ -242,6 +282,65 @@ export function ProductForm({ open, onOpenChange, onSuccess, initialData }: Prod
                       }
                     })
                   }}
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="purchaseUnit">Satuan Beli</Label>
+                <Input
+                  id="purchaseUnit"
+                  name="purchaseUnit"
+                  defaultValue={initialData?.purchaseUnit || ''}
+                  placeholder="Contoh: DUS"
+                  maxLength={20}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="stockBaseUnit">Satuan Dasar</Label>
+                <Input
+                  id="stockBaseUnit"
+                  name="stockBaseUnit"
+                  defaultValue={initialData?.stockBaseUnit || ''}
+                  placeholder="Contoh: PCS"
+                  maxLength={20}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="conversionQty">Qty Konversi</Label>
+                <Input
+                  id="conversionQty"
+                  name="conversionQty"
+                  type="number"
+                  defaultValue={initialData?.conversionQty ?? ''}
+                  placeholder="Contoh: 40"
+                  min="1"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="retailPriceNote">Referensi Harga Ecer</Label>
+                <Input
+                  id="retailPriceNote"
+                  name="retailPriceNote"
+                  defaultValue={initialData?.retailPriceNote || ''}
+                  placeholder="Misal: Rp12.000 / PCS"
+                  maxLength={100}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="stock">Stok (Base Unit) <span className="text-red-500">*</span></Label>
+                <Input
+                  id="stock"
+                  name="stock"
+                  type="number"
+                  defaultValue={initialData?.stock ?? ''}
+                  placeholder="0"
+                  required
+                  min="0"
                 />
               </div>
             </div>

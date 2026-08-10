@@ -93,7 +93,7 @@ export function StockMovementsClient({ initialData, metadata }: StockMovementsCl
       // --- 2. HEADERS ---
       const headers = [
         'No', 'Waktu', 'Kode Produk', 'Nama Produk', 'Tipe',
-        'Jml (Sistem)', 'Jml (Terkecil)', 'Sisa (Sistem)', 'Sisa (Terkecil)',
+        'Jml (Satuan Dasar)', 'Jml (Konversi)', 'Sisa (Satuan Dasar)', 'Sisa (Konversi)',
         'Nama Sales', 'Nama Toko', 'No. PO', 'Catatan/Keterangan'
       ];
       const headerRow = sheet.addRow(headers);
@@ -111,18 +111,17 @@ export function StockMovementsClient({ initialData, metadata }: StockMovementsCl
 
       // --- 3. DATA ROWS ---
       result.data.forEach((movement, index) => {
-        let multiplier = 1;
-        let smallestUnit = movement.product.retailPriceNote || 'Pcs';
-        
-        if (movement.product.contents) {
-          const match = movement.product.contents.match(/(\d+)/);
-          if (match) multiplier = parseInt(match[1], 10);
-          const unitMatch = movement.product.contents.match(/[a-zA-Z]+/);
-          if (unitMatch) smallestUnit = unitMatch[0];
-        }
+        const p = movement.product;
+        const smallestUnit = p.stockBaseUnit || 'PCS';
+        const purchaseUnit = p.purchaseUnit || 'DUS';
+        const convQty = p.conversionQty || 1;
 
-        const quantitySmallestUnit = movement.quantity * multiplier;
-        const balanceAfterSmallestUnit = movement.balanceAfter * multiplier;
+        // System now stores quantity in smallestUnit
+        const quantitySmallestUnit = movement.quantity;
+        const balanceAfterSmallestUnit = movement.balanceAfter;
+
+        const quantityBigUnit = (quantitySmallestUnit / convQty).toFixed(2).replace(/\.00$/, '');
+        const balanceAfterBigUnit = (balanceAfterSmallestUnit / convQty).toFixed(2).replace(/\.00$/, '');
 
         const tipeStr = movement.type === 'IN' ? 'Masuk' : movement.type === 'OUT' ? 'Keluar' : 'Penyesuaian';
         const qtyPrefix = movement.type === 'IN' ? '+' : movement.type === 'OUT' ? '-' : '';
@@ -145,10 +144,10 @@ export function StockMovementsClient({ initialData, metadata }: StockMovementsCl
           movement.product.code,
           movement.product.name,
           tipeStr,
-          `${qtyPrefix}${movement.quantity}`,
           `${qtyPrefix}${quantitySmallestUnit} ${smallestUnit}`,
-          movement.balanceAfter,
+          `${qtyPrefix}${quantityBigUnit} ${purchaseUnit}`,
           `${balanceAfterSmallestUnit} ${smallestUnit}`,
+          `${balanceAfterBigUnit} ${purchaseUnit}`,
           movement.transaction?.user?.name || '-',
           movement.transaction?.customerName || '-',
           poNumber,
@@ -252,24 +251,41 @@ export function StockMovementsClient({ initialData, metadata }: StockMovementsCl
     },
     {
       id: 'jumlah',
-      header: 'Jumlah',
+      header: 'Jml (Satuan Dasar)',
       cell: ({ row }: { row: any }) => {
         const movement = row.original as StockMovementWithProduct;
+        const unit = movement.product.stockBaseUnit || 'PCS';
         return (
           <span className={`font-semibold ${movement.type === 'IN' ? 'text-green-600' : 'text-red-600'}`}>
-            {movement.type === 'IN' ? '+' : '-'}{movement.quantity}
+            {movement.type === 'IN' ? '+' : '-'}{movement.quantity} {unit}
+          </span>
+        );
+      },
+    },
+    {
+      id: 'jumlah_konversi',
+      header: 'Jml (Konversi)',
+      cell: ({ row }: { row: any }) => {
+        const movement = row.original as StockMovementWithProduct;
+        const convQty = movement.product.conversionQty || 1;
+        const purchaseUnit = movement.product.purchaseUnit || 'DUS';
+        const qtyBigUnit = (movement.quantity / convQty).toFixed(2).replace(/\.00$/, '');
+        return (
+          <span className={`text-sm ${movement.type === 'IN' ? 'text-green-600/70' : 'text-red-600/70'}`}>
+            {movement.type === 'IN' ? '+' : '-'}{qtyBigUnit} {purchaseUnit}
           </span>
         );
       },
     },
     {
       id: 'sisa_stok',
-      header: 'Sisa Stok',
+      header: 'Sisa Stok (Dasar)',
       cell: ({ row }: { row: any }) => {
         const movement = row.original as StockMovementWithProduct;
+        const unit = movement.product.stockBaseUnit || 'PCS';
         return (
           <span className="text-slate-600 font-medium">
-            {movement.balanceAfter}
+            {movement.balanceAfter} {unit}
           </span>
         );
       },

@@ -33,11 +33,22 @@ export async function getAllProducts() {
 export async function createProductAction(dataInput: { 
   code?: string;
   name: string;
+  brand?: string | null;
   description?: string | null;
   price: number;
+  purchasePrice?: number | null;
+  retailPriceNote?: string | null;
   stock: number;
   categoryId: string;
   unitId?: string | null;
+  purchaseUnit?: string | null;
+  stockBaseUnit?: string | null;
+  conversionQty?: number | null;
+  status?: string;
+  salesMode?: string | null;
+  allowUnitSale?: boolean;
+  allowFractional?: boolean;
+  legacyCode?: string | null;
 }) {
   const result = await productService.createProduct(dataInput);
   if (result.success) {
@@ -57,11 +68,22 @@ export async function importProductsAction(formData: FormData) {
 export async function updateProductAction(id: string, dataInput: { 
   code?: string;
   name: string;
+  brand?: string | null;
   description?: string | null;
   price: number;
+  purchasePrice?: number | null;
+  retailPriceNote?: string | null;
   stock: number;
   categoryId: string;
   unitId?: string | null;
+  purchaseUnit?: string | null;
+  stockBaseUnit?: string | null;
+  conversionQty?: number | null;
+  status?: string;
+  salesMode?: string | null;
+  allowUnitSale?: boolean;
+  allowFractional?: boolean;
+  legacyCode?: string | null;
 }) {
   const result = await productService.updateProduct(id, dataInput);
   if (result.success) {

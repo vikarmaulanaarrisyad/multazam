@@ -171,6 +171,8 @@ export function SalesProductsClient({ initialProducts, categories }: SalesProduc
         {filteredProducts.map(product => {
           const isOutOfStock = product.stock <= 0;
           const isLowStock = product.stock > 0 && product.stock <= 10;
+          const isReview = (product as any).salesMode === 'REVIEW';
+          const isBlocked = isOutOfStock || isReview;
           const cartQty = cart[product.id] || 0;
           
           return (
@@ -178,13 +180,18 @@ export function SalesProductsClient({ initialProducts, categories }: SalesProduc
               key={product.id} 
               className={cn(
                 "flex flex-col rounded-xl overflow-hidden relative group transition-transform border border-slate-100 bg-white shadow-sm",
-                !isOutOfStock && "active:scale-[0.98]",
-                isOutOfStock && "opacity-75 grayscale-[0.2]"
+                !isBlocked && "active:scale-[0.98]",
+                isBlocked && "opacity-75 grayscale-[0.2]"
               )}
             >
-              {isLowStock && (
+              {isLowStock && !isReview && (
                 <div className="absolute top-2 right-2 bg-red-100 text-red-700 font-bold text-[10px] px-2 py-1 rounded-full z-10 border border-red-200">
                   Stok Menipis
+                </div>
+              )}
+              {isReview && (
+                <div className="absolute top-2 right-2 bg-amber-100 text-amber-700 font-bold text-[10px] px-2 py-1 rounded-full z-10 border border-amber-200">
+                  Perlu Review
                 </div>
               )}
               
@@ -265,10 +272,10 @@ export function SalesProductsClient({ initialProducts, categories }: SalesProduc
                     ) : (
                       <button 
                         onClick={() => updateCart(product.id, 1, product.stock)}
-                        disabled={isOutOfStock}
+                        disabled={isBlocked}
                         className={cn(
                           "w-7 h-7 rounded-full flex items-center justify-center shadow-sm active:scale-95",
-                          isOutOfStock 
+                          isBlocked 
                             ? "bg-slate-100 text-slate-400 cursor-not-allowed" 
                             : "bg-blue-100 text-blue-700 hover:bg-blue-200"
                         )}

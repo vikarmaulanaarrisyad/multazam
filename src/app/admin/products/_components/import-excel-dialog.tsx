@@ -30,14 +30,23 @@ export function ImportExcelDialog({ open, onOpenChange, onSuccess }: ImportExcel
     try {
 
       const data = [{
-        'KODE PRODUK': 'PRD-001',
-        'PRODUK': 'Contoh Produk A',
+        'SKU': 'PRD-001',
+        'NAMA PRODUK': 'Contoh Produk A',
+        'BRAND': 'Merek A',
         'KATEGORI': 'Minuman',
-        'QTY': '48',
-        'SATUAN ECER (BTL/RTG/PCS)': 'Botol',
-        'HARGA KARTON': 150000,
+        'STATUS': 'ACTIVE',
+        'SATUAN BELI': 'DUS',
+        'SATUAN JUAL': 'DUS',
+        'SATUAN DASAR': 'PCS',
+        'QTY KONVERSI': 24,
+        'SALES MODE': 'WHOLESALE_AND_RETAIL',
+        'JUAL SATUAN?': 'TRUE',
+        'JUAL PECAHAN?': 'FALSE',
+        'HARGA JUAL': 150000,
         'HARGA BELI': 130000,
-        'STOK': 100,
+        'REF ECER': '15,000 per pcs',
+        'LEGACY CODE': 'PRD001',
+        'STOK AWAL': 100,
         'DESKRIPSI': 'Opsional'
       }];
       
@@ -45,14 +54,23 @@ export function ImportExcelDialog({ open, onOpenChange, onSuccess }: ImportExcel
       
       // Set column widths
       worksheet['!cols'] = [
-        { wch: 15 }, // KODE PRODUK
-        { wch: 30 }, // PRODUK
+        { wch: 15 }, // SKU
+        { wch: 30 }, // NAMA PRODUK
+        { wch: 20 }, // BRAND
         { wch: 15 }, // KATEGORI
-        { wch: 10 }, // QTY
-        { wch: 25 }, // SATUAN ECER
-        { wch: 15 }, // HARGA KARTON
+        { wch: 15 }, // STATUS
+        { wch: 15 }, // SATUAN BELI
+        { wch: 15 }, // SATUAN JUAL
+        { wch: 15 }, // SATUAN DASAR
+        { wch: 15 }, // QTY KONVERSI
+        { wch: 25 }, // SALES MODE
+        { wch: 15 }, // JUAL SATUAN?
+        { wch: 15 }, // JUAL PECAHAN?
+        { wch: 15 }, // HARGA JUAL
         { wch: 15 }, // HARGA BELI
-        { wch: 10 }, // STOK
+        { wch: 25 }, // REF ECER
+        { wch: 15 }, // LEGACY CODE
+        { wch: 15 }, // STOK AWAL
         { wch: 30 }, // DESKRIPSI
       ];
 

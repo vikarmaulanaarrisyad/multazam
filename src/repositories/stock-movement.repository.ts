@@ -14,7 +14,7 @@ export type StockMovementType = {
 };
 
 export type StockMovementWithProduct = StockMovementType & {
-  product: { id: string; name: string; code: string; contents: string | null; retailPriceNote: string | null; };
+  product: { id: string; name: string; code: string; contents: string | null; retailPriceNote: string | null; purchaseUnit: string | null; stockBaseUnit: string | null; conversionQty: number | null; };
   transaction?: {
     user: { name: string } | null;
     customerName: string | null;
@@ -45,7 +45,7 @@ export const stockMovementRepository = {
         skip,
         take,
         include: {
-          product: { select: { id: true, name: true, code: true, contents: true, retailPriceNote: true } },
+          product: { select: { id: true, name: true, code: true, contents: true, retailPriceNote: true, purchaseUnit: true, stockBaseUnit: true, conversionQty: true } },
         },
         orderBy: { createdAt: 'desc' },
       }),
@@ -74,7 +74,7 @@ export const stockMovementRepository = {
     const data = await prisma.stockMovement.findMany({
       where,
       include: {
-        product: { select: { id: true, name: true, code: true, contents: true, retailPriceNote: true } },
+        product: { select: { id: true, name: true, code: true, contents: true, retailPriceNote: true, purchaseUnit: true, stockBaseUnit: true, conversionQty: true } },
       },
       orderBy: { createdAt: 'desc' },
     });
