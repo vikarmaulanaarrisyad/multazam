@@ -14,6 +14,9 @@ export default async function NewReturnPage() {
   const products = rawProducts.map(p => ({
     id: p.id,
     name: p.name,
+    purchaseUnit: (p as any).purchaseUnit || p.unit?.name || 'DUS',
+    stockBaseUnit: (p as any).stockBaseUnit || 'PCS',
+    salesMode: (p as any).salesMode,
     price: typeof p.price === 'object' && p.price !== null && 'toNumber' in p.price 
       ? (p.price as any).toNumber() 
       : Number(p.price)

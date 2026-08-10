@@ -119,7 +119,7 @@ export const purchaseService = {
           
           if (!product) continue;
           
-          const baseQtyToAdd = calculateBaseQuantity(item.quantity, product.purchaseUnit, product);
+          const baseQtyToAdd = item.quantity; // Already converted to baseQty by frontend
 
           // Update stock atomically
           const updatedProduct = await tx.product.update({
@@ -136,7 +136,7 @@ export const purchaseService = {
               balanceBefore: updatedProduct.stock - baseQtyToAdd,
               balanceAfter: updatedProduct.stock,
               reference: purchase.invoiceNumber,
-              notes: `Restock dari supplier: ${purchase.supplier.name} - Order: ${item.quantity} ${product.purchaseUnit || 'PCS'}`
+              notes: `Restock dari supplier: ${purchase.supplier.name} - Qty: ${item.quantity} ${(product as any).stockBaseUnit || 'PCS'}`
             }
           });
         }

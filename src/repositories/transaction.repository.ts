@@ -128,7 +128,19 @@ export class TransactionRepository {
         });
         if (!product) throw new Error(`Produk dengan ID ${item.productId} tidak ditemukan.`);
         
-        const baseQtyToDeduct = calculateBaseQuantity(item.quantity, item.unitNote, product);
+        if ((product as any).salesMode === 'REVIEW') {
+          throw new Error(`Produk ${product.name} belum bisa ditransaksikan (Status: REVIEW).`);
+        }
+        
+        if ((product as any).salesMode === 'WHOLESALE_ONLY') {
+          const expectedUnit = (product as any).purchaseUnit || 'DUS';
+          const orderUnit = item.unitNote || expectedUnit;
+          if (orderUnit.toUpperCase() !== expectedUnit.toUpperCase()) {
+            throw new Error(`Produk ${product.name} hanya bisa dijual Grosir (${expectedUnit}).`);
+          }
+        }
+        
+        const baseQtyToDeduct = calculateBaseQuantity(item.quantity, item.unitNote || (product as any).purchaseUnit, product);
 
         const updated = await tx.product.updateMany({
           where: { id: item.productId, stock: { gte: baseQtyToDeduct } },
@@ -354,37 +366,4 @@ export class TransactionRepository {
     });
   }
 
-  static async createPriceRequest(data: any, userId: string) {
-    const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-    const counter = await prisma.$transaction(async (tx) => {
-      return await tx.invoiceCounter.upsert({
-        where: { date: dateStr },
-        update: { counter: { increment: 1 } },
-        create: { date: dateStr, counter: 1 },
-      });
-    });
-    const invoiceNumber = `REQ-${dateStr}-${counter.counter.toString().padStart(4, '0')}`;
-
-    const totalAmount = data.items.reduce((sum: number, item: any) => sum + (item.requestedPrice * item.quantity), 0);
-
-    return prisma.transaction.create({
-      data: {
-        invoiceNumber,
-        userId: userId,
-        totalAmount,
-        status: 'PENDING_APPROVAL',
-        customerName: data.storeName,
-        customerPhone: data.storeLocation,
-        notes: data.notes,
-        items: {
-          create: data.items.map((item: any) => ({
-            productId: item.productId,
-            quantity: item.quantity,
-            price: item.requestedPrice,
-            originalPrice: item.originalPrice
-          }))
-        }
-      }
-    });
-  }
 }

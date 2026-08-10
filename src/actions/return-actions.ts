@@ -12,7 +12,7 @@ export async function createReturn(data: {
   userId: string;
   type: ReturnType;
   notes?: string;
-  items: { productId: string; quantity: number; condition: ReturnCondition; price: number }[];
+  items: { productId: string; quantity: number; condition: ReturnCondition; price: number; unitNote?: string }[];
 }) {
   try {
     const session = await auth();
@@ -49,11 +49,21 @@ export async function createReturn(data: {
           notes: data.notes,
           status: 'PENDING',
           items: {
-            create: data.items.map(item => ({
-              productId: item.productId,
-              quantity: item.quantity,
-              condition: item.condition,
-              price: item.price,
+            create: await Promise.all(data.items.map(async item => {
+              const product = await tx.product.findUnique({ 
+                where: { id: item.productId },
+                include: { unitConversions: true }
+              });
+              const baseQty = product ? calculateBaseQuantity(item.quantity, item.unitNote || product.purchaseUnit, product) : item.quantity;
+              
+              return {
+                productId: item.productId,
+                quantity: baseQty,
+                condition: item.condition,
+                price: item.price,
+                unitNote: item.unitNote || (product as any).purchaseUnit || 'PCS',
+                totalPrice: Number(item.quantity) * Number(item.price)
+              };
             }))
           }
         }
@@ -89,27 +99,32 @@ export async function approveReturn(returnId: string, adminNotes?: string) {
 
     // Process inventory inside a transaction
     await prisma.$transaction(async (tx) => {
+      let totalRefundValue = 0;
+      
       for (const item of ret.items) {
         const product = await tx.product.findUnique({ 
-          where: { id: item.productId },
-          include: { unitConversions: true } 
+          where: { id: item.productId }
         });
         if (!product) continue;
         
-        const baseQty = calculateBaseQuantity(item.quantity, product.purchaseUnit, product);
+        const baseQty = item.quantity; // Already converted to baseQty during createReturn
 
         if (ret.type === 'EXCHANGE') {
           if (item.condition === 'BAD') {
-            if (product.stock < baseQty) {
-              throw new Error(`Stok bagus untuk produk ${product.name} tidak cukup untuk Tukar Guling`);
-            }
-            const updatedProduct = await tx.product.update({
-              where: { id: product.id },
+            const updatedProducts = await tx.product.updateMany({
+              where: { id: product.id, stock: { gte: baseQty } },
               data: {
                 stock: { decrement: baseQty },
                 badStock: { increment: baseQty }
               }
             });
+            
+            if (updatedProducts.count === 0) {
+              throw new Error(`Stok bagus untuk produk ${product.name} tidak cukup untuk Tukar Guling`);
+            }
+            
+            const updatedProduct = await tx.product.findUnique({ where: { id: product.id }});
+            if (!updatedProduct) continue;
             
             await tx.stockMovement.create({
               data: {
@@ -148,6 +163,24 @@ export async function approveReturn(returnId: string, adminNotes?: string) {
               }
             });
           }
+          
+          totalRefundValue += Number((item as any).totalPrice || 0);
+        }
+      }
+
+      if (ret.type === 'REFUND' && ret.transactionId && totalRefundValue > 0) {
+        const transaction = await tx.transaction.findUnique({ where: { id: ret.transactionId }});
+        if (transaction) {
+          const newTotalAmount = Math.max(0, Number(transaction.totalAmount) - totalRefundValue);
+          const paymentStatus = Number(transaction.paidAmount) >= newTotalAmount ? 'PAID' : (Number(transaction.paidAmount) > 0 ? 'PARTIAL' : 'UNPAID');
+          
+          await tx.transaction.update({
+            where: { id: transaction.id },
+            data: {
+              totalAmount: newTotalAmount,
+              paymentStatus: paymentStatus
+            }
+          });
         }
       }
 

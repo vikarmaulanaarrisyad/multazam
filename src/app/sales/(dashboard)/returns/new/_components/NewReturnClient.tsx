@@ -23,10 +23,10 @@ export default function NewReturnClient({ products }: { products: any[] }) {
   const [customerName, setCustomerName] = useState('');
   const [type, setType] = useState<ReturnType>('EXCHANGE');
   const [notes, setNotes] = useState('');
-  const [items, setItems] = useState([{ productId: '', quantity: 1, condition: 'BAD' as ReturnCondition, price: 0 }]);
+  const [items, setItems] = useState([{ productId: '', quantity: 1, condition: 'BAD' as ReturnCondition, price: 0, unitNote: '' }]);
 
   const addItem = () => {
-    setItems([...items, { productId: '', quantity: 1, condition: 'BAD', price: 0 }]);
+    setItems([...items, { productId: '', quantity: 1, condition: 'BAD', price: 0, unitNote: '' }]);
   };
 
   const removeItem = (index: number) => {
@@ -42,7 +42,10 @@ export default function NewReturnClient({ products }: { products: any[] }) {
     
     if (field === 'productId') {
       const prod = products.find(p => p.id === value);
-      if (prod) item.price = Number(prod.price);
+      if (prod) {
+        item.price = Number(prod.price);
+        item.unitNote = prod.purchaseUnit;
+      }
     }
     
     setItems(newItems);
@@ -148,6 +151,30 @@ export default function NewReturnClient({ products }: { products: any[] }) {
                     onChange={e => updateItem(index, 'quantity', parseInt(e.target.value) || 0)}
                     className="bg-white"
                   />
+                </div>
+
+                <div className="w-full sm:w-28 space-y-2">
+                  <Label>Satuan</Label>
+                  <select 
+                    value={item.unitNote}
+                    onChange={e => updateItem(index, 'unitNote', e.target.value)}
+                    disabled={!item.productId}
+                    className="w-full flex h-10 items-center justify-between rounded-md border border-slate-200 bg-white px-3 py-2 text-sm ring-offset-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-950 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {(() => {
+                       const p = products.find(prod => prod.id === item.productId);
+                       if (!p) return <option value="">-</option>;
+                       if (p.salesMode === 'WHOLESALE_ONLY') {
+                          return <option value={p.purchaseUnit}>{p.purchaseUnit}</option>;
+                       }
+                       return (
+                         <>
+                           <option value={p.purchaseUnit}>{p.purchaseUnit}</option>
+                           <option value={p.stockBaseUnit}>{p.stockBaseUnit}</option>
+                         </>
+                       );
+                    })()}
+                  </select>
                 </div>
 
                 <div className="w-full sm:w-40 space-y-2">

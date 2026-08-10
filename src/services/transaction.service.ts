@@ -112,7 +112,4 @@ export class TransactionService {
     return TransactionRepository.rejectPriceRequest(data.transactionId, data.adminNotes);
   }
 
-  static async createPriceRequest(data: any, userId: string) {
-    return TransactionRepository.createPriceRequest(data, userId);
-  }
 }

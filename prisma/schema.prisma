@@ -352,6 +352,8 @@ model ReturnItem {
   quantity            Int
   condition           ReturnCondition
   price               Decimal           @db.Decimal(10, 2)
+  unitNote            String?
+  totalPrice          Decimal?          @db.Decimal(10, 2)
 }
 
 model UnitConversion {
