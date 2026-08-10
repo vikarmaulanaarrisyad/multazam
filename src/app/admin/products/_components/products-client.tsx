@@ -13,9 +13,11 @@ import { getProductsPaginated, deleteManyProducts } from '@/actions/products';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
 import { Loader2 } from 'lucide-react';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { ProductWithRelations } from '@/types/product.type';
 
 export function ProductsClient() {
+  const [activeTab, setActiveTab] = useState('master');
   const [data, setData] = useState<ProductWithRelations[]>([]);
   const [loading, setLoading] = useState(true);
   
@@ -88,90 +90,49 @@ export function ProductsClient() {
     }
   };
 
-  const columns = useMemo<ColumnDef<ProductWithRelations>[]>(() => [
-    {
-      id: 'select',
-      header: ({ table }) => (
-        <Checkbox
-          checked={
-            table.getIsAllPageRowsSelected()
-          }
-          onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-          aria-label="Select all"
-          className="translate-y-0.5"
-        />
-      ),
-      cell: ({ row }) => (
-        <Checkbox
-          checked={row.getIsSelected()}
-          onCheckedChange={(value) => row.toggleSelected(!!value)}
-          aria-label="Select row"
-          className="translate-y-0.5"
-        />
-      ),
-      enableSorting: false,
-      enableHiding: false,
-    },
-    {
-      accessorKey: 'code',
-      header: 'Kode SKU',
-      cell: ({ row }) => <span className="font-mono text-sm text-slate-600 bg-slate-100 px-2 py-1 rounded">{row.original.code}</span>
-    },
-    {
-      accessorKey: 'name',
-      header: 'Nama Produk',
-      cell: ({ row }) => (
-        <div>
-          <p className="font-medium text-slate-900">{row.original.name}</p>
-          {row.original.description && (
-            <p className="text-xs text-slate-500 line-clamp-1">{row.original.description}</p>
-          )}
-        </div>
-      )
-    },
-    {
-      accessorKey: 'category.name',
-      header: 'Kategori',
-      cell: ({ row }) => row.original.category?.name || '-'
-    },
-    {
-      accessorKey: 'price',
-      header: 'Harga',
-      cell: ({ row }) => {
-        const amount = parseFloat(row.original.price.toString());
-        const formatted = new Intl.NumberFormat('id-ID', {
-          style: 'currency',
-          currency: 'IDR',
-          minimumFractionDigits: 0,
-        }).format(amount);
-        return <span className="font-medium text-slate-700">{formatted}</span>;
-      }
-    },
-    {
-      accessorKey: 'stock',
-      header: 'Stok',
-      cell: ({ row }) => {
-        const stock = row.original.stock;
-        const unitName = row.original.unit?.name || '';
-        
-        let badgeColor = "bg-emerald-100 text-emerald-800 border-emerald-200";
-        if (stock < 10) badgeColor = "bg-red-100 text-red-800 border-red-200";
-        else if (stock < 30) badgeColor = "bg-amber-100 text-amber-800 border-amber-200";
-        
-        return (
-          <div className="flex items-center gap-2">
-            <span className="font-semibold">{stock}</span>
-            <span className="text-xs text-slate-500">{unitName}</span>
-            {stock < 10 && (
-              <span className={`ml-2 text-[10px] uppercase px-1.5 py-0.5 rounded-full border ${badgeColor}`}>
-                <AlertCircle className="w-3 h-3 mr-1 inline-block" /> Tipis
-              </span>
+  const columns = useMemo<ColumnDef<ProductWithRelations>[]>(() => {
+    const commonCols: ColumnDef<ProductWithRelations>[] = [
+      {
+        id: 'select',
+        header: ({ table }) => (
+          <Checkbox
+            checked={table.getIsAllPageRowsSelected()}
+            onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+            aria-label="Select all"
+            className="translate-y-0.5"
+          />
+        ),
+        cell: ({ row }) => (
+          <Checkbox
+            checked={row.getIsSelected()}
+            onCheckedChange={(value) => row.toggleSelected(!!value)}
+            aria-label="Select row"
+            className="translate-y-0.5"
+          />
+        ),
+        enableSorting: false,
+        enableHiding: false,
+      },
+      {
+        accessorKey: 'code',
+        header: 'Kode SKU',
+        cell: ({ row }) => <span className="font-mono text-sm text-slate-600 bg-slate-100 px-2 py-1 rounded">{row.original.code}</span>
+      },
+      {
+        accessorKey: 'name',
+        header: 'Nama Produk',
+        cell: ({ row }) => (
+          <div>
+            <p className="font-medium text-slate-900">{row.original.name}</p>
+            {row.original.description && (
+              <p className="text-xs text-slate-500 line-clamp-1">{row.original.description}</p>
             )}
           </div>
-        );
+        )
       }
-    },
-    {
+    ];
+
+    const actionsCol: ColumnDef<ProductWithRelations> = {
       id: 'actions',
       header: 'Aksi',
       cell: ({ row }) => {
@@ -203,8 +164,108 @@ export function ProductsClient() {
           </div>
         );
       },
+    };
+
+    if (activeTab === 'master') {
+      return [
+        ...commonCols,
+        {
+          accessorKey: 'category.name',
+          header: 'Kategori',
+          cell: ({ row }) => row.original.category?.name || '-'
+        },
+        {
+          accessorKey: 'stock',
+          header: 'Stok (Base Unit)',
+          cell: ({ row }) => {
+            const stock = row.original.stock;
+            const unitName = row.original.unit?.name || row.original.stockBaseUnit || '';
+            
+            let badgeColor = "bg-emerald-100 text-emerald-800 border-emerald-200";
+            if (stock < 10) badgeColor = "bg-red-100 text-red-800 border-red-200";
+            else if (stock < 30) badgeColor = "bg-amber-100 text-amber-800 border-amber-200";
+            
+            return (
+              <div className="flex items-center gap-2">
+                <span className="font-semibold">{stock}</span>
+                <span className="text-xs text-slate-500">{unitName}</span>
+                {stock < 10 && (
+                  <span className={`ml-2 text-[10px] uppercase px-1.5 py-0.5 rounded-full border ${badgeColor}`}>
+                    <AlertCircle className="w-3 h-3 mr-1 inline-block" /> Tipis
+                  </span>
+                )}
+              </div>
+            );
+          }
+        },
+        actionsCol
+      ];
+    } else if (activeTab === 'conversion') {
+      return [
+        ...commonCols,
+        {
+          accessorKey: 'purchaseUnit',
+          header: 'Unit Beli',
+          cell: ({ row }) => row.original.purchaseUnit || '-'
+        },
+        {
+          accessorKey: 'stockBaseUnit',
+          header: 'Base Unit',
+          cell: ({ row }) => row.original.stockBaseUnit || '-'
+        },
+        {
+          accessorKey: 'unitConversions',
+          header: 'Konversi Aktif',
+          cell: ({ row }) => {
+            const conversions = row.original.unitConversions || [];
+            const active = conversions.filter(c => c.active);
+            if (active.length === 0) return <span className="text-slate-400 text-sm">Tidak ada</span>;
+            return (
+              <div className="flex flex-col gap-1">
+                {active.map(c => (
+                  <span key={c.id} className="text-xs bg-blue-50 text-blue-700 px-2 py-0.5 rounded border border-blue-100 w-fit whitespace-nowrap">
+                    {c.fromUnit} ➔ {c.conversionQty} {c.toUnit}
+                  </span>
+                ))}
+              </div>
+            );
+          }
+        },
+        actionsCol
+      ];
+    } else {
+      return [
+        ...commonCols,
+        {
+          accessorKey: 'purchasePrice',
+          header: 'Harga Beli/Dus',
+          cell: ({ row }) => {
+            const amount = parseFloat(row.original.purchasePrice?.toString() || '0');
+            return <span className="font-medium text-slate-700">{new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(amount)}</span>;
+          }
+        },
+        {
+          accessorKey: 'price',
+          header: 'Harga Jual/Dus',
+          cell: ({ row }) => {
+            const amount = parseFloat(row.original.price.toString());
+            return <span className="font-medium text-slate-700">{new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(amount)}</span>;
+          }
+        },
+        {
+          accessorKey: 'retailPriceNote',
+          header: 'Ref Ecer',
+          cell: ({ row }) => row.original.retailPriceNote || '-'
+        },
+        {
+          accessorKey: 'legacyCode',
+          header: 'Legacy Code',
+          cell: ({ row }) => row.original.legacyCode || '-'
+        },
+        actionsCol
+      ];
     }
-  ], []);
+  }, [activeTab]);
 
   const selectedCount = Object.keys(rowSelection).length;
 
@@ -262,9 +323,17 @@ export function ProductsClient() {
 
       {/* Filters & Table */}
       <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden flex flex-col">
-        {/* Toolbar */}
-        <div className="p-4 border-b border-slate-200 flex flex-col sm:flex-row gap-4 items-center justify-between bg-slate-50/50">
-          <div className="relative w-full sm:max-w-xs">
+        {/* Tabs & Toolbar */}
+        <div className="p-4 border-b border-slate-200 flex flex-col gap-4 bg-slate-50/50">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <TabsList className="w-full sm:w-auto grid grid-cols-3 sm:inline-flex h-auto p-1 bg-slate-200/50">
+              <TabsTrigger value="master" className="py-2 data-[state=active]:bg-white data-[state=active]:shadow-sm">PRODUCT MASTER</TabsTrigger>
+              <TabsTrigger value="conversion" className="py-2 data-[state=active]:bg-white data-[state=active]:shadow-sm">UNIT CONVERSION</TabsTrigger>
+              <TabsTrigger value="price" className="py-2 data-[state=active]:bg-white data-[state=active]:shadow-sm">PRICE MASTER</TabsTrigger>
+            </TabsList>
+          </Tabs>
+
+          <div className="relative w-full sm:max-w-xs mt-2 sm:mt-0">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
               <SearchIcon className="h-4 w-4 text-slate-400" />
             </div>
