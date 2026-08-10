@@ -14,7 +14,7 @@ interface PreOrderClientProps {
 export function PreOrderClient({ stores }: PreOrderClientProps) {
   const router = useRouter();
   
-  const [cartItems, setCartItems] = useState<{product: Product, quantity: number, requestedPrice?: number}[]>([]);
+  const [cartItems, setCartItems] = useState<{product: Product, quantity: number, requestedPrice?: number, unitNote?: string}[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
@@ -72,10 +72,21 @@ export function PreOrderClient({ stores }: PreOrderClientProps) {
       try {
         const parsed = JSON.parse(stored);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          setCartItems(parsed.map(item => ({
-            ...item,
-            requestedPrice: item.requestedPrice || Number(item.product.price)
-          })));
+          setCartItems(parsed.map(item => {
+            let initialUnitNote = item.unitNote;
+            if (!initialUnitNote) {
+              initialUnitNote = (item.product as any).unit?.name || 'Karton';
+              const eceran = getEceranPrice(item.product);
+              if (eceran !== null && (item.requestedPrice === eceran || !item.requestedPrice)) {
+                // If it's empty, we just default to Karton.
+              }
+            }
+            return {
+              ...item,
+              requestedPrice: item.requestedPrice || Number(item.product.price),
+              unitNote: initialUnitNote
+            };
+          }));
         } else {
           router.push('/sales/products');
         }
@@ -148,10 +159,14 @@ export function PreOrderClient({ stores }: PreOrderClientProps) {
     });
   };
 
-  const updateRequestedPrice = (index: number, newPrice: number) => {
+  const updateRequestedPrice = (index: number, newPrice: number, newUnitNote?: string) => {
     setCartItems(prev => {
       const newItems = [...prev];
-      newItems[index] = { ...newItems[index], requestedPrice: newPrice };
+      newItems[index] = { 
+        ...newItems[index], 
+        requestedPrice: newPrice,
+        ...(newUnitNote ? { unitNote: newUnitNote } : {})
+      };
       sessionStorage.setItem('preOrderCart', JSON.stringify(newItems));
       return newItems;
     });
@@ -201,21 +216,13 @@ export function PreOrderClient({ stores }: PreOrderClientProps) {
         latitude: lat,
         longitude: lng,
         clonedFromId: formData.clonedFromId,
-        items: cartItems.map(item => {
-          let unitString = (item.product as any).unit?.name || '';
-          const eceran = getEceranPrice(item.product);
-          if (eceran !== null && item.requestedPrice === eceran) {
-            const match = (item.product as any).retailPriceNote?.match(/[a-zA-Z]+/);
-            if (match) unitString = match[0].toUpperCase();
-          }
-          return {
-            productId: item.product.id,
-            quantity: item.quantity,
-            price: item.requestedPrice || Number(item.product.price),
-            originalPrice: Number(item.product.price),
-            unitNote: unitString
-          };
-        })
+        items: cartItems.map(item => ({
+          productId: item.product.id,
+          quantity: item.quantity,
+          price: item.requestedPrice || Number(item.product.price),
+          originalPrice: Number(item.product.price),
+          unitNote: item.unitNote || (item.product as any).unit?.name || 'Karton'
+        }))
       });
       
       if (result.success) {
@@ -433,7 +440,7 @@ export function PreOrderClient({ stores }: PreOrderClientProps) {
                       <div className="flex items-center justify-end gap-1.5 pl-2 -mt-1 mb-2">
                         <button
                           type="button"
-                          onClick={() => updateRequestedPrice(index, Number(item.product.price))}
+                          onClick={() => updateRequestedPrice(index, Number(item.product.price), (item.product as any).unit?.name || 'Karton')}
                           className={cn(
                             "text-[10px] font-bold px-2 py-1 rounded border transition-colors shadow-sm",
                             (item.requestedPrice === Number(item.product.price) || !item.requestedPrice)
@@ -449,7 +456,10 @@ export function PreOrderClient({ stores }: PreOrderClientProps) {
                             onClick={() => {
                               const eceranPrice = getEceranPrice(item.product);
                               if (eceranPrice !== null) {
-                                updateRequestedPrice(index, eceranPrice);
+                                let eceranUnit = 'Eceran';
+                                const match = (item.product as any).retailPriceNote?.match(/[a-zA-Z]+/);
+                                if (match) eceranUnit = match[0].toUpperCase();
+                                updateRequestedPrice(index, eceranPrice, eceranUnit);
                               }
                             }}
                             className={cn(
@@ -500,14 +510,8 @@ export function PreOrderClient({ stores }: PreOrderClientProps) {
                               className="w-10 text-center font-bold text-sm text-slate-900 bg-transparent border-none focus:outline-none appearance-none m-0 p-0"
                             />
                             {(() => {
-                              let unitString = (item.product as any).unit?.name || '';
-                              const eceran = getEceranPrice(item.product);
-                              if (eceran !== null && item.requestedPrice === eceran) {
-                                const match = (item.product as any).retailPriceNote?.match(/[a-zA-Z]+/);
-                                if (match) unitString = match[0].toUpperCase();
-                              }
                               return (
-                                <span className="pr-1 text-sm font-bold text-slate-900">{unitString}</span>
+                                <span className="pr-1 text-sm font-bold text-slate-900">{item.unitNote || (item.product as any).unit?.name || 'Karton'}</span>
                               );
                             })()}
                           </div>
