@@ -141,14 +141,8 @@ export function PreOrderClient({ stores }: PreOrderClientProps) {
   const setQuantity = (index: number, newQty: number) => {
     setCartItems(prev => {
       const newItems = [...prev];
-      if (newQty <= 0) {
-        newItems.splice(index, 1);
-        if (newItems.length === 0) {
-          router.push('/sales/products');
-        }
-      } else {
-        newItems[index].quantity = Math.min(newQty, newItems[index].product.stock);
-      }
+      if (newQty < 0) return prev;
+      newItems[index].quantity = Math.min(newQty, newItems[index].product.stock);
       sessionStorage.setItem('preOrderCart', JSON.stringify(newItems));
       return newItems;
     });
@@ -479,6 +473,20 @@ export function PreOrderClient({ stores }: PreOrderClientProps) {
                               onChange={(e) => {
                                 const val = e.target.value === '' ? 0 : parseInt(e.target.value, 10);
                                 if (!isNaN(val)) setQuantity(index, val);
+                              }}
+                              onBlur={(e) => {
+                                const val = parseInt(e.target.value, 10);
+                                if (isNaN(val) || val <= 0) {
+                                  setCartItems(prev => {
+                                    const newItems = [...prev];
+                                    newItems.splice(index, 1);
+                                    if (newItems.length === 0) {
+                                      router.push('/sales/products');
+                                    }
+                                    sessionStorage.setItem('preOrderCart', JSON.stringify(newItems));
+                                    return newItems;
+                                  });
+                                }
                               }}
                               className="w-10 text-center font-bold text-sm text-slate-900 bg-transparent border-none focus:outline-none appearance-none m-0 p-0"
                             />

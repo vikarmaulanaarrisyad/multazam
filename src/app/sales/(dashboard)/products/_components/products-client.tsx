@@ -62,7 +62,7 @@ export function SalesProductsClient({ initialProducts, categories }: SalesProduc
 
   const setCartQuantity = (productId: string, qty: number, maxStock: number) => {
     setCart(prev => {
-      if (qty <= 0) {
+      if (qty < 0) {
         const newCart = { ...prev };
         delete newCart[productId];
         return newCart;
@@ -221,7 +221,7 @@ export function SalesProductsClient({ initialProducts, categories }: SalesProduc
                   </div>
                   
                   <div className="flex items-center justify-end mt-1 h-8">
-                    {cartQty > 0 ? (
+                    {cart[product.id] !== undefined ? (
                       <div className="flex items-center gap-1.5 bg-blue-50 rounded-full p-1 border border-blue-100 shadow-sm">
                         <button 
                           onClick={() => updateCart(product.id, -1, product.stock)}
@@ -233,10 +233,20 @@ export function SalesProductsClient({ initialProducts, categories }: SalesProduc
                           type="number"
                           min="0"
                           max={product.stock}
-                          value={cartQty || ''}
+                          value={cartQty === 0 && !cart[product.id] ? '' : cartQty || ''}
                           onChange={(e) => {
                             const val = e.target.value === '' ? 0 : parseInt(e.target.value, 10);
                             if (!isNaN(val)) setCartQuantity(product.id, val, product.stock);
+                          }}
+                          onBlur={(e) => {
+                            const val = parseInt(e.target.value, 10);
+                            if (isNaN(val) || val <= 0) {
+                              setCart(prev => {
+                                const newCart = { ...prev };
+                                delete newCart[product.id];
+                                return newCart;
+                              });
+                            }
                           }}
                           className="text-[11px] font-bold text-blue-800 w-8 text-center bg-transparent border-none focus:outline-none appearance-none m-0 p-0"
                         />
