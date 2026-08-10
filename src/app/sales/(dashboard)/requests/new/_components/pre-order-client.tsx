@@ -201,12 +201,21 @@ export function PreOrderClient({ stores }: PreOrderClientProps) {
         latitude: lat,
         longitude: lng,
         clonedFromId: formData.clonedFromId,
-        items: cartItems.map(item => ({
-          productId: item.product.id,
-          quantity: item.quantity,
-          price: item.requestedPrice || Number(item.product.price),
-          originalPrice: Number(item.product.price)
-        }))
+        items: cartItems.map(item => {
+          let unitString = (item.product as any).unit?.name || '';
+          const eceran = getEceranPrice(item.product);
+          if (eceran !== null && item.requestedPrice === eceran) {
+            const match = (item.product as any).retailPriceNote?.match(/[a-zA-Z]+/);
+            if (match) unitString = match[0].toUpperCase();
+          }
+          return {
+            productId: item.product.id,
+            quantity: item.quantity,
+            price: item.requestedPrice || Number(item.product.price),
+            originalPrice: Number(item.product.price),
+            unitNote: unitString
+          };
+        })
       });
       
       if (result.success) {

@@ -38,7 +38,8 @@ export type TransactionDetail = {
     retailPriceNote: string | null;
     quantity: number;
     price: number;
-    originalPrice: number;
+    originalPrice: number | null;
+    unitNote: string | null;
   }[];
   paymentHistories: {
     id: string;
@@ -837,19 +838,7 @@ export function TransactionsClient({ transactions }: { transactions: Transaction
                       <tr key={item.id} className="bg-white">
                         <td className="p-3 text-sm font-medium text-slate-900">{item.productName}</td>
                         <td className="p-3 text-sm text-slate-600 text-right">
-                          {item.quantity} {(() => {
-                            let unitString = 'Karton';
-                            const eceranPriceMatch = item.retailPriceNote?.match(/\d[\d.,]*/);
-                            let eceranPrice = null;
-                            if (eceranPriceMatch) {
-                              eceranPrice = parseInt(eceranPriceMatch[0].replace(/[.,]/g, ''), 10);
-                            }
-                            if (eceranPrice !== null && item.price === eceranPrice) {
-                              const match = item.retailPriceNote?.match(/[a-zA-Z]+/);
-                              if (match) unitString = match[0].toUpperCase();
-                            }
-                            return <span className="text-[10px] text-slate-400 font-semibold ml-1">{unitString}</span>;
-                          })()}
+                          {item.quantity} <span className="text-[10px] text-slate-400 font-semibold ml-1">{item.unitNote || 'Karton'}</span>
                         </td>
                         <td className="p-3 text-sm text-slate-600 text-right">
                           {selectedTx.status === 'PENDING_APPROVAL' ? (

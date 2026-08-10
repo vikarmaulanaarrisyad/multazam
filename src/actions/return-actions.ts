@@ -15,13 +15,17 @@ export async function createReturn(data: {
   try {
     // Generate return number
     const today = new Date();
-    const dateStr = today.toISOString().split('T')[0].replace(/-/g, '');
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, '0');
+    const dd = String(today.getDate()).padStart(2, '0');
+    const dateStr = `${yyyy}${mm}${dd}`;
     
-    // Simple counter logic for demo purposes
+    // Counter logic based on local day
+    const startOfDay = new Date(yyyy, today.getMonth(), today.getDate());
     const count = await prisma.returnTransaction.count({
       where: {
         createdAt: {
-          gte: new Date(today.setHours(0, 0, 0, 0)),
+          gte: startOfDay,
         }
       }
     });

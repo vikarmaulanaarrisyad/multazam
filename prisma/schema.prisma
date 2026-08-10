@@ -178,6 +178,7 @@ model TransactionItem {
   price         Decimal     @db.Decimal(10, 2)
   originalPrice Decimal?    @db.Decimal(10, 2)
   purchasePrice Decimal?    @db.Decimal(10, 2)
+  unitNote      String?
 }
 
 model StockMovement {

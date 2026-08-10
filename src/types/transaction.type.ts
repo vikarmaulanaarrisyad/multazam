@@ -20,7 +20,8 @@ export const PreOrderSchema = z.object({
       productId: z.string().min(1),
       quantity: z.number().int().positive(),
       price: z.number().nonnegative(),
-      originalPrice: z.number().nonnegative().optional()
+      originalPrice: z.number().nonnegative().optional(),
+      unitNote: z.string().optional()
     })
   ).min(1),
   clonedFromId: z.string().optional()

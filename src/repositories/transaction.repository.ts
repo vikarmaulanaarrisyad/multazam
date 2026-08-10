@@ -89,7 +89,8 @@ export class TransactionRepository {
               productId: item.productId,
               quantity: item.quantity,
               price: item.price,
-              originalPrice: item.originalPrice || item.price
+              originalPrice: item.originalPrice || item.price,
+              unitNote: item.unitNote || null
             }))
           }
         }
