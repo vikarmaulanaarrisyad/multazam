@@ -71,6 +71,7 @@ export default async function SuperAdminTransactionsPage() {
       quantity: item.quantity,
       price: Number(item.price),
       originalPrice: item.originalPrice ? Number(item.originalPrice) : Number(item.price),
+      unitNote: item.unitNote,
     })),
     paymentHistories: tx.paymentHistories.map(ph => ({
       id: ph.id,
