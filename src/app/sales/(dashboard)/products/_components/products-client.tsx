@@ -60,6 +60,17 @@ export function SalesProductsClient({ initialProducts, categories }: SalesProduc
     });
   };
 
+  const setCartQuantity = (productId: string, qty: number, maxStock: number) => {
+    setCart(prev => {
+      if (qty <= 0) {
+        const newCart = { ...prev };
+        delete newCart[productId];
+        return newCart;
+      }
+      return { ...prev, [productId]: Math.min(qty, maxStock) };
+    });
+  };
+
   const cartTotal = Object.entries(cart).reduce((total, [id, qty]) => {
     const product = initialProducts.find(p => p.id === id);
     return total + (product ? product.price * qty : 0);
@@ -214,11 +225,21 @@ export function SalesProductsClient({ initialProducts, categories }: SalesProduc
                       <div className="flex items-center gap-1.5 bg-blue-50 rounded-full p-1 border border-blue-100 shadow-sm">
                         <button 
                           onClick={() => updateCart(product.id, -1, product.stock)}
-                          className="w-6 h-6 rounded-full flex items-center justify-center bg-white text-blue-600 shadow-sm active:scale-95"
+                          className="w-6 h-6 rounded-full flex items-center justify-center bg-white text-blue-600 shadow-sm active:scale-95 shrink-0"
                         >
                           <Minus className="w-3 h-3" />
                         </button>
-                        <span className="text-[11px] font-bold text-blue-800 w-3 text-center">{cartQty}</span>
+                        <input
+                          type="number"
+                          min="0"
+                          max={product.stock}
+                          value={cartQty || ''}
+                          onChange={(e) => {
+                            const val = e.target.value === '' ? 0 : parseInt(e.target.value, 10);
+                            if (!isNaN(val)) setCartQuantity(product.id, val, product.stock);
+                          }}
+                          className="text-[11px] font-bold text-blue-800 w-8 text-center bg-transparent border-none focus:outline-none appearance-none m-0 p-0"
+                        />
                         <button 
                           onClick={() => updateCart(product.id, 1, product.stock)}
                           disabled={cartQty >= product.stock}

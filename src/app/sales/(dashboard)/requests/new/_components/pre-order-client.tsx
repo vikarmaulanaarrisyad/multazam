@@ -138,6 +138,22 @@ export function PreOrderClient({ stores }: PreOrderClientProps) {
     });
   };
 
+  const setQuantity = (index: number, newQty: number) => {
+    setCartItems(prev => {
+      const newItems = [...prev];
+      if (newQty <= 0) {
+        newItems.splice(index, 1);
+        if (newItems.length === 0) {
+          router.push('/sales/products');
+        }
+      } else {
+        newItems[index].quantity = Math.min(newQty, newItems[index].product.stock);
+      }
+      sessionStorage.setItem('preOrderCart', JSON.stringify(newItems));
+      return newItems;
+    });
+  };
+
   const updateRequestedPrice = (index: number, newPrice: number) => {
     setCartItems(prev => {
       const newItems = [...prev];
@@ -450,23 +466,34 @@ export function PreOrderClient({ stores }: PreOrderClientProps) {
                           <button 
                             type="button"
                             onClick={() => updateQuantity(index, -1)}
-                            className="w-7 h-7 flex items-center justify-center rounded-full bg-slate-50 hover:bg-slate-100 text-slate-600 transition-colors"
+                            className="w-7 h-7 flex items-center justify-center rounded-full bg-slate-50 hover:bg-slate-100 text-slate-600 transition-colors shrink-0"
                           >
                             <Minus className="w-3.5 h-3.5" />
                           </button>
-                          {(() => {
-                            let unitString = (item.product as any).unit?.name || '';
-                            const eceran = getEceranPrice(item.product);
-                            if (eceran !== null && item.requestedPrice === eceran) {
-                              const match = (item.product as any).retailPriceNote?.match(/[a-zA-Z]+/);
-                              if (match) unitString = match[0].toUpperCase();
-                            }
-                            return (
-                              <span className="min-w-8 px-1 text-center font-bold text-sm text-slate-900 whitespace-nowrap">
-                                {item.quantity} {unitString}
-                              </span>
-                            );
-                          })()}
+                          <div className="flex items-center">
+                            <input
+                              type="number"
+                              min="0"
+                              max={item.product.stock}
+                              value={item.quantity || ''}
+                              onChange={(e) => {
+                                const val = e.target.value === '' ? 0 : parseInt(e.target.value, 10);
+                                if (!isNaN(val)) setQuantity(index, val);
+                              }}
+                              className="w-10 text-center font-bold text-sm text-slate-900 bg-transparent border-none focus:outline-none appearance-none m-0 p-0"
+                            />
+                            {(() => {
+                              let unitString = (item.product as any).unit?.name || '';
+                              const eceran = getEceranPrice(item.product);
+                              if (eceran !== null && item.requestedPrice === eceran) {
+                                const match = (item.product as any).retailPriceNote?.match(/[a-zA-Z]+/);
+                                if (match) unitString = match[0].toUpperCase();
+                              }
+                              return (
+                                <span className="pr-1 text-sm font-bold text-slate-900">{unitString}</span>
+                              );
+                            })()}
+                          </div>
                           <button 
                             type="button"
                             onClick={() => updateQuantity(index, 1)}
@@ -540,6 +567,7 @@ export function PreOrderClient({ stores }: PreOrderClientProps) {
                       <option value="CASH">CASH</option>
                       <option value="TRANSFER">TRANSFER</option>
                       <option value="COD">COD</option>
+                      <option value="TEMPO">TEMPO</option>
                     </select>
                   </div>
                   <div className="flex flex-col gap-1.5">

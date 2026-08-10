@@ -68,7 +68,11 @@ function SuratJalanCopy({ transaction, setting, isDivider = false }: any) {
         {/* Kiri */}
         <div className="flex flex-col w-1/2">
           <span className="text-[22px] font-bold tracking-wider">{setting?.companyName || 'E - DIA MAKMUR ABADI'}</span>
-          <span className="text-xs font-semibold tracking-wide">FAKTUR PENJUALAN TUNAI</span>
+          <span className="text-xs font-semibold tracking-wide">
+            {transaction.notes?.includes('[Metode: COD]') || transaction.notes?.includes('[Metode: CASH]') || (!transaction.notes?.includes('[Metode: TEMPO]') && !transaction.notes?.includes('[Metode: TRANSFER]'))
+              ? 'FAKTUR PENJUALAN TUNAI' 
+              : 'FAKTUR PENJUALAN'}
+          </span>
           
           <div className="flex mt-auto pt-6">
             <span className="w-24">TANGGAL</span>
