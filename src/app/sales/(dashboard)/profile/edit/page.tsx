@@ -38,7 +38,7 @@ export default async function EditProfilePage() {
 
       <div className="px-4 mt-6">
         <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-5 overflow-hidden relative">
-          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary to-blue-400"></div>
+          <div className="absolute top-0 left-0 w-full h-1 bg-linear-to-r from-primary to-blue-400"></div>
           
           <EditProfileForm 
             initialName={user.name || ''} 

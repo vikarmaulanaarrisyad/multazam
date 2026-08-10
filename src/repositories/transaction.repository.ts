@@ -79,7 +79,7 @@ export class TransactionRepository {
           shippingAddress: data.shippingAddress || null,
           shippingCost: data.shippingCost || null,
           dueDate: data.dueDate,
-          notes: data.notes,
+          notes: data.paymentMethod ? `[Metode: ${data.paymentMethod}]\n${data.notes || ''}`.trim() : data.notes,
           latitude: data.latitude,
           longitude: data.longitude,
           paidAmount: dpAmount,
@@ -109,7 +109,7 @@ export class TransactionRepository {
           data: {
             transactionId: newTransaction.id,
             amount: dpAmount,
-            paymentMethod: 'CASH', // default for DP via Sales App
+            paymentMethod: data.paymentMethod || 'CASH', // Use selected method or default
             notes: 'Uang Muka (DP) saat pembuatan pesanan',
             userId: userId
           }

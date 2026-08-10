@@ -18,7 +18,7 @@ export default function SupportPage() {
       </div>
 
       <div className="px-4 mt-6">
-        <div className="bg-gradient-to-br from-primary to-blue-600 rounded-2xl p-6 text-white shadow-md relative overflow-hidden">
+        <div className="bg-linear-to-br from-primary to-blue-600 rounded-2xl p-6 text-white shadow-md relative overflow-hidden">
           <div className="absolute -right-4 -top-4 w-24 h-24 bg-white/10 rounded-full blur-xl"></div>
           <div className="absolute -left-4 -bottom-4 w-32 h-32 bg-black/10 rounded-full blur-2xl"></div>
           

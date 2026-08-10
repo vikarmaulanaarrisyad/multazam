@@ -69,7 +69,7 @@ export function EditProfileForm({ initialName, initialEmail }: EditProfileFormPr
             name="name"
             defaultValue={initialName}
             required
-            className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+            className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
             placeholder="Masukkan nama lengkap"
           />
         </div>
@@ -86,7 +86,7 @@ export function EditProfileForm({ initialName, initialEmail }: EditProfileFormPr
             name="email"
             defaultValue={initialEmail}
             required
-            className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+            className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
             placeholder="Masukkan alamat email"
           />
         </div>
@@ -101,7 +101,7 @@ export function EditProfileForm({ initialName, initialEmail }: EditProfileFormPr
           <input
             type="password"
             name="password"
-            className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+            className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
             placeholder="Kosongkan jika tidak ingin mengubah"
           />
         </div>

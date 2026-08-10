@@ -11,6 +11,7 @@ export const PreOrderSchema = z.object({
   dpAmount: z.number().nonnegative().optional(),
   dueDate: z.preprocess(arg => new Date(arg as string), z.date()),
   notes: z.string().optional(),
+  paymentMethod: z.string().optional(),
   latitude: z.number().optional(),
   longitude: z.number().optional(),
   ownerName: z.string().optional(),

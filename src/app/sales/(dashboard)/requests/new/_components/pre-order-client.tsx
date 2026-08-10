@@ -31,6 +31,7 @@ export function PreOrderClient({ stores }: PreOrderClientProps) {
     shippingAddress: '',
     shippingCost: '',
     dpAmount: '',
+    paymentMethod: 'CASH',
     dueDate: '',
     notes: ''
   });
@@ -184,6 +185,7 @@ export function PreOrderClient({ stores }: PreOrderClientProps) {
         shippingAddress: formData.shippingAddress,
         shippingCost: formData.shippingCost ? Number(formData.shippingCost.replace(/\D/g, '')) : undefined,
         dpAmount: formData.dpAmount ? Number(formData.dpAmount.replace(/\D/g, '')) : undefined,
+        paymentMethod: formData.paymentMethod,
         dueDate: new Date(formData.dueDate),
         notes: formData.notes,
         latitude: lat,
@@ -526,6 +528,19 @@ export function PreOrderClient({ stores }: PreOrderClientProps) {
                       value={formData.dueDate}
                       className="w-full h-11 px-3 rounded-lg bg-slate-100 border-slate-200 text-slate-500 cursor-not-allowed border"
                     />
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs font-bold text-slate-500" htmlFor="paymentMethod">Metode Pembayaran</label>
+                    <select
+                      id="paymentMethod"
+                      value={formData.paymentMethod}
+                      onChange={e => setFormData({...formData, paymentMethod: e.target.value})}
+                      className="w-full h-11 px-3 rounded-lg bg-slate-50 border-slate-200 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all border"
+                    >
+                      <option value="CASH">CASH</option>
+                      <option value="TRANSFER">TRANSFER</option>
+                      <option value="COD">COD</option>
+                    </select>
                   </div>
                   <div className="flex flex-col gap-1.5">
                     <label className="text-xs font-bold text-slate-500" htmlFor="dpAmount">Uang Muka / DP (Opsional)</label>
