@@ -2,6 +2,7 @@ import { purchaseRepository, PurchaseWithRelations } from '@/repositories/purcha
 import prisma from '@/lib/prisma';
 import { format } from 'date-fns';
 import { createNotification } from '@/lib/createNotification';
+import { calculateBaseQuantity } from '@/utils/inventory';
 
 async function generateInvoiceNumber(): Promise<string> {
   const dateStr = format(new Date(), 'yyyyMMdd');
@@ -112,14 +113,18 @@ export const purchaseService = {
         // 2. Update stock and create stock movements
         for (const item of purchase.items) {
           const product = await tx.product.findUnique({
-            where: { id: item.productId }
+            where: { id: item.productId },
+            include: { unitConversions: true }
           });
           
           if (!product) continue;
+          
+          const baseQtyToAdd = calculateBaseQuantity(item.quantity, product.purchaseUnit, product);
+
           // Update stock atomically
           const updatedProduct = await tx.product.update({
             where: { id: item.productId },
-            data: { stock: { increment: item.quantity } }
+            data: { stock: { increment: baseQtyToAdd } }
           });
 
           // Create stock movement
@@ -127,11 +132,11 @@ export const purchaseService = {
             data: {
               productId: item.productId,
               type: 'IN',
-              quantity: item.quantity,
-              balanceBefore: updatedProduct.stock - item.quantity,
+              quantity: baseQtyToAdd,
+              balanceBefore: updatedProduct.stock - baseQtyToAdd,
               balanceAfter: updatedProduct.stock,
               reference: purchase.invoiceNumber,
-              notes: `Restock dari supplier: ${purchase.supplier.name}`
+              notes: `Restock dari supplier: ${purchase.supplier.name} - Order: ${item.quantity} ${product.purchaseUnit || 'PCS'}`
             }
           });
         }

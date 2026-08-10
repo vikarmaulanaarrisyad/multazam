@@ -23,6 +23,14 @@ export type ProductType = {
   unitId: string | null;
   createdAt: Date;
   updatedAt: Date;
+  unitConversions?: {
+    id: string;
+    fromUnit: string;
+    toUnit: string;
+    conversionQty: number;
+    conversionType: string;
+    active: boolean;
+  }[];
 };
 
 export type ProductWithRelations = ProductType & {

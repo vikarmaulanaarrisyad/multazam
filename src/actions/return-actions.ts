@@ -4,6 +4,7 @@ import prisma from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
 import { ReturnCondition, ReturnType, ReturnStatus, MovementType } from '@/generated/prisma/client';
 import { auth } from '@/auth';
+import { calculateBaseQuantity } from '@/utils/inventory';
 
 export async function createReturn(data: {
   transactionId?: string;
@@ -89,62 +90,60 @@ export async function approveReturn(returnId: string, adminNotes?: string) {
     // Process inventory inside a transaction
     await prisma.$transaction(async (tx) => {
       for (const item of ret.items) {
-        const product = await tx.product.findUnique({ where: { id: item.productId } });
+        const product = await tx.product.findUnique({ 
+          where: { id: item.productId },
+          include: { unitConversions: true } 
+        });
         if (!product) continue;
+        
+        const baseQty = calculateBaseQuantity(item.quantity, product.purchaseUnit, product);
 
         if (ret.type === 'EXCHANGE') {
-          // Exchange means we take the returned item and give a new one from good stock.
-          // If condition is BAD, we add to badStock and deduct from good stock.
-          // If condition is GOOD (rare for exchange but possible), net stock is 0.
           if (item.condition === 'BAD') {
-            if (product.stock < item.quantity) {
+            if (product.stock < baseQty) {
               throw new Error(`Stok bagus untuk produk ${product.name} tidak cukup untuk Tukar Guling`);
             }
             const updatedProduct = await tx.product.update({
               where: { id: product.id },
               data: {
-                stock: { decrement: item.quantity },
-                badStock: { increment: item.quantity }
+                stock: { decrement: baseQty },
+                badStock: { increment: baseQty }
               }
             });
             
-            // Log movement for the new item given to customer
             await tx.stockMovement.create({
               data: {
                 productId: product.id,
-                type: 'RETURN', // We use RETURN to indicate it's part of a return process, or OUT. 
-                // Actually, since we added RETURN to MovementType, let's use it.
-                quantity: item.quantity,
-                balanceBefore: updatedProduct.stock + item.quantity,
+                type: 'RETURN',
+                quantity: baseQty,
+                balanceBefore: updatedProduct.stock + baseQty,
                 balanceAfter: updatedProduct.stock,
                 reference: `Tukar Guling: ${ret.returnNumber}`,
-                notes: 'Pemberian barang pengganti (Good Stock)',
+                notes: `Pemberian barang pengganti (Good Stock) - Order: ${item.quantity} ${product.purchaseUnit || 'PCS'}`,
                 userId: ret.userId
               }
             });
           }
         } else if (ret.type === 'REFUND') {
-          // Refund means customer just gives back the item.
           if (item.condition === 'BAD') {
             await tx.product.update({
               where: { id: product.id },
-              data: { badStock: { increment: item.quantity } }
+              data: { badStock: { increment: baseQty } }
             });
           } else {
             const updatedProduct = await tx.product.update({
               where: { id: product.id },
-              data: { stock: { increment: item.quantity } }
+              data: { stock: { increment: baseQty } }
             });
-            // Log movement for stock in
             await tx.stockMovement.create({
               data: {
                 productId: product.id,
                 type: 'RETURN',
-                quantity: item.quantity,
-                balanceBefore: updatedProduct.stock - item.quantity,
+                quantity: baseQty,
+                balanceBefore: updatedProduct.stock - baseQty,
                 balanceAfter: updatedProduct.stock,
                 reference: `Refund: ${ret.returnNumber}`,
-                notes: 'Pengembalian barang kondisi bagus',
+                notes: `Pengembalian barang kondisi bagus - Order: ${item.quantity} ${product.purchaseUnit || 'PCS'}`,
                 userId: ret.userId
               }
             });

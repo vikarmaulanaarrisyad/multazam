@@ -1,5 +1,6 @@
 import prisma from '@/lib/prisma';
 import { PreOrderData, UpdateTransactionStatusDTO, CancelTransactionDTO, AddPaymentDTO } from '../types/transaction.type';
+import { calculateBaseQuantity } from '../utils/inventory';
 
 export class TransactionRepository {
   
@@ -121,12 +122,17 @@ export class TransactionRepository {
       for (const item of data.items) {
         if (!item.productId) throw new Error('ID Produk tidak valid pada salah satu pesanan.');
 
-        const product = await tx.product.findUnique({ where: { id: item.productId } });
+        const product = await tx.product.findUnique({ 
+          where: { id: item.productId },
+          include: { unitConversions: true } 
+        });
         if (!product) throw new Error(`Produk dengan ID ${item.productId} tidak ditemukan.`);
         
+        const baseQtyToDeduct = calculateBaseQuantity(item.quantity, item.unitNote, product);
+
         const updated = await tx.product.updateMany({
-          where: { id: item.productId, stock: { gte: item.quantity } },
-          data: { stock: { decrement: item.quantity } }
+          where: { id: item.productId, stock: { gte: baseQtyToDeduct } },
+          data: { stock: { decrement: baseQtyToDeduct } }
         });
         if (updated.count === 0) throw new Error(`Stok produk ${product.name} tidak mencukupi.`);
 
@@ -137,11 +143,11 @@ export class TransactionRepository {
           data: {
             productId: item.productId,
             type: 'OUT',
-            quantity: item.quantity,
-            balanceBefore: updatedProduct.stock + item.quantity,
+            quantity: baseQtyToDeduct,
+            balanceBefore: updatedProduct.stock + baseQtyToDeduct,
             balanceAfter: updatedProduct.stock,
             reference: invoiceNumber,
-            notes: isPriceProposal ? 'Booking (Menunggu Persetujuan)' : 'Penjualan / Pre-Order',
+            notes: isPriceProposal ? `Booking (Menunggu Persetujuan) - Order: ${item.quantity} ${item.unitNote || 'PCS'}` : `Penjualan / Pre-Order - Order: ${item.quantity} ${item.unitNote || 'PCS'}`,
             userId: userId
           }
         });
@@ -172,23 +178,28 @@ export class TransactionRepository {
       });
 
       for (const item of transaction.items) {
-        const product = await tx.product.findUnique({ where: { id: item.productId } });
+        const product = await tx.product.findUnique({ 
+          where: { id: item.productId },
+          include: { unitConversions: true } 
+        });
         if (!product) continue;
+
+        const baseQtyToReturn = calculateBaseQuantity(item.quantity, item.unitNote, product);
 
         const updatedProduct = await tx.product.update({
           where: { id: item.productId },
-          data: { stock: { increment: item.quantity } }
+          data: { stock: { increment: baseQtyToReturn } }
         });
 
         await tx.stockMovement.create({
           data: {
             productId: item.productId,
             type: 'IN',
-            quantity: item.quantity,
-            balanceBefore: updatedProduct.stock - item.quantity,
+            quantity: baseQtyToReturn,
+            balanceBefore: updatedProduct.stock - baseQtyToReturn,
             balanceAfter: updatedProduct.stock,
             reference: transaction.invoiceNumber,
-            notes: `Pengembalian stok dari pesanan dibatalkan: ${adminNotes}`,
+            notes: `Pengembalian stok pesanan batal: ${adminNotes} - Order: ${item.quantity} ${item.unitNote || 'PCS'}`,
             userId: userId
           }
         });
@@ -211,21 +222,26 @@ export class TransactionRepository {
         throw new Error('Tidak bisa menghapus item terakhir. Batalkan pesanan saja.');
       }
 
-      const product = await tx.product.findUnique({ where: { id: itemToRemove.productId } });
+      const product = await tx.product.findUnique({ 
+        where: { id: itemToRemove.productId },
+        include: { unitConversions: true }
+      });
       if (product) {
+        const baseQtyToReturn = calculateBaseQuantity(itemToRemove.quantity, itemToRemove.unitNote, product);
+
         const updatedProduct = await tx.product.update({
           where: { id: itemToRemove.productId },
-          data: { stock: { increment: itemToRemove.quantity } }
+          data: { stock: { increment: baseQtyToReturn } }
         });
         await tx.stockMovement.create({
           data: {
             productId: itemToRemove.productId,
             type: 'IN',
-            quantity: itemToRemove.quantity,
-            balanceBefore: updatedProduct.stock - itemToRemove.quantity,
+            quantity: baseQtyToReturn,
+            balanceBefore: updatedProduct.stock - baseQtyToReturn,
             balanceAfter: updatedProduct.stock,
             reference: transaction.invoiceNumber,
-            notes: `Pengembalian stok dari pesanan (Item dihapus)`,
+            notes: `Pengembalian stok pesanan (Item dihapus) - Order: ${itemToRemove.quantity} ${itemToRemove.unitNote || 'PCS'}`,
             userId: userId
           }
         });
@@ -309,25 +325,28 @@ export class TransactionRepository {
 
       for (const item of transaction.items) {
         const product = await tx.product.findUnique({
-          where: { id: item.productId }
+          where: { id: item.productId },
+          include: { unitConversions: true }
         });
 
         if (!product) continue;
 
+        const baseQtyToReturn = calculateBaseQuantity(item.quantity, item.unitNote, product);
+
         await tx.product.update({
           where: { id: item.productId },
-          data: { stock: { increment: item.quantity } }
+          data: { stock: { increment: baseQtyToReturn } }
         });
 
         await tx.stockMovement.create({
           data: {
             productId: item.productId,
             type: 'IN',
-            quantity: item.quantity,
+            quantity: baseQtyToReturn,
             balanceBefore: product.stock,
-            balanceAfter: product.stock + item.quantity,
+            balanceAfter: product.stock + baseQtyToReturn,
             reference: transaction.invoiceNumber,
-            notes: 'Pengembalian Stok (Pengajuan Ditolak)',
+            notes: `Pengembalian Stok (Pengajuan Ditolak) - Order: ${item.quantity} ${item.unitNote || 'PCS'}`,
             userId: transaction.userId
           }
         });
