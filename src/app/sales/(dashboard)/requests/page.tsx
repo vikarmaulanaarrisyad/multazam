@@ -19,7 +19,7 @@ export default async function RequestsPage() {
     where: {
       userId: session.user.id,
       status: {
-        in: ['PENDING', 'PENDING_APPROVAL', 'APPROVED', 'SHIPPED', 'COMPLETED', 'REJECTED']
+        in: ['PENDING', 'PENDING_APPROVAL', 'APPROVED', 'SHIPPED', 'COMPLETED', 'REJECTED', 'CANCELLED']
       }
     },
     orderBy: {
