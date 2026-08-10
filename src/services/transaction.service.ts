@@ -41,6 +41,13 @@ export class TransactionService {
     return TransactionRepository.cancelTransaction(data.transactionId, data.adminNotes, userId);
   }
 
+  static async removeItem(transactionId: string, itemId: string, userId: string, role: string) {
+    if (role !== 'ADMIN' && role !== 'SUPER_ADMIN') {
+      throw new Error('Unauthorized');
+    }
+    return TransactionRepository.removeItem(transactionId, itemId, userId);
+  }
+
   static async addPayment(data: AddPaymentDTO, userId: string) {
     const tx = await TransactionRepository.findById(data.transactionId);
     

@@ -3,7 +3,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Search, ChevronLeft, ChevronRight, CheckCircle, XCircle, Truck, Package, X, Plus, Printer, FileDown, AlertCircle } from 'lucide-react';
 import { ColumnDef, flexRender, getCoreRowModel, useReactTable, getPaginationRowModel } from '@tanstack/react-table';
-import { updateTransactionStatus, cancelTransaction, addPayment } from '@/actions/transaction-actions';
+import { updateTransactionStatus, cancelTransaction, addPayment, removeItemFromTransaction } from '@/actions/transaction-actions';
 import { approvePriceRequest, rejectPriceRequest } from '@/actions/approval-actions';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -62,6 +62,7 @@ export function TransactionsClient({ transactions }: { transactions: Transaction
   const [adminNotes, setAdminNotes] = useState('');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
+  const [isRemovingItem, setIsRemovingItem] = useState<string | null>(null);
 
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
@@ -158,6 +159,26 @@ export function TransactionsClient({ transactions }: { transactions: Transaction
       setSelectedTx(null);
     } else {
       setError(result.error || 'Terjadi kesalahan saat mengubah status');
+    }
+  };
+
+  const handleRemoveItem = async (txId: string, itemId: string) => {
+    if (!confirm('Apakah Anda yakin ingin menghapus item ini dari pesanan? Stok akan dikembalikan ke sistem.')) return;
+    
+    setIsRemovingItem(itemId);
+    setError(null);
+    try {
+      const result = await removeItemFromTransaction({ transactionId: txId, itemId });
+      if (result.success) {
+        toast.success('Item berhasil dihapus dari pesanan');
+        setSelectedTx(null); // Tutup modal, admin harus membukanya lagi
+      } else {
+        setError(result.error || 'Gagal menghapus item');
+      }
+    } catch (e: any) {
+      setError(e.message || 'Gagal menghapus item');
+    } finally {
+      setIsRemovingItem(null);
     }
   };
 
@@ -806,13 +827,30 @@ export function TransactionsClient({ transactions }: { transactions: Transaction
                       <th className="p-3 text-xs font-bold text-slate-500 text-right">Qty</th>
                       <th className="p-3 text-xs font-bold text-slate-500 text-right">Harga Satuan</th>
                       <th className="p-3 text-xs font-bold text-slate-500 text-right">Subtotal</th>
+                      {(selectedTx.status === 'PENDING' || selectedTx.status === 'PENDING_APPROVAL') && (
+                        <th className="p-3 text-xs font-bold text-slate-500 text-center w-12"></th>
+                      )}
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
                     {selectedTx.items.map(item => (
                       <tr key={item.id} className="bg-white">
                         <td className="p-3 text-sm font-medium text-slate-900">{item.productName}</td>
-                        <td className="p-3 text-sm text-slate-600 text-right">{item.quantity}</td>
+                        <td className="p-3 text-sm text-slate-600 text-right">
+                          {item.quantity} {(() => {
+                            let unitString = 'Karton';
+                            const eceranPriceMatch = item.retailPriceNote?.match(/[\d.,]+/);
+                            let eceranPrice = null;
+                            if (eceranPriceMatch) {
+                              eceranPrice = parseInt(eceranPriceMatch[0].replace(/[.,]/g, ''), 10);
+                            }
+                            if (eceranPrice !== null && item.price === eceranPrice) {
+                              const match = item.retailPriceNote?.match(/[a-zA-Z]+/);
+                              if (match) unitString = match[0].toUpperCase();
+                            }
+                            return <span className="text-[10px] text-slate-400 font-semibold ml-1">{unitString}</span>;
+                          })()}
+                        </td>
                         <td className="p-3 text-sm text-slate-600 text-right">
                           {selectedTx.status === 'PENDING_APPROVAL' ? (
                             <div className="flex flex-col items-end gap-1">
@@ -835,12 +873,25 @@ export function TransactionsClient({ transactions }: { transactions: Transaction
                             ? formatCurrency((editedPrices[item.id] || 0) * item.quantity)
                             : formatCurrency(item.price * item.quantity)}
                         </td>
+                        {(selectedTx.status === 'PENDING' || selectedTx.status === 'PENDING_APPROVAL') && (
+                          <td className="p-3 text-center">
+                            <button
+                              onClick={() => handleRemoveItem(selectedTx.id, item.id)}
+                              disabled={isRemovingItem === item.id || selectedTx.items.length <= 1}
+                              className="text-red-500 hover:text-red-700 hover:bg-red-50 p-1.5 rounded transition-colors disabled:opacity-30 disabled:hover:bg-transparent"
+                              title={selectedTx.items.length <= 1 ? "Tidak bisa menghapus item terakhir (batalkan saja pesanannya)" : "Hapus Item karena Stok Fisik Kosong"}
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
+                          </td>
+                        )}
                       </tr>
                     ))}
                     {selectedTx.shippingCost ? (
                       <tr className="bg-slate-50/50">
                         <td colSpan={3} className="p-3 text-sm font-bold text-slate-500 text-right">Ongkos Kirim</td>
                         <td className="p-3 text-sm font-bold text-slate-700 text-right">{formatCurrency(selectedTx.shippingCost)}</td>
+                        {(selectedTx.status === 'PENDING' || selectedTx.status === 'PENDING_APPROVAL') && <td></td>}
                       </tr>
                     ) : null}
                     <tr className="bg-slate-50">
@@ -852,6 +903,7 @@ export function TransactionsClient({ transactions }: { transactions: Transaction
                             )
                           : formatCurrency(selectedTx.totalAmount)}
                       </td>
+                      {(selectedTx.status === 'PENDING' || selectedTx.status === 'PENDING_APPROVAL') && <td></td>}
                     </tr>
                   </tbody>
                 </table>

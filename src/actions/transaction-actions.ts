@@ -53,6 +53,30 @@ export async function cancelTransaction(data: {
   }
 }
 
+export async function removeItemFromTransaction(data: {
+  transactionId: string;
+  itemId: string;
+}) {
+  try {
+    const session = await auth();
+    if (!session?.user?.id || !session?.user?.role) {
+      return { success: false, error: 'Unauthorized' };
+    }
+
+    await TransactionService.removeItem(data.transactionId, data.itemId, session.user.id, session.user.role);
+
+    revalidatePath('/admin/transactions');
+    revalidatePath('/super-admin/transactions');
+    revalidatePath('/sales/requests');
+    revalidatePath('/sales/orders');
+
+    return { success: true };
+  } catch (error: any) {
+    console.error('Failed to remove item:', error);
+    return { success: false, error: error.message || 'Gagal menghapus item dari pesanan' };
+  }
+}
+
 export async function addPayment(data: {
   transactionId: string;
   amount: number;

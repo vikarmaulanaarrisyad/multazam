@@ -192,6 +192,56 @@ export class TransactionRepository {
     }, { maxWait: 10000, timeout: 20000 });
   }
 
+  static async removeItem(transactionId: string, itemId: string, userId: string) {
+    return prisma.$transaction(async (tx) => {
+      const transaction = await tx.transaction.findUnique({
+        where: { id: transactionId },
+        include: { items: true }
+      });
+      if (!transaction) throw new Error('Pesanan tidak ditemukan');
+
+      const itemToRemove = transaction.items.find(item => item.id === itemId);
+      if (!itemToRemove) throw new Error('Item tidak ditemukan di pesanan ini');
+
+      if (transaction.items.length <= 1) {
+        throw new Error('Tidak bisa menghapus item terakhir. Batalkan pesanan saja.');
+      }
+
+      const product = await tx.product.findUnique({ where: { id: itemToRemove.productId } });
+      if (product) {
+        await tx.product.update({
+          where: { id: itemToRemove.productId },
+          data: { stock: { increment: itemToRemove.quantity } }
+        });
+        await tx.stockMovement.create({
+          data: {
+            productId: itemToRemove.productId,
+            type: 'IN',
+            quantity: itemToRemove.quantity,
+            balanceBefore: product.stock,
+            balanceAfter: product.stock + itemToRemove.quantity,
+            reference: transaction.invoiceNumber,
+            notes: `Pengembalian stok dari pesanan (Item dihapus)`,
+            userId: userId
+          }
+        });
+      }
+
+      await tx.transactionItem.delete({
+        where: { id: itemId }
+      });
+
+      const newTotalAmount = Number(transaction.totalAmount) - (Number(itemToRemove.price) * itemToRemove.quantity);
+      await tx.transaction.update({
+        where: { id: transactionId },
+        data: {
+          totalAmount: newTotalAmount
+        }
+      });
+      return true;
+    }, { maxWait: 10000, timeout: 20000 });
+  }
+
   static async addPayment(transactionId: string, amount: number, newPaidAmount: number, paymentStatus: string, paymentMethod: string, notes: string | undefined, userId: string) {
     return prisma.$transaction(async (tx) => {
       await tx.paymentHistory.create({
