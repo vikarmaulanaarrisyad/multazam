@@ -287,10 +287,12 @@ export function CreatePurchaseClient({ suppliers, products, userId }: CreatePurc
               <div className="md:col-span-4 space-y-2">
                 <Label>Harga Beli (per {inputUnit || 'Satuan'})</Label>
                 <Input 
-                  type="number" 
-                  min="0" 
-                  value={inputPrice} 
-                  onChange={(e) => setInputPrice(Number(e.target.value))} 
+                  type="text" 
+                  value={inputPrice ? inputPrice.toLocaleString('id-ID') : ''} 
+                  onChange={(e) => {
+                    const val = e.target.value.replace(/\D/g, '');
+                    setInputPrice(val ? parseInt(val, 10) : 0);
+                  }} 
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') {
                       e.preventDefault();
@@ -354,11 +356,13 @@ export function CreatePurchaseClient({ suppliers, products, userId }: CreatePurc
                       </td>
                       <td className="px-4 py-3">
                         <Input 
-                          type="number" 
-                          min="0" 
+                          type="text" 
                           className="h-8 w-full text-xs"
-                          value={item.price} 
-                          onChange={(e) => handleUpdateItem(idx, 'price', Number(e.target.value))} 
+                          value={item.price ? item.price.toLocaleString('id-ID') : ''}
+                          onChange={(e) => {
+                            const val = e.target.value.replace(/\D/g, '');
+                            handleUpdateItem(idx, 'price', val ? parseInt(val, 10) : 0);
+                          }}
                         />
                       </td>
                       <td className="px-4 py-3 font-medium">

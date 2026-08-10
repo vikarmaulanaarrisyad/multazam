@@ -38,7 +38,7 @@ function toTerbilang(angka: number): string {
 
 const getEceranPrice = (product: any): number | null => {
   if (!product?.retailPriceNote) return null;
-  const match = product.retailPriceNote.match(/[\d.,]+/);
+  const match = product.retailPriceNote.match(/\d[\d.,]*/);
   if (match) {
     const rawNum = match[0].replace(/[.,]/g, '');
     const num = parseInt(rawNum, 10);

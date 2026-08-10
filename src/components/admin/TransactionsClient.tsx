@@ -839,7 +839,7 @@ export function TransactionsClient({ transactions }: { transactions: Transaction
                         <td className="p-3 text-sm text-slate-600 text-right">
                           {item.quantity} {(() => {
                             let unitString = 'Karton';
-                            const eceranPriceMatch = item.retailPriceNote?.match(/[\d.,]+/);
+                            const eceranPriceMatch = item.retailPriceNote?.match(/\d[\d.,]*/);
                             let eceranPrice = null;
                             if (eceranPriceMatch) {
                               eceranPrice = parseInt(eceranPriceMatch[0].replace(/[.,]/g, ''), 10);

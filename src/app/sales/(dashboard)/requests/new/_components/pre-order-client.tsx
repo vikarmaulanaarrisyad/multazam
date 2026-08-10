@@ -130,7 +130,7 @@ export function PreOrderClient({ stores }: PreOrderClientProps) {
           router.push('/sales/products');
         }
       } else if (newQty <= newItems[index].product.stock) {
-        newItems[index].quantity = newQty;
+        newItems[index] = { ...newItems[index], quantity: newQty };
       }
       
       sessionStorage.setItem('preOrderCart', JSON.stringify(newItems));
@@ -142,7 +142,7 @@ export function PreOrderClient({ stores }: PreOrderClientProps) {
     setCartItems(prev => {
       const newItems = [...prev];
       if (newQty < 0) return prev;
-      newItems[index].quantity = Math.min(newQty, newItems[index].product.stock);
+      newItems[index] = { ...newItems[index], quantity: Math.min(newQty, newItems[index].product.stock) };
       sessionStorage.setItem('preOrderCart', JSON.stringify(newItems));
       return newItems;
     });
@@ -151,7 +151,7 @@ export function PreOrderClient({ stores }: PreOrderClientProps) {
   const updateRequestedPrice = (index: number, newPrice: number) => {
     setCartItems(prev => {
       const newItems = [...prev];
-      newItems[index].requestedPrice = newPrice;
+      newItems[index] = { ...newItems[index], requestedPrice: newPrice };
       sessionStorage.setItem('preOrderCart', JSON.stringify(newItems));
       return newItems;
     });
@@ -235,7 +235,7 @@ export function PreOrderClient({ stores }: PreOrderClientProps) {
 
   const getEceranPrice = (product: any): number | null => {
     if (!product.retailPriceNote) return null;
-    const match = product.retailPriceNote.match(/[\d.,]+/);
+    const match = product.retailPriceNote.match(/\d[\d.,]*/);
     if (match) {
       const rawNum = match[0].replace(/[.,]/g, '');
       const num = parseInt(rawNum, 10);
@@ -523,11 +523,13 @@ export function PreOrderClient({ stores }: PreOrderClientProps) {
                         <div className="flex items-center gap-1.5 w-32">
                           <span className="text-xs font-bold text-slate-400">Rp</span>
                           <input 
-                            type="number" 
-                            min="0"
+                            type="text" 
                             required
-                            value={item.requestedPrice === 0 ? '' : item.requestedPrice}
-                            onChange={e => updateRequestedPrice(index, Number(e.target.value))}
+                            value={item.requestedPrice ? item.requestedPrice.toLocaleString('id-ID') : ''}
+                            onChange={e => {
+                              const val = e.target.value.replace(/\D/g, '');
+                              updateRequestedPrice(index, val ? parseInt(val, 10) : 0);
+                            }}
                             className="w-full bg-transparent border-none outline-none font-bold text-sm text-right text-blue-700 p-0 m-0"
                           />
                         </div>
