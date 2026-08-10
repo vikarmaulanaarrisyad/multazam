@@ -85,13 +85,19 @@ export async function getDashboardAnalytics(months = 6) {
       take: 5,
     });
 
-    const topProducts = await Promise.all(topProductsRaw.map(async (p) => {
-      const product = await prisma.product.findUnique({ where: { id: p.productId }});
+    const productIds = topProductsRaw.map(p => p.productId);
+    const productsData = await prisma.product.findMany({
+      where: { id: { in: productIds } },
+      select: { id: true, name: true }
+    });
+
+    const topProducts = topProductsRaw.map(p => {
+      const product = productsData.find(prod => prod.id === p.productId);
       return {
         name: product?.name || 'Unknown',
         soldQuantity: p._sum.quantity || 0,
       };
-    }));
+    });
 
     // 4. Dead Stock (Stock > 0 but 0 sales in last 30 days)
     const thirtyDaysAgo = new Date();

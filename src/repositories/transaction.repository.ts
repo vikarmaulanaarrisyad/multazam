@@ -130,13 +130,16 @@ export class TransactionRepository {
         });
         if (updated.count === 0) throw new Error(`Stok produk ${product.name} tidak mencukupi.`);
 
+        const updatedProduct = await tx.product.findUnique({ where: { id: item.productId } });
+        if (!updatedProduct) throw new Error(`Produk dengan ID ${item.productId} hilang setelah update.`);
+
         await tx.stockMovement.create({
           data: {
             productId: item.productId,
             type: 'OUT',
             quantity: item.quantity,
-            balanceBefore: product.stock,
-            balanceAfter: product.stock - item.quantity,
+            balanceBefore: updatedProduct.stock + item.quantity,
+            balanceAfter: updatedProduct.stock,
             reference: invoiceNumber,
             notes: isPriceProposal ? 'Booking (Menunggu Persetujuan)' : 'Penjualan / Pre-Order',
             userId: userId
@@ -172,7 +175,7 @@ export class TransactionRepository {
         const product = await tx.product.findUnique({ where: { id: item.productId } });
         if (!product) continue;
 
-        await tx.product.update({
+        const updatedProduct = await tx.product.update({
           where: { id: item.productId },
           data: { stock: { increment: item.quantity } }
         });
@@ -182,8 +185,8 @@ export class TransactionRepository {
             productId: item.productId,
             type: 'IN',
             quantity: item.quantity,
-            balanceBefore: product.stock,
-            balanceAfter: product.stock + item.quantity,
+            balanceBefore: updatedProduct.stock - item.quantity,
+            balanceAfter: updatedProduct.stock,
             reference: transaction.invoiceNumber,
             notes: `Pengembalian stok dari pesanan dibatalkan: ${adminNotes}`,
             userId: userId
@@ -210,7 +213,7 @@ export class TransactionRepository {
 
       const product = await tx.product.findUnique({ where: { id: itemToRemove.productId } });
       if (product) {
-        await tx.product.update({
+        const updatedProduct = await tx.product.update({
           where: { id: itemToRemove.productId },
           data: { stock: { increment: itemToRemove.quantity } }
         });
@@ -219,8 +222,8 @@ export class TransactionRepository {
             productId: itemToRemove.productId,
             type: 'IN',
             quantity: itemToRemove.quantity,
-            balanceBefore: product.stock,
-            balanceAfter: product.stock + itemToRemove.quantity,
+            balanceBefore: updatedProduct.stock - itemToRemove.quantity,
+            balanceAfter: updatedProduct.stock,
             reference: transaction.invoiceNumber,
             notes: `Pengembalian stok dari pesanan (Item dihapus)`,
             userId: userId

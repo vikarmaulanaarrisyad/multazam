@@ -30,14 +30,13 @@ export async function createReturn(data: {
     const startOfDay = new Date(yyyy, today.getMonth(), today.getDate());
     
     const newReturn = await prisma.$transaction(async (tx) => {
-      const count = await tx.returnTransaction.count({
-        where: {
-          createdAt: {
-            gte: startOfDay,
-          }
-        }
+      const counterKey = `RET-${dateStr}`;
+      const counter = await tx.invoiceCounter.upsert({
+        where: { date: counterKey },
+        update: { counter: { increment: 1 } },
+        create: { date: counterKey, counter: 1 }
       });
-      const returnNumber = `RET-${dateStr}-${(count + 1).toString().padStart(4, '0')}`;
+      const returnNumber = `RET-${dateStr}-${counter.counter.toString().padStart(4, '0')}`;
 
       return tx.returnTransaction.create({
         data: {
@@ -59,7 +58,8 @@ export async function createReturn(data: {
         }
       });
     }, {
-      isolationLevel: 'Serializable' // Highest isolation level to prevent race conditions on count
+      maxWait: 10000,
+      timeout: 20000
     });
 
     revalidatePath('/sales/returns');
@@ -100,7 +100,7 @@ export async function approveReturn(returnId: string, adminNotes?: string) {
             if (product.stock < item.quantity) {
               throw new Error(`Stok bagus untuk produk ${product.name} tidak cukup untuk Tukar Guling`);
             }
-            await tx.product.update({
+            const updatedProduct = await tx.product.update({
               where: { id: product.id },
               data: {
                 stock: { decrement: item.quantity },
@@ -115,8 +115,8 @@ export async function approveReturn(returnId: string, adminNotes?: string) {
                 type: 'RETURN', // We use RETURN to indicate it's part of a return process, or OUT. 
                 // Actually, since we added RETURN to MovementType, let's use it.
                 quantity: item.quantity,
-                balanceBefore: product.stock,
-                balanceAfter: product.stock - item.quantity,
+                balanceBefore: updatedProduct.stock + item.quantity,
+                balanceAfter: updatedProduct.stock,
                 reference: `Tukar Guling: ${ret.returnNumber}`,
                 notes: 'Pemberian barang pengganti (Good Stock)',
                 userId: ret.userId
@@ -131,7 +131,7 @@ export async function approveReturn(returnId: string, adminNotes?: string) {
               data: { badStock: { increment: item.quantity } }
             });
           } else {
-            await tx.product.update({
+            const updatedProduct = await tx.product.update({
               where: { id: product.id },
               data: { stock: { increment: item.quantity } }
             });
@@ -141,8 +141,8 @@ export async function approveReturn(returnId: string, adminNotes?: string) {
                 productId: product.id,
                 type: 'RETURN',
                 quantity: item.quantity,
-                balanceBefore: product.stock,
-                balanceAfter: product.stock + item.quantity,
+                balanceBefore: updatedProduct.stock - item.quantity,
+                balanceAfter: updatedProduct.stock,
                 reference: `Refund: ${ret.returnNumber}`,
                 notes: 'Pengembalian barang kondisi bagus',
                 userId: ret.userId

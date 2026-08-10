@@ -116,13 +116,10 @@ export const purchaseService = {
           });
           
           if (!product) continue;
-          
-          const newStock = product.stock + item.quantity;
-
-          // Update stock
-          await tx.product.update({
+          // Update stock atomically
+          const updatedProduct = await tx.product.update({
             where: { id: item.productId },
-            data: { stock: newStock }
+            data: { stock: { increment: item.quantity } }
           });
 
           // Create stock movement
@@ -131,8 +128,8 @@ export const purchaseService = {
               productId: item.productId,
               type: 'IN',
               quantity: item.quantity,
-              balanceBefore: product.stock,
-              balanceAfter: newStock,
+              balanceBefore: updatedProduct.stock - item.quantity,
+              balanceAfter: updatedProduct.stock,
               reference: purchase.invoiceNumber,
               notes: `Restock dari supplier: ${purchase.supplier.name}`
             }
