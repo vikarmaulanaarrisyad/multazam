@@ -85,11 +85,11 @@ export async function addPayment(data: {
 }) {
   try {
     const session = await auth();
-    if (!session?.user?.id) {
+    if (!session?.user?.id || !session?.user?.role) {
       return { success: false, error: 'Unauthorized' };
     }
 
-    await TransactionService.addPayment(data, session.user.id);
+    await TransactionService.addPayment(data, session.user.id, session.user.role);
 
     revalidatePath('/admin/transactions');
     revalidatePath('/super-admin/transactions');

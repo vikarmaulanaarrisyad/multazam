@@ -48,11 +48,15 @@ export class TransactionService {
     return TransactionRepository.removeItem(transactionId, itemId, userId);
   }
 
-  static async addPayment(data: AddPaymentDTO, userId: string) {
+  static async addPayment(data: AddPaymentDTO, userId: string, role?: string) {
     const tx = await TransactionRepository.findById(data.transactionId);
     
     if (!tx) {
       throw new Error('Pesanan tidak ditemukan');
+    }
+
+    if (role === 'SALES' && tx.userId !== userId) {
+      throw new Error('Unauthorized: Anda hanya bisa mengelola pembayaran untuk pesanan Anda sendiri.');
     }
 
     if (data.amount <= 0) {
