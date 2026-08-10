@@ -118,22 +118,34 @@ model Category {
 }
 
 model Product {
-  id          String   @id @default(cuid())
-  code        String   @unique
-  name        String
-  description String?
+  id              String   @id @default(cuid())
+  code            String   @unique
+  name            String
+  description     String?
   price           Decimal  @db.Decimal(10, 2)
   purchasePrice   Decimal? @db.Decimal(10, 2)
   contents        String?  // for 'ISI' e.g. 48btl
   retailPriceNote String?  // for 'BTL,RTG,PCS,BAG'
+  
+  // New Product Master Fields
+  brand           String?
+  status          String   @default("ACTIVE")
+  purchaseUnit    String?
+  stockBaseUnit   String?
+  conversionQty   Int?
+  salesMode       String?
+  allowUnitSale   Boolean  @default(true)
+  allowFractional Boolean  @default(false)
+  legacyCode      String?
+
   stock           Int      @default(0)
   badStock        Int      @default(0)
-  categoryId  String
-  category    Category @relation(fields: [categoryId], references: [id])
-  unitId      String?
-  unit        Unit?    @relation(fields: [unitId], references: [id])
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  categoryId      String
+  category        Category @relation(fields: [categoryId], references: [id])
+  unitId          String?
+  unit            Unit?    @relation(fields: [unitId], references: [id])
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
   transactionItems TransactionItem[]
   stockMovements   StockMovement[]

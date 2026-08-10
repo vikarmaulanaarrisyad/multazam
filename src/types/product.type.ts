@@ -9,6 +9,15 @@ export type ProductType = {
   purchasePrice?: Prisma.Decimal | null;
   contents?: string | null;
   retailPriceNote?: string | null;
+  brand?: string | null;
+  status: string;
+  purchaseUnit?: string | null;
+  stockBaseUnit?: string | null;
+  conversionQty?: number | null;
+  salesMode?: string | null;
+  allowUnitSale: boolean;
+  allowFractional: boolean;
+  legacyCode?: string | null;
   stock: number;
   categoryId: string;
   unitId: string | null;
