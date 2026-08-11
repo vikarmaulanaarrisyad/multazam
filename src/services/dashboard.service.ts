@@ -9,8 +9,11 @@ export class DashboardService {
 
     const validStatus = ['COMPLETED', 'SHIPPED', 'APPROVED', 'PENDING', 'PENDING_APPROVAL'];
 
-    const [todayTx, monthTx, yearTx, totalProducts, totalCategories, recentActivities] = 
-      await DashboardRepository.getDashboardData(startOfToday, startOfMonth, startOfYear, validStatus);
+    const [
+      todayTx, monthTx, yearTx, totalProducts, totalCategories, recentActivities,
+      pendingShipmentCount, pendingApprovalCount, pendingReturnCount,
+      lowStockProducts
+    ] = await DashboardRepository.getDashboardData(startOfToday, startOfMonth, startOfYear, validStatus);
 
     const todayRevenue = Number(todayTx._sum.totalAmount || 0);
     const monthRevenue = monthTx.reduce((sum, tx) => sum + Number(tx.totalAmount), 0);
@@ -40,7 +43,13 @@ export class DashboardService {
       totalCategories,
       newTransactions,
       recentActivities: serializedActivities,
-      chartData
+      chartData,
+      pendingActions: {
+        shipment: pendingShipmentCount,
+        approval: pendingApprovalCount,
+        returns: pendingReturnCount
+      },
+      lowStockProducts
     };
   }
 }

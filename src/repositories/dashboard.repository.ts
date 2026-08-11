@@ -35,6 +35,17 @@ export class DashboardRepository {
         take: 6,
         orderBy: { createdAt: 'desc' },
         include: { user: { select: { name: true } } }
+      }),
+      // Pending Actions
+      prisma.transaction.count({ where: { status: 'PENDING' } }), // Menunggu Pengiriman
+      prisma.transaction.count({ where: { status: 'PENDING_APPROVAL' } }), // Menunggu Persetujuan Harga
+      prisma.returnTransaction.count({ where: { status: 'PENDING' } }), // Pengajuan Retur
+      // Low Stock Products
+      prisma.product.findMany({
+        where: { stock: { lte: 10 } },
+        take: 5,
+        orderBy: { stock: 'asc' },
+        select: { id: true, name: true, code: true, stock: true }
       })
     ]);
   }

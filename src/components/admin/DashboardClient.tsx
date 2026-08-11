@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Package, Tags, ShoppingCart, DollarSign, WalletCards, TrendingUp, TrendingDown, Clock } from 'lucide-react';
+import { Package, Tags, ShoppingCart, DollarSign, WalletCards, TrendingUp, TrendingDown, Clock, AlertTriangle, ArrowRight } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { cn } from '@/lib/utils';
 import { ExportReports } from './ExportReports';
@@ -25,6 +25,12 @@ interface DashboardClientProps {
     newTransactions: number;
     recentActivities: Activity[];
     chartData: { name: string; total: number }[];
+    pendingActions?: {
+      shipment: number;
+      approval: number;
+      returns: number;
+    };
+    lowStockProducts?: { id: string; name: string; code: string; stock: number }[];
   };
   role: 'ADMIN' | 'SUPER_ADMIN';
 }
@@ -155,6 +161,47 @@ export function DashboardClient({ data, role }: DashboardClientProps) {
         </div>
       </div>
 
+      {/* Pending Actions */}
+      {data.pendingActions && (
+        <div className="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm">
+          <h3 className="font-bold text-slate-900 mb-4 flex items-center gap-2">
+            <Clock className="w-5 h-5 text-amber-500" /> Tugas Tertunda
+          </h3>
+          <div className="grid gap-4 sm:grid-cols-3">
+            {/* Shipment */}
+            <div className="flex items-center gap-4 p-4 rounded-xl bg-slate-50 border border-slate-100">
+              <div className="w-12 h-12 rounded-full flex items-center justify-center bg-blue-100 text-blue-600 font-bold shrink-0">
+                {data.pendingActions.shipment}
+              </div>
+              <div>
+                <p className="text-sm font-bold text-slate-900">Menunggu Pengiriman</p>
+                <p className="text-xs text-slate-500 mt-0.5">Pesanan baru masuk</p>
+              </div>
+            </div>
+            {/* Approval */}
+            <div className="flex items-center gap-4 p-4 rounded-xl bg-slate-50 border border-slate-100">
+              <div className="w-12 h-12 rounded-full flex items-center justify-center bg-amber-100 text-amber-600 font-bold shrink-0">
+                {data.pendingActions.approval}
+              </div>
+              <div>
+                <p className="text-sm font-bold text-slate-900">Butuh Persetujuan</p>
+                <p className="text-xs text-slate-500 mt-0.5">Nego Harga dari Sales</p>
+              </div>
+            </div>
+            {/* Returns */}
+            <div className="flex items-center gap-4 p-4 rounded-xl bg-slate-50 border border-slate-100">
+              <div className="w-12 h-12 rounded-full flex items-center justify-center bg-orange-100 text-orange-600 font-bold shrink-0">
+                {data.pendingActions.returns}
+              </div>
+              <div>
+                <p className="text-sm font-bold text-slate-900">Pengajuan Retur</p>
+                <p className="text-xs text-slate-500 mt-0.5">Barang rusak / tukar guling</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Main Content Area */}
       <div className="grid gap-6 lg:grid-cols-7">
         
@@ -249,6 +296,44 @@ export function DashboardClient({ data, role }: DashboardClientProps) {
         </div>
 
       </div>
+
+      {/* Additional Alerts Row */}
+      {data.lowStockProducts && data.lowStockProducts.length > 0 && (
+        <div className="bg-red-50 rounded-2xl border border-red-100 shadow-sm p-5 mt-6 relative overflow-hidden">
+          <div className="absolute right-0 top-0 w-32 h-32 bg-red-500/5 rounded-bl-full -mr-4 -mt-4"></div>
+          
+          <div className="flex justify-between items-center mb-6 relative z-10">
+            <div>
+              <h3 className="font-bold text-red-900 flex items-center gap-2">
+                <AlertTriangle className="w-5 h-5 text-red-600" /> Peringatan Stok Menipis
+              </h3>
+              <p className="text-sm text-red-700/80 mt-1">Produk berikut memiliki stok kurang dari 10 dan perlu segera di-restock.</p>
+            </div>
+            <a href={`/${role === 'SUPER_ADMIN' ? 'super-admin' : 'admin'}/purchases`} className="hidden sm:flex items-center gap-2 text-sm font-bold text-red-700 bg-white px-4 py-2 rounded-xl shadow-sm hover:bg-red-100 transition-colors">
+              Pesan Restock <ArrowRight className="w-4 h-4" />
+            </a>
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 relative z-10">
+            {data.lowStockProducts.map(product => (
+              <div key={product.id} className="bg-white rounded-xl p-4 shadow-sm border border-red-100/50 flex flex-col justify-between">
+                <div>
+                  <span className="text-[10px] font-bold text-slate-400 mb-1 block">{product.code}</span>
+                  <p className="text-sm font-bold text-slate-800 line-clamp-2 leading-tight">{product.name}</p>
+                </div>
+                <div className="mt-3 flex items-center justify-between">
+                  <span className="text-xs text-slate-500">Sisa Stok:</span>
+                  <span className="text-lg font-black text-red-600">{product.stock}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <a href={`/${role === 'SUPER_ADMIN' ? 'super-admin' : 'admin'}/purchases`} className="sm:hidden mt-4 flex justify-center items-center gap-2 text-sm font-bold text-red-700 bg-white px-4 py-3 rounded-xl shadow-sm w-full relative z-10">
+            Pesan Restock Sekarang
+          </a>
+        </div>
+      )}
     </div>
   );
 }
