@@ -15,15 +15,17 @@ export async function getDashboardAnalytics(months = 6) {
     const currentMonthStart = startOfMonth(today);
     const currentMonthEnd = endOfMonth(today);
 
-    // 1. Get total revenue and cogs for current month
-    const currentMonthTransactions = await prisma.transaction.findMany({
+    // Single Query Batching for N months trend + current month
+    const nMonthsAgoStart = startOfMonth(subMonths(today, months - 1));
+
+    const allTrendTransactions = await prisma.transaction.findMany({
       where: {
         createdAt: {
-          gte: currentMonthStart,
+          gte: nMonthsAgoStart,
           lte: currentMonthEnd,
         },
         status: {
-          in: ['COMPLETED', 'SHIPPED', 'APPROVED'] // Only consider successful transactions
+          in: ['COMPLETED', 'SHIPPED', 'APPROVED']
         }
       },
       include: {
@@ -34,10 +36,14 @@ export async function getDashboardAnalytics(months = 6) {
     let currentRevenue = 0;
     let currentCogs = 0;
 
+    // Filter current month transactions in memory
+    const currentMonthTransactions = allTrendTransactions.filter(tx => 
+      tx.createdAt >= currentMonthStart && tx.createdAt <= currentMonthEnd
+    );
+
     currentMonthTransactions.forEach(tx => {
       currentRevenue += Number(tx.totalAmount);
       tx.items.forEach(item => {
-        // Fallback to 0 if purchasePrice is not available
         const itemCogs = Number(item.purchasePrice || 0) * item.quantity;
         currentCogs += itemCogs;
       });
@@ -45,19 +51,15 @@ export async function getDashboardAnalytics(months = 6) {
 
     const currentGrossProfit = currentRevenue - currentCogs;
 
-    // 2. Monthly Trend Data (last N months)
+    // 2. Monthly Trend Data (last N months) filtered in memory
     const trendData = [];
     for (let i = months - 1; i >= 0; i--) {
       const monthStart = startOfMonth(subMonths(today, i));
       const monthEnd = endOfMonth(subMonths(today, i));
       
-      const txs = await prisma.transaction.findMany({
-        where: {
-          createdAt: { gte: monthStart, lte: monthEnd },
-          status: { in: ['COMPLETED', 'SHIPPED', 'APPROVED'] }
-        },
-        include: { items: true }
-      });
+      const txs = allTrendTransactions.filter(tx => 
+        tx.createdAt >= monthStart && tx.createdAt <= monthEnd
+      );
 
       let rev = 0;
       let cogs = 0;

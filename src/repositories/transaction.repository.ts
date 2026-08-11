@@ -46,8 +46,15 @@ export class TransactionRepository {
       let totalAmount = data.shippingCost || 0;
       let totalOriginalAmount = data.shippingCost || 0;
 
+      // Pre-fetch all products for O(1) loop
+      const productIds = data.items.map(item => item.productId);
+      const products = await tx.product.findMany({
+        where: { id: { in: productIds } },
+        include: { unitConversions: true }
+      });
+
       for (const item of data.items) {
-        const product = await tx.product.findUnique({ where: { id: item.productId } });
+        const product = products.find(p => p.id === item.productId);
         if (!product) throw new Error(`Produk dengan ID ${item.productId} tidak ditemukan.`);
         
         const realOriginalPrice = Number(product.price);
@@ -130,13 +137,11 @@ export class TransactionRepository {
       }
 
       // 2. Deduct stock for each item and record StockMovement
+
       for (const item of data.items) {
         if (!item.productId) throw new Error('ID Produk tidak valid pada salah satu pesanan.');
 
-        const product = await tx.product.findUnique({ 
-          where: { id: item.productId },
-          include: { unitConversions: true } 
-        });
+        const product = products.find(p => p.id === item.productId);
         if (!product) throw new Error(`Produk dengan ID ${item.productId} tidak ditemukan.`);
         
         if ((product as any).salesMode === 'REVIEW') {
@@ -206,11 +211,15 @@ export class TransactionRepository {
 
       if (!transaction) throw new Error('Pesanan tidak ditemukan');
 
+      // Pre-fetch all products to eliminate N+1 read query
+      const productIds = transaction.items.map(item => item.productId);
+      const products = await tx.product.findMany({
+        where: { id: { in: productIds } },
+        include: { unitConversions: true }
+      });
+
       for (const item of transaction.items) {
-        const product = await tx.product.findUnique({ 
-          where: { id: item.productId },
-          include: { unitConversions: true } 
-        });
+        const product = products.find(p => p.id === item.productId);
         if (!product) continue;
 
         const baseQtyToReturn = calculateBaseQuantity(item.quantity, item.unitNote, product);

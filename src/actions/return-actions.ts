@@ -114,10 +114,14 @@ export async function approveReturn(returnId: string, adminNotes?: string) {
 
       let totalRefundValue = 0;
       
+      // Pre-fetch products to prevent N+1 queries
+      const productIds = ret.items.map(item => item.productId);
+      const products = await tx.product.findMany({
+        where: { id: { in: productIds } }
+      });
+
       for (const item of ret.items) {
-        const product = await tx.product.findUnique({ 
-          where: { id: item.productId }
-        });
+        const product = products.find(p => p.id === item.productId);
         if (!product) continue;
         
         const baseQty = item.quantity; // Already converted to baseQty during createReturn

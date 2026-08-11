@@ -126,14 +126,17 @@ export const purchaseService = {
           data: { status: 'COMPLETED' }
         });
 
+        // Pre-fetch all products to eliminate N+1 read query
+        const productIds = lockedPurchase.items.map(item => item.productId);
+        const products = await tx.product.findMany({
+          where: { id: { in: productIds } },
+          include: { unitConversions: true }
+        });
+
         // 2. Update stock and create stock movements
         for (const item of lockedPurchase.items) {
-          const product = await tx.product.findUnique({
-            where: { id: item.productId },
-            include: { unitConversions: true }
-          });
-          
-          if (!product) continue;
+          const product = products.find(p => p.id === item.productId);
+          if (!product) throw new Error(`Produk dengan ID ${item.productId} tidak ditemukan.`);
           
           const baseQtyToAdd = item.quantity; // Already converted to baseQty by frontend
 
