@@ -20,7 +20,7 @@ export async function getSalesExportData(month: number, year: number) {
           lte: endDate,
         },
         status: {
-          in: ['COMPLETED', 'SHIPPED', 'APPROVED']
+          in: ['COMPLETED', 'SHIPPED', 'APPROVED', 'PENDING', 'PENDING_APPROVAL']
         }
       },
       include: {
