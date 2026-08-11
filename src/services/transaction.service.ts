@@ -63,24 +63,9 @@ export class TransactionService {
       throw new Error('Jumlah pembayaran harus lebih dari 0.');
     }
 
-    const remainingBill = Number(tx.totalAmount) - Number(tx.paidAmount);
-    if (data.amount > remainingBill) {
-      throw new Error(`Jumlah pembayaran melebihi sisa tagihan.`);
-    }
-
-    const newPaidAmount = Number(tx.paidAmount) + data.amount;
-    let paymentStatus = 'PARTIAL';
-    if (newPaidAmount >= Number(tx.totalAmount)) {
-      paymentStatus = 'PAID';
-    } else if (newPaidAmount <= 0) {
-      paymentStatus = 'UNPAID';
-    }
-
     return TransactionRepository.addPayment(
       data.transactionId, 
       data.amount, 
-      newPaidAmount, 
-      paymentStatus, 
       data.paymentMethod || 'CASH', 
       data.notes, 
       userId

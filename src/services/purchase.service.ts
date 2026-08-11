@@ -104,6 +104,22 @@ export const purchaseService = {
 
       // We need to use a transaction to ensure all stocks are updated safely
       await prisma.$transaction(async (tx) => {
+        // Atomic status check to prevent race condition (double restock)
+        const lockedPurchase = await tx.purchase.findUnique({
+          where: { id },
+          include: { items: true, supplier: true }
+        });
+
+        if (!lockedPurchase) {
+          throw new Error('Transaksi tidak ditemukan.');
+        }
+        if (lockedPurchase.status === 'COMPLETED') {
+          throw new Error('Transaksi ini sudah selesai (Stock sudah ditambahkan).');
+        }
+        if (lockedPurchase.status === 'CANCELLED') {
+          throw new Error('Transaksi ini sudah dibatalkan.');
+        }
+
         // 1. Update purchase status
         await tx.purchase.update({
           where: { id },
@@ -111,7 +127,7 @@ export const purchaseService = {
         });
 
         // 2. Update stock and create stock movements
-        for (const item of purchase.items) {
+        for (const item of lockedPurchase.items) {
           const product = await tx.product.findUnique({
             where: { id: item.productId },
             include: { unitConversions: true }
@@ -135,8 +151,8 @@ export const purchaseService = {
               quantity: baseQtyToAdd,
               balanceBefore: updatedProduct.stock - baseQtyToAdd,
               balanceAfter: updatedProduct.stock,
-              reference: purchase.invoiceNumber,
-              notes: `Restock dari supplier: ${purchase.supplier.name} - Qty: ${item.quantity} ${(product as any).stockBaseUnit || 'PCS'}`
+              reference: lockedPurchase.invoiceNumber,
+              notes: `Restock dari supplier: ${lockedPurchase.supplier.name} - Qty: ${item.quantity} ${(product as any).stockBaseUnit || 'PCS'}`
             }
           });
         }

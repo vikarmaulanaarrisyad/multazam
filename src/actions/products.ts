@@ -11,11 +11,11 @@ export async function getProductsPaginated(page: number = 1, limit: number = 10,
   }
   const result = await productService.getPaginatedProducts(page, limit, search);
   if (result.success && result.data) {
-    // Serialize Prisma Decimal to string to pass safely to Client Components
+    const isAdmin = session.user.role === 'ADMIN' || session.user.role === 'SUPER_ADMIN';
     const serializedData = result.data.map((p: any) => ({
       ...p,
       price: p.price ? p.price.toString() : '0',
-      purchasePrice: p.purchasePrice ? p.purchasePrice.toString() : null
+      purchasePrice: isAdmin && p.purchasePrice ? p.purchasePrice.toString() : null
     }));
     return { ...result, data: serializedData };
   }
@@ -29,10 +29,11 @@ export async function getAllProducts() {
   }
   const result = await productService.getAllProducts();
   if (result.success && result.data) {
+    const isAdmin = session.user.role === 'ADMIN' || session.user.role === 'SUPER_ADMIN';
     const serializedData = result.data.map((p: any) => ({
       ...p,
       price: p.price ? p.price.toString() : '0',
-      purchasePrice: p.purchasePrice ? p.purchasePrice.toString() : null
+      purchasePrice: isAdmin && p.purchasePrice ? p.purchasePrice.toString() : null
     }));
     return { ...result, data: serializedData };
   }

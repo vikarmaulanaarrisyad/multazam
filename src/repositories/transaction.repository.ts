@@ -40,13 +40,24 @@ export class TransactionRepository {
     });
     const invoiceNumber = `PO-${dateStr}-${counter.counter.toString().padStart(4, '0')}`;
 
-    const totalAmount = data.items.reduce((sum, item) => sum + (item.price * item.quantity), 0) + (data.shippingCost || 0);
-    const totalOriginalAmount = data.items.reduce((sum, item) => sum + ((item.originalPrice ?? item.price) * item.quantity), 0) + (data.shippingCost || 0);
-    
-    const isPriceProposal = totalAmount < totalOriginalAmount;
     const dpAmount = Number(data.dpAmount ?? 0);
 
     return prisma.$transaction(async (tx) => {
+      let totalAmount = data.shippingCost || 0;
+      let totalOriginalAmount = data.shippingCost || 0;
+
+      for (const item of data.items) {
+        const product = await tx.product.findUnique({ where: { id: item.productId } });
+        if (!product) throw new Error(`Produk dengan ID ${item.productId} tidak ditemukan.`);
+        
+        const realOriginalPrice = Number(product.price);
+        item.originalPrice = realOriginalPrice;
+        
+        totalAmount += (item.price * item.quantity);
+        totalOriginalAmount += (realOriginalPrice * item.quantity);
+      }
+
+      const isPriceProposal = totalAmount < totalOriginalAmount;
       // 0. Auto-save new store if it doesn't exist
       if (data.customerName) {
         const existingStore = await tx.store.findFirst({
@@ -274,8 +285,25 @@ export class TransactionRepository {
     }, { maxWait: 10000, timeout: 20000 });
   }
 
-  static async addPayment(transactionId: string, amount: number, newPaidAmount: number, paymentStatus: string, paymentMethod: string, notes: string | undefined, userId: string) {
+  static async addPayment(transactionId: string, amount: number, paymentMethod: string, notes: string | undefined, userId: string) {
     return prisma.$transaction(async (tx) => {
+      // Atomic check to prevent race condition
+      const transaction = await tx.transaction.findUnique({ where: { id: transactionId } });
+      if (!transaction) throw new Error('Transaksi tidak ditemukan.');
+      
+      const remainingBill = Number(transaction.totalAmount) - Number(transaction.paidAmount);
+      if (amount > remainingBill) {
+        throw new Error(`Jumlah pembayaran (${amount}) melebihi sisa tagihan (${remainingBill}).`);
+      }
+
+      const newPaidAmount = Number(transaction.paidAmount) + amount;
+      let paymentStatus = 'PARTIAL';
+      if (newPaidAmount >= Number(transaction.totalAmount)) {
+        paymentStatus = 'PAID';
+      } else if (newPaidAmount <= 0) {
+        paymentStatus = 'UNPAID';
+      }
+
       await tx.paymentHistory.create({
         data: {
           transactionId: transactionId,

@@ -421,8 +421,11 @@ export const productService = {
 
       await productRepository.deleteById(id);
       return { success: true, message: 'Produk berhasil dihapus.' };
-    } catch (error) {
+    } catch (error: any) {
       console.error('Delete product error:', error);
+      if (error?.code === 'P2003') {
+        return { success: false, message: 'Produk tidak dapat dihapus karena masih digunakan dalam riwayat transaksi atau perpindahan stok. Harap nonaktifkan produk saja.' };
+      }
       return { success: false, message: 'Terjadi kesalahan pada sistem.' };
     }
   },
@@ -435,8 +438,11 @@ export const productService = {
 
       const deletedCount = await productRepository.deleteMany(ids);
       return { success: true, message: `Berhasil menghapus ${deletedCount} produk.` };
-    } catch (error) {
+    } catch (error: any) {
       console.error('Delete many products error:', error);
+      if (error?.code === 'P2003') {
+        return { success: false, message: 'Beberapa produk tidak dapat dihapus karena masih digunakan dalam riwayat transaksi atau stok. Harap nonaktifkan produk tersebut.' };
+      }
       return { success: false, message: 'Terjadi kesalahan pada sistem.' };
     }
   }
