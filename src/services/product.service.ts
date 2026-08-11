@@ -158,6 +158,12 @@ export const productService = {
 
       const validProducts = [];
       let skipped = 0;
+
+      const parseIndoNumber = (val: any): number => {
+        if (typeof val === 'number') return val;
+        if (!val || typeof val !== 'string') return NaN;
+        return parseFloat(val.replace(/\./g, '').replace(/,/g, '.'));
+      };
       let duplicateInDb = 0;
       const errorDetails: string[] = [];
 
@@ -206,7 +212,7 @@ export const productService = {
         }
 
         const rawPrice = row['HARGA JUAL'] || row['Harga Jual'] || row['HARGA KARTON'] || row['Harga'] || row['price'];
-        let price = parseFloat(rawPrice);
+        let price = parseIndoNumber(rawPrice);
         if (isNaN(price) || price < 0) {
           price = 0;
         }
@@ -214,7 +220,7 @@ export const productService = {
         const rawPurchasePrice = row['HARGA BELI'] || row['Harga Beli'] || null;
         let purchasePrice = null;
         if (rawPurchasePrice !== null) {
-          const parsed = parseFloat(rawPurchasePrice);
+          const parsed = parseIndoNumber(rawPurchasePrice);
           if (!isNaN(parsed) && parsed >= 0) purchasePrice = parsed;
         }
 
@@ -227,7 +233,7 @@ export const productService = {
         const rawConvQty = row['QTY KONVERSI'] || row['Qty Konversi'] || row['QTY'] || null;
         let conversionQty = null;
         if (rawConvQty !== null) {
-           const parsed = parseInt(rawConvQty);
+           const parsed = parseIndoNumber(rawConvQty);
            if (!isNaN(parsed) && parsed > 0) conversionQty = parsed;
         }
 
@@ -250,7 +256,7 @@ export const productService = {
         }
 
         const rawStock = row['STOK AWAL'] || row['Stok Awal'] || row['STOK'] || row['Stok'] || row['stok'] || row['stock'];
-        let stock = parseInt(rawStock);
+        let stock = parseIndoNumber(rawStock);
         if (isNaN(stock) || stock < 0) {
           stock = 0;
         }

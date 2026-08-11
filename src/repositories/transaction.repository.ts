@@ -345,7 +345,7 @@ export class TransactionRepository {
 
         const baseQtyToReturn = calculateBaseQuantity(item.quantity, item.unitNote, product);
 
-        await tx.product.update({
+        const updatedProduct = await tx.product.update({
           where: { id: item.productId },
           data: { stock: { increment: baseQtyToReturn } }
         });
@@ -355,8 +355,8 @@ export class TransactionRepository {
             productId: item.productId,
             type: 'IN',
             quantity: baseQtyToReturn,
-            balanceBefore: product.stock,
-            balanceAfter: product.stock + baseQtyToReturn,
+            balanceBefore: updatedProduct.stock - baseQtyToReturn,
+            balanceAfter: updatedProduct.stock,
             reference: transaction.invoiceNumber,
             notes: `Pengembalian Stok (Pengajuan Ditolak) - Order: ${item.quantity} ${item.unitNote || 'PCS'}`,
             userId: transaction.userId
