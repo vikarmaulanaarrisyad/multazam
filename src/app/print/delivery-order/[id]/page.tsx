@@ -3,6 +3,7 @@ import prisma from '@/lib/prisma';
 import { notFound } from 'next/navigation';
 import { PrintButton } from './_components/PrintButton';
 import { Suspense } from 'react';
+import { auth } from '@/auth';
 
 // Terbilang helper function
 function terbilang(angka: number): string {
@@ -229,13 +230,35 @@ export default async function PrintDeliveryOrderPage({ params, searchParams }: {
     }
   });
 
-  const setting = await prisma.setting.findUnique({
-    where: { id: "1" }
-  });
-
   if (!transaction) {
     notFound();
   }
+
+  const session = await auth();
+  if (!session?.user) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-8 text-center">
+        <h1 className="text-2xl font-bold text-slate-900 mb-2">Akses Ditolak</h1>
+        <p className="text-slate-500">Anda harus login untuk mencetak dokumen ini.</p>
+      </div>
+    );
+  }
+
+  const role = session.user.role;
+  const isOwner = transaction.userId === session.user.id;
+  
+  if (role === 'SALES' && !isOwner) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-8 text-center">
+        <h1 className="text-2xl font-bold text-slate-900 mb-2">Akses Ditolak</h1>
+        <p className="text-slate-500">Anda hanya dapat mencetak faktur milik Anda sendiri.</p>
+      </div>
+    );
+  }
+
+  const setting = await prisma.setting.findUnique({
+    where: { id: "1" }
+  });
 
   return (
     <div className="min-h-screen bg-slate-50 print:bg-white flex flex-col items-center p-8 print:p-0 w-full">
