@@ -3,9 +3,14 @@
 import prisma from '@/lib/prisma';
 import { startOfMonth, endOfMonth, subMonths, format } from 'date-fns';
 import { id } from 'date-fns/locale';
+import { auth } from '@/auth';
 
 export async function getDashboardAnalytics(months = 6) {
   try {
+    const session = await auth();
+    if (!session?.user || (session.user.role !== 'ADMIN' && session.user.role !== 'SUPER_ADMIN')) {
+      return { success: false, error: 'Unauthorized / Akses Ditolak' };
+    }
     const today = new Date();
     const currentMonthStart = startOfMonth(today);
     const currentMonthEnd = endOfMonth(today);

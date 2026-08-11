@@ -2,8 +2,13 @@
 
 import { productService } from '@/services/product.service';
 import { revalidatePath } from 'next/cache';
+import { auth } from '@/auth';
 
 export async function getProductsPaginated(page: number = 1, limit: number = 10, search?: string) {
+  const session = await auth();
+  if (!session?.user) {
+    return { success: false, message: 'Unauthorized' };
+  }
   const result = await productService.getPaginatedProducts(page, limit, search);
   if (result.success && result.data) {
     // Serialize Prisma Decimal to string to pass safely to Client Components
@@ -18,6 +23,10 @@ export async function getProductsPaginated(page: number = 1, limit: number = 10,
 }
 
 export async function getAllProducts() {
+  const session = await auth();
+  if (!session?.user) {
+    return { success: false, message: 'Unauthorized' };
+  }
   const result = await productService.getAllProducts();
   if (result.success && result.data) {
     const serializedData = result.data.map((p: any) => ({
@@ -50,6 +59,10 @@ export async function createProductAction(dataInput: {
   allowFractional?: boolean;
   legacyCode?: string | null;
 }) {
+  const session = await auth();
+  if (!session?.user || (session.user.role !== 'ADMIN' && session.user.role !== 'SUPER_ADMIN')) {
+    return { success: false, message: 'Unauthorized / Akses Ditolak' };
+  }
   const result = await productService.createProduct(dataInput);
   if (result.success) {
     revalidatePath('/admin/products');
@@ -58,6 +71,10 @@ export async function createProductAction(dataInput: {
 }
 
 export async function importProductsAction(formData: FormData) {
+  const session = await auth();
+  if (!session?.user || (session.user.role !== 'ADMIN' && session.user.role !== 'SUPER_ADMIN')) {
+    return { success: false, message: 'Unauthorized / Akses Ditolak' };
+  }
   const result = await productService.importProducts(formData);
   if (result.success) {
     revalidatePath('/admin/products');
@@ -85,6 +102,10 @@ export async function updateProductAction(id: string, dataInput: {
   allowFractional?: boolean;
   legacyCode?: string | null;
 }) {
+  const session = await auth();
+  if (!session?.user || (session.user.role !== 'ADMIN' && session.user.role !== 'SUPER_ADMIN')) {
+    return { success: false, message: 'Unauthorized / Akses Ditolak' };
+  }
   const result = await productService.updateProduct(id, dataInput);
   if (result.success) {
     revalidatePath('/admin/products');
@@ -93,6 +114,10 @@ export async function updateProductAction(id: string, dataInput: {
 }
 
 export async function deleteProductAction(id: string) {
+  const session = await auth();
+  if (!session?.user || (session.user.role !== 'ADMIN' && session.user.role !== 'SUPER_ADMIN')) {
+    return { success: false, message: 'Unauthorized / Akses Ditolak' };
+  }
   const result = await productService.deleteProduct(id);
   if (result.success) {
     revalidatePath('/admin/products');
@@ -101,6 +126,10 @@ export async function deleteProductAction(id: string) {
 }
 
 export async function deleteManyProducts(ids: string[]) {
+  const session = await auth();
+  if (!session?.user || (session.user.role !== 'ADMIN' && session.user.role !== 'SUPER_ADMIN')) {
+    return { success: false, message: 'Unauthorized / Akses Ditolak' };
+  }
   const result = await productService.deleteManyProducts(ids);
   if (result.success) {
     revalidatePath('/admin/products');

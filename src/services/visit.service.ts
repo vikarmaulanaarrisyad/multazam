@@ -1,6 +1,21 @@
 import { VisitRepository } from '../repositories/visit.repository';
 import { StoreRepository } from '../repositories/store.repository';
 
+function getDistanceInMeters(lat1: number, lon1: number, lat2: number, lon2: number) {
+  const R = 6371e3; // Radius of earth in meters
+  const p1 = lat1 * Math.PI / 180;
+  const p2 = lat2 * Math.PI / 180;
+  const dp = (lat2 - lat1) * Math.PI / 180;
+  const dl = (lon2 - lon1) * Math.PI / 180;
+
+  const a = Math.sin(dp / 2) * Math.sin(dp / 2) +
+    Math.cos(p1) * Math.cos(p2) *
+    Math.sin(dl / 2) * Math.sin(dl / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+  return R * c;
+}
+
 export class VisitService {
   static async markCompleted(visitId: string, userId: string, lat?: number, lng?: number) {
     const visit = await VisitRepository.findById(visitId);
@@ -10,6 +25,19 @@ export class VisitService {
     if (visit.userId !== userId) {
       throw new Error('FORBIDDEN');
     }
+
+    if (visit.store.latitude && visit.store.longitude) {
+      if (!lat || !lng) {
+        throw new Error('Lokasi (Latitude & Longitude) wajib disertakan untuk Check-in toko ini.');
+      }
+      const distance = getDistanceInMeters(lat, lng, visit.store.latitude, visit.store.longitude);
+      const MAX_RADIUS = 100; // meters
+      
+      if (distance > MAX_RADIUS) {
+        throw new Error(`Anda terlalu jauh dari lokasi toko. Jarak: ${Math.round(distance)}m (Maks: ${MAX_RADIUS}m). Validasi server menolak check-in.`);
+      }
+    }
+
     return VisitRepository.updateStatus(visitId, 'COMPLETED', lat, lng);
   }
 

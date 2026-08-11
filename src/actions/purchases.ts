@@ -2,8 +2,13 @@
 
 import { purchaseService } from '@/services/purchase.service';
 import { revalidatePath } from 'next/cache';
+import { auth } from '@/auth';
 
 export async function getPurchasesPaginated(page: number = 1, limit: number = 10, search?: string) {
+  const session = await auth();
+  if (!session?.user || (session.user.role !== 'ADMIN' && session.user.role !== 'SUPER_ADMIN')) {
+    return { success: false, message: 'Unauthorized / Akses Ditolak' };
+  }
   const result = await purchaseService.getPaginatedPurchases(page, limit, search);
   if (result.success && result.data) {
     const serializedData = result.data.map((p: any) => ({
@@ -29,6 +34,10 @@ export async function createPurchaseAction(data: {
   notes?: string;
   items: Array<{ productId: string; quantity: number; price: number }>;
 }) {
+  const session = await auth();
+  if (!session?.user || (session.user.role !== 'ADMIN' && session.user.role !== 'SUPER_ADMIN')) {
+    return { success: false, message: 'Unauthorized / Akses Ditolak' };
+  }
   const result = await purchaseService.createPurchase(data);
   if (result.success) {
     revalidatePath('/admin/purchases');
@@ -37,6 +46,10 @@ export async function createPurchaseAction(data: {
 }
 
 export async function completePurchaseAction(id: string) {
+  const session = await auth();
+  if (!session?.user || (session.user.role !== 'ADMIN' && session.user.role !== 'SUPER_ADMIN')) {
+    return { success: false, message: 'Unauthorized / Akses Ditolak' };
+  }
   const result = await purchaseService.completePurchase(id);
   if (result.success) {
     revalidatePath('/admin/purchases');
@@ -47,6 +60,10 @@ export async function completePurchaseAction(id: string) {
 }
 
 export async function cancelPurchaseAction(id: string) {
+  const session = await auth();
+  if (!session?.user || (session.user.role !== 'ADMIN' && session.user.role !== 'SUPER_ADMIN')) {
+    return { success: false, message: 'Unauthorized / Akses Ditolak' };
+  }
   const result = await purchaseService.cancelPurchase(id);
   if (result.success) {
     revalidatePath('/admin/purchases');

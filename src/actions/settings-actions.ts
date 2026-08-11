@@ -2,9 +2,12 @@
 
 import { revalidatePath } from 'next/cache';
 import { SettingService } from '@/services/setting.service';
+import { auth } from '@/auth';
 
 export async function getSettings() {
   try {
+    const session = await auth();
+    if (!session?.user) return null;
     return await SettingService.getSettings();
   } catch (error) {
     console.error("Failed to get settings", error);
@@ -14,6 +17,10 @@ export async function getSettings() {
 
 export async function updateSettings(formData: FormData) {
   try {
+    const session = await auth();
+    if (!session?.user || session.user.role !== 'SUPER_ADMIN') {
+      return { success: false, error: 'Unauthorized / Akses Ditolak' };
+    }
     const companyName = formData.get('companyName') as string;
     const companyAddress = formData.get('companyAddress') as string;
     const logoFile = formData.get('logoFile') as File | null;
@@ -37,6 +44,10 @@ export async function updateSettings(formData: FormData) {
 
 export async function removeLogo() {
   try {
+    const session = await auth();
+    if (!session?.user || session.user.role !== 'SUPER_ADMIN') {
+      return { success: false, error: 'Unauthorized / Akses Ditolak' };
+    }
     await SettingService.removeLogo();
     
     revalidatePath('/print/delivery-order/[id]', 'page');

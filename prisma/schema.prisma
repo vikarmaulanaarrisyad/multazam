@@ -122,8 +122,8 @@ model Product {
   code            String   @unique
   name            String
   description     String?
-  price           Decimal  @db.Decimal(10, 2)
-  purchasePrice   Decimal? @db.Decimal(10, 2)
+  price           Decimal  @db.Decimal(18, 2)
+  purchasePrice   Decimal? @db.Decimal(18, 2)
   contents        String? // for 'ISI' e.g. 48btl
   retailPriceNote String? // for 'BTL,RTG,PCS,BAG'
 
@@ -159,18 +159,18 @@ model Transaction {
   invoiceNumber    String    @unique
   userId           String
   user             User      @relation(fields: [userId], references: [id])
-  totalAmount      Decimal   @db.Decimal(10, 2)
+  totalAmount      Decimal   @db.Decimal(18, 2)
   status           String    @default("COMPLETED") // PENDING, COMPLETED, CANCELLED
   customerName     String?
   customerPhone    String?
   shippingAddress  String?   @db.Text
-  shippingCost     Decimal?  @db.Decimal(10, 2)
+  shippingCost     Decimal?  @db.Decimal(18, 2)
   dueDate          DateTime?
   notes            String?   @db.Text
   adminNotes       String?   @db.Text
   latitude         Float?
   longitude        Float?
-  paidAmount       Decimal   @default(0) @db.Decimal(10, 2)
+  paidAmount       Decimal   @default(0) @db.Decimal(18, 2)
   paymentStatus    String    @default("UNPAID") // UNPAID, PARTIAL, PAID
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
@@ -188,9 +188,9 @@ model TransactionItem {
   productId     String
   product       Product     @relation(fields: [productId], references: [id])
   quantity      Int
-  price         Decimal     @db.Decimal(10, 2)
-  originalPrice Decimal?    @db.Decimal(10, 2)
-  purchasePrice Decimal?    @db.Decimal(10, 2)
+  price         Decimal     @db.Decimal(18, 2)
+  originalPrice Decimal?    @db.Decimal(18, 2)
+  purchasePrice Decimal?    @db.Decimal(18, 2)
   unitNote      String?
 }
 
@@ -214,7 +214,7 @@ model PaymentHistory {
   id            String      @id @default(cuid())
   transactionId String
   transaction   Transaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
-  amount        Decimal     @db.Decimal(10, 2)
+  amount        Decimal     @db.Decimal(18, 2)
   paymentMethod String      @default("CASH") // CASH, TRANSFER, dll
   notes         String?     @db.Text
   userId        String // Siapa yang mencatat pembayaran ini
@@ -242,7 +242,7 @@ model Purchase {
   supplier      Supplier @relation(fields: [supplierId], references: [id])
   userId        String
   user          User     @relation(fields: [userId], references: [id])
-  totalAmount   Decimal  @db.Decimal(10, 2)
+  totalAmount   Decimal  @db.Decimal(18, 2)
   status        String   @default("PENDING") // PENDING, COMPLETED, CANCELLED
   notes         String?  @db.Text
   createdAt     DateTime @default(now())
@@ -258,7 +258,7 @@ model PurchaseItem {
   productId  String
   product    Product  @relation(fields: [productId], references: [id])
   quantity   Int
-  price      Decimal  @db.Decimal(10, 2)
+  price      Decimal  @db.Decimal(18, 2)
 }
 
 model Setting {
@@ -351,9 +351,9 @@ model ReturnItem {
   product             Product           @relation(fields: [productId], references: [id])
   quantity            Int
   condition           ReturnCondition
-  price               Decimal           @db.Decimal(10, 2)
+  price               Decimal           @db.Decimal(18, 2)
   unitNote            String?
-  totalPrice          Decimal?          @db.Decimal(10, 2)
+  totalPrice          Decimal?          @db.Decimal(18, 2)
 }
 
 model UnitConversion {
