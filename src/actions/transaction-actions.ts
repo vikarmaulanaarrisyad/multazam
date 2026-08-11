@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { auth } from '@/auth';
 import { TransactionService } from '@/services/transaction.service';
+import { logAudit } from '@/actions/audit-actions';
 
 export async function updateTransactionStatus(data: {
   transactionId: string;
@@ -16,6 +17,7 @@ export async function updateTransactionStatus(data: {
     }
 
     await TransactionService.updateStatus(data, session.user.id, session.user.role);
+    await logAudit('UPDATE', 'TRANSACTION', data.transactionId, `Mengubah status menjadi: ${data.status}`);
 
     revalidatePath('/admin/transactions');
     revalidatePath('/super-admin/transactions');
@@ -40,6 +42,7 @@ export async function cancelTransaction(data: {
     }
 
     await TransactionService.cancelTransaction(data, session.user.id, session.user.role);
+    await logAudit('UPDATE', 'TRANSACTION', data.transactionId, `Membatalkan pesanan. Alasan: ${data.adminNotes}`);
 
     revalidatePath('/admin/transactions');
     revalidatePath('/super-admin/transactions');
@@ -64,6 +67,7 @@ export async function removeItemFromTransaction(data: {
     }
 
     await TransactionService.removeItem(data.transactionId, data.itemId, session.user.id, session.user.role);
+    await logAudit('DELETE', 'TRANSACTION_ITEM', data.transactionId, `Menghapus item ${data.itemId} dari pesanan`);
 
     revalidatePath('/admin/transactions');
     revalidatePath('/super-admin/transactions');
@@ -90,6 +94,7 @@ export async function addPayment(data: {
     }
 
     await TransactionService.addPayment(data, session.user.id, session.user.role);
+    await logAudit('CREATE', 'PAYMENT', data.transactionId, `Menambahkan pembayaran sebesar Rp${data.amount}`);
 
     revalidatePath('/admin/transactions');
     revalidatePath('/super-admin/transactions');

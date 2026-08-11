@@ -3,6 +3,7 @@
 import { productService } from '@/services/product.service';
 import { revalidatePath } from 'next/cache';
 import { auth } from '@/auth';
+import { logAudit } from '@/actions/audit-actions';
 
 export async function getProductsPaginated(page: number = 1, limit: number = 10, search?: string) {
   const session = await auth();
@@ -66,6 +67,7 @@ export async function createProductAction(dataInput: {
   }
   const result = await productService.createProduct(dataInput);
   if (result.success) {
+    await logAudit('CREATE', 'PRODUCT', result.data.id, `Membuat produk baru: ${dataInput.code} - ${dataInput.name} (Harga: Rp${dataInput.price})`);
     revalidatePath('/admin/products');
   }
   return result;
@@ -109,6 +111,7 @@ export async function updateProductAction(id: string, dataInput: {
   }
   const result = await productService.updateProduct(id, dataInput);
   if (result.success) {
+    await logAudit('UPDATE', 'PRODUCT', id, `Mengubah produk: ${dataInput.code} - ${dataInput.name}`);
     revalidatePath('/admin/products');
   }
   return result;
@@ -121,6 +124,7 @@ export async function deleteProductAction(id: string) {
   }
   const result = await productService.deleteProduct(id);
   if (result.success) {
+    await logAudit('DELETE', 'PRODUCT', id, `Menghapus produk.`);
     revalidatePath('/admin/products');
   }
   return result;

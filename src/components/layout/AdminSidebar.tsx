@@ -21,6 +21,7 @@ import {
   ClipboardCheck,
   Store,
   MapPin,
+  ShieldAlert,
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -130,6 +131,12 @@ export function AdminSidebar({ role, className, onNavigate, logoUrl }: SidebarPr
       title: 'Pengaturan',
       href: `${basePath}/settings`,
       icon: Settings,
+      visible: true,
+    },
+    {
+      title: 'Log Aktivitas',
+      href: `${basePath}/audit-logs`,
+      icon: ShieldAlert,
       visible: true,
     },
   ];

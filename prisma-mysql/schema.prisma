@@ -32,6 +32,7 @@ model User {
 
   transactions  Transaction[]
   purchases     Purchase[]
+  auditLogs     AuditLog[]
 }
 
 model Unit {
@@ -143,4 +144,20 @@ model PurchaseItem {
   product     Product  @relation(fields: [productId], references: [id])
   quantity    Int
   price       Decimal  @db.Decimal(18, 2)
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  userId     String
+  action     String   // CREATE, UPDATE, DELETE, LOGIN, dll
+  entityType String   // PRODUCT, TRANSACTION, USER, dll
+  entityId   String   // ID produk / transaksi yg diubah
+  details    String   @db.Text
+  createdAt  DateTime @default(now())
+
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([entityType, entityId])
+  @@index([createdAt])
 }

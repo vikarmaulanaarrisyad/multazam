@@ -91,3 +91,8 @@ export type Purchase = Prisma.PurchaseModel
  * 
  */
 export type PurchaseItem = Prisma.PurchaseItemModel
+/**
+ * Model AuditLog
+ * 
+ */
+export type AuditLog = Prisma.AuditLogModel
