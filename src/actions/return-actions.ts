@@ -95,10 +95,23 @@ export async function approveReturn(returnId: string, adminNotes?: string) {
     });
 
     if (!ret) throw new Error('Data retur tidak ditemukan');
-    if (ret.status !== 'PENDING') throw new Error('Retur sudah diproses sebelumnya');
+    // Check moved inside transaction for atomicity
 
     // Process inventory inside a transaction
     await prisma.$transaction(async (tx) => {
+      // 1. Atomic check and update to prevent Double Approve
+      const updateResult = await tx.returnTransaction.updateMany({
+        where: { id: returnId, status: 'PENDING' },
+        data: {
+          status: 'APPROVED',
+          adminNotes: adminNotes
+        }
+      });
+      
+      if (updateResult.count === 0) {
+        throw new Error('Retur sudah diproses sebelumnya (Mungkin disetujui/ditolak oleh admin lain)');
+      }
+
       let totalRefundValue = 0;
       
       for (const item of ret.items) {
@@ -184,13 +197,7 @@ export async function approveReturn(returnId: string, adminNotes?: string) {
         }
       }
 
-      await tx.returnTransaction.update({
-        where: { id: returnId },
-        data: {
-          status: 'APPROVED',
-          adminNotes: adminNotes
-        }
-      });
+      // Status update is already done atomically at the beginning of the transaction
     }, {
       maxWait: 10000,
       timeout: 20000
@@ -212,13 +219,18 @@ export async function rejectReturn(returnId: string, adminNotes?: string) {
       return { success: false, error: 'Unauthorized' };
     }
 
-    await prisma.returnTransaction.update({
-      where: { id: returnId },
+    const updateResult = await prisma.returnTransaction.updateMany({
+      where: { id: returnId, status: 'PENDING' },
       data: {
         status: 'REJECTED',
         adminNotes: adminNotes
       }
     });
+
+    if (updateResult.count === 0) {
+      return { success: false, error: 'Retur sudah diproses (Tidak bisa ditolak lagi)' };
+    }
+
     revalidatePath('/admin/returns');
     revalidatePath('/sales/returns');
     return { success: true };

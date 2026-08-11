@@ -185,20 +185,26 @@ export class TransactionRepository {
 
   static async cancelTransaction(transactionId: string, adminNotes: string, userId: string) {
     return prisma.$transaction(async (tx) => {
+      // 1. Atomic check and update to prevent Double Cancel
+      const updateResult = await tx.transaction.updateMany({
+        where: { id: transactionId, status: { not: 'CANCELLED' } },
+        data: {
+          status: 'CANCELLED',
+          adminNotes: adminNotes,
+        }
+      });
+
+      if (updateResult.count === 0) {
+        throw new Error('Pesanan sudah dibatalkan atau tidak ditemukan (Proses ganda dicegah).');
+      }
+
+      // 2. Fetch transaction items to return stock
       const transaction = await tx.transaction.findUnique({
         where: { id: transactionId },
         include: { items: true }
       });
 
       if (!transaction) throw new Error('Pesanan tidak ditemukan');
-
-      await tx.transaction.update({
-        where: { id: transactionId },
-        data: {
-          status: 'CANCELLED',
-          adminNotes: adminNotes,
-        }
-      });
 
       for (const item of transaction.items) {
         const product = await tx.product.findUnique({ 
@@ -249,6 +255,16 @@ export class TransactionRepository {
         where: { id: itemToRemove.productId },
         include: { unitConversions: true }
       });
+
+      // Atomic delete to prevent double remove
+      const deleteResult = await tx.transactionItem.deleteMany({
+        where: { id: itemId }
+      });
+
+      if (deleteResult.count === 0) {
+        throw new Error('Item sudah terhapus oleh proses lain.');
+      }
+
       if (product) {
         const baseQtyToReturn = calculateBaseQuantity(itemToRemove.quantity, itemToRemove.unitNote, product);
 
@@ -269,10 +285,6 @@ export class TransactionRepository {
           }
         });
       }
-
-      await tx.transactionItem.delete({
-        where: { id: itemId }
-      });
 
       const newTotalAmount = Number(transaction.totalAmount) - (Number(itemToRemove.price) * itemToRemove.quantity);
       await tx.transaction.update({
