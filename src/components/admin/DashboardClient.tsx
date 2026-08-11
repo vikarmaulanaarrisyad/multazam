@@ -4,6 +4,7 @@ import React from 'react';
 import { Package, Tags, ShoppingCart, DollarSign, WalletCards, TrendingUp, TrendingDown, Clock } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { cn } from '@/lib/utils';
+import { ExportReports } from './ExportReports';
 
 interface Activity {
   id: string;
@@ -70,11 +71,14 @@ export function DashboardClient({ data, role }: DashboardClientProps) {
 
   return (
     <div className="space-y-6 pb-12">
-      <div>
-        <h1 className="text-2xl font-bold text-slate-900">
-          Beranda {role === 'SUPER_ADMIN' ? 'Super Admin' : 'Admin'}
-        </h1>
-        <p className="text-sm text-slate-500">Ringkasan analitik dan aktivitas terkini toko Anda.</p>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900">
+            Beranda {role === 'SUPER_ADMIN' ? 'Super Admin' : 'Admin'}
+          </h1>
+          <p className="text-sm text-slate-500">Ringkasan analitik dan aktivitas terkini toko Anda.</p>
+        </div>
+        <ExportReports />
       </div>
 
       {/* Metric Cards */}
