@@ -7,11 +7,15 @@ export const metadata = {
 };
 
 export default async function AuditLogsPage(props: {
-  searchParams: Promise<{ page?: string }>;
+  searchParams: Promise<{ page?: string; search?: string; startDate?: string; endDate?: string }>;
 }) {
   const searchParams = await props.searchParams;
   const page = searchParams?.page ? parseInt(searchParams.page) : 1;
-  const result = await getAuditLogs(page, 50);
+  const search = searchParams?.search || '';
+  const startDate = searchParams?.startDate || '';
+  const endDate = searchParams?.endDate || '';
+  
+  const result = await getAuditLogs(page, 50, search, startDate, endDate);
 
   if (!result.success || !result.data) {
     return (
