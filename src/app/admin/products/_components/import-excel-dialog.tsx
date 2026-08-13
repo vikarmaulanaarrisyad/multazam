@@ -28,36 +28,36 @@ export function ImportExcelDialog({ open, onOpenChange, onSuccess }: ImportExcel
 
   const handleDownloadTemplate = () => {
     try {
-
+      // 1. Data Sheet
       const data = [{
         'SKU': 'PRD-001',
-        'NAMA PRODUK': 'Contoh Produk A',
-        'BRAND': 'Merek A',
-        'KATEGORI': 'Minuman',
+        'NAMA PRODUK': 'Minyak Goreng Bimoli 2L',
+        'BRAND': 'Bimoli',
+        'KATEGORI': 'Sembako',
         'STATUS': 'ACTIVE',
         'SATUAN BELI': 'DUS',
         'SATUAN JUAL': 'DUS',
-        'SATUAN DASAR': 'PCS',
-        'QTY KONVERSI': 24,
+        'SATUAN DASAR': 'POUCH',
+        'QTY KONVERSI': 6,
         'SALES MODE': 'WHOLESALE_AND_RETAIL',
         'JUAL SATUAN?': 'TRUE',
         'JUAL PECAHAN?': 'FALSE',
-        'HARGA JUAL': 150000,
-        'HARGA BELI': 130000,
-        'REF ECER': '15,000 per pcs',
-        'LEGACY CODE': 'PRD001',
+        'HARGA JUAL': 200000,
+        'HARGA BELI': 185000,
+        'REF ECER': '35,000 per pouch',
+        'LEGACY CODE': 'OLD-001',
         'STOK AWAL': 100,
-        'DESKRIPSI': 'Opsional'
+        'DESKRIPSI': 'Minyak goreng kemasan 2 Liter'
       }];
       
       const worksheet = xlsx.utils.json_to_sheet(data);
       
-      // Set column widths
+      // Set column widths for Data Sheet
       worksheet['!cols'] = [
         { wch: 15 }, // SKU
-        { wch: 30 }, // NAMA PRODUK
+        { wch: 35 }, // NAMA PRODUK
         { wch: 20 }, // BRAND
-        { wch: 15 }, // KATEGORI
+        { wch: 20 }, // KATEGORI
         { wch: 15 }, // STATUS
         { wch: 15 }, // SATUAN BELI
         { wch: 15 }, // SATUAN JUAL
@@ -74,8 +74,41 @@ export function ImportExcelDialog({ open, onOpenChange, onSuccess }: ImportExcel
         { wch: 30 }, // DESKRIPSI
       ];
 
+      // 2. Explanation Sheet
+      const explanations = [
+        { 'NAMA KOLOM': 'SKU', 'STATUS': 'Opsional', 'PENJELASAN': 'Kode unik produk. Kosongkan jika ingin di-generate otomatis oleh sistem.' },
+        { 'NAMA KOLOM': 'NAMA PRODUK', 'STATUS': 'Wajib', 'PENJELASAN': 'Nama lengkap produk yang akan ditampilkan.' },
+        { 'NAMA KOLOM': 'BRAND', 'STATUS': 'Opsional', 'PENJELASAN': 'Merek produk tersebut.' },
+        { 'NAMA KOLOM': 'KATEGORI', 'STATUS': 'Wajib', 'PENJELASAN': 'Nama Kategori. (Pastikan namanya sama persis dengan yang sudah dibuat di menu Kategori aplikasi).' },
+        { 'NAMA KOLOM': 'STATUS', 'STATUS': 'Wajib', 'PENJELASAN': 'Isi dengan ACTIVE (Aktif) atau INACTIVE (Tidak Aktif).' },
+        { 'NAMA KOLOM': 'SATUAN BELI', 'STATUS': 'Opsional', 'PENJELASAN': 'Satuan kemasan saat membeli barang ke supplier (Contoh: DUS / KARTON).' },
+        { 'NAMA KOLOM': 'SATUAN JUAL', 'STATUS': 'Opsional', 'PENJELASAN': 'Satuan utama saat menjual barang di toko (Contoh: DUS / PCS).' },
+        { 'NAMA KOLOM': 'SATUAN DASAR', 'STATUS': 'Opsional', 'PENJELASAN': 'Satuan terkecil (eceran) yang disimpan di gudang (Contoh: PCS / POUCH).' },
+        { 'NAMA KOLOM': 'QTY KONVERSI', 'STATUS': 'Opsional', 'PENJELASAN': 'Jumlah satuan dasar di dalam satuan beli. (Contoh: Jika 1 Dus isi 24 Pcs, isikan 24).' },
+        { 'NAMA KOLOM': 'SALES MODE', 'STATUS': 'Opsional', 'PENJELASAN': 'Pilih salah satu: WHOLESALE_AND_RETAIL (Grosir & Ecer), RETAIL_ONLY (Ecer Saja), atau WHOLESALE_ONLY (Grosir Saja).' },
+        { 'NAMA KOLOM': 'JUAL SATUAN?', 'STATUS': 'Wajib', 'PENJELASAN': 'Isi TRUE jika barang boleh dijual secara eceran. Isi FALSE jika tidak boleh.' },
+        { 'NAMA KOLOM': 'JUAL PECAHAN?', 'STATUS': 'Wajib', 'PENJELASAN': 'Isi TRUE jika barang boleh dijual desimal (contoh: 1.5 Kg). Isi FALSE jika harus bilangan bulat.' },
+        { 'NAMA KOLOM': 'HARGA JUAL', 'STATUS': 'Wajib', 'PENJELASAN': 'Harga jual per Satuan Jual. Harus berupa angka saja (jangan pakai Rp atau titik koma).' },
+        { 'NAMA KOLOM': 'HARGA BELI', 'STATUS': 'Opsional', 'PENJELASAN': 'Harga beli/modal per Satuan Beli. Harus berupa angka saja.' },
+        { 'NAMA KOLOM': 'REF ECER', 'STATUS': 'Opsional', 'PENJELASAN': 'Catatan teks bebas untuk patokan harga eceran (Contoh: "15.000 per pcs").' },
+        { 'NAMA KOLOM': 'LEGACY CODE', 'STATUS': 'Opsional', 'PENJELASAN': 'Kode atau ID dari sistem lama, jika Anda sedang memindahkan data.' },
+        { 'NAMA KOLOM': 'STOK AWAL', 'STATUS': 'Wajib', 'PENJELASAN': 'Jumlah stok fisik saat ini. Dihitung berdasarkan Satuan Dasar. (Jika Anda import ulang, nilai stok ini TIDAK akan menimpa stok yang sedang berjalan).' },
+        { 'NAMA KOLOM': 'DESKRIPSI', 'STATUS': 'Opsional', 'PENJELASAN': 'Penjelasan tambahan atau detail mengenai produk.' }
+      ];
+
+      const explanationSheet = xlsx.utils.json_to_sheet(explanations);
+      
+      // Set column widths for Explanation Sheet
+      explanationSheet['!cols'] = [
+        { wch: 20 }, // NAMA KOLOM
+        { wch: 15 }, // STATUS
+        { wch: 100 }, // PENJELASAN
+      ];
+
+      // 3. Assemble Workbook
       const workbook = xlsx.utils.book_new();
-      xlsx.utils.book_append_sheet(workbook, worksheet, 'Produk');
+      xlsx.utils.book_append_sheet(workbook, worksheet, 'Data Produk');
+      xlsx.utils.book_append_sheet(workbook, explanationSheet, 'Penjelasan Kolom');
       
       xlsx.writeFile(workbook, 'Template_Import_Produk.xlsx');
       toast.success('Template berhasil diunduh.');
