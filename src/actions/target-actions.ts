@@ -4,9 +4,22 @@ import prisma from "@/lib/prisma";
 import { auth } from "@/auth";
 import { revalidatePath } from "next/cache";
 import { logAudit } from "./audit-actions";
+import { z } from "zod";
 
 // Type imports generated from Prisma
 import { TargetPeriod } from "@/generated/prisma/client";
+
+const SalesTargetSchema = z.object({
+  userId: z.string().min(1, "User ID tidak boleh kosong"),
+  targetAmount: z.number().positive("Target harus bernilai positif"),
+  periodType: z.nativeEnum(TargetPeriod),
+  startDate: z.date(),
+  endDate: z.date(),
+  notes: z.string().max(500, "Catatan maksimal 500 karakter").optional(),
+}).refine((data) => data.startDate <= data.endDate, {
+  message: "Tanggal mulai tidak boleh lebih besar dari tanggal selesai",
+  path: ["startDate"],
+});
 
 export async function setSalesTarget(data: {
   userId: string;
@@ -20,6 +33,11 @@ export async function setSalesTarget(data: {
     const session = await auth();
     if (!session || (session.user.role !== "ADMIN" && session.user.role !== "SUPER_ADMIN")) {
       return { success: false, message: "Unauthorized" };
+    }
+
+    const parsed = SalesTargetSchema.safeParse(data);
+    if (!parsed.success) {
+      return { success: false, message: parsed.error.issues[0].message };
     }
 
     // Upsert target based on userId, startDate, endDate, and periodType
@@ -77,6 +95,7 @@ export async function getSalesUsers() {
 
     const salesUsers = await prisma.user.findMany({
       where: { role: "SALES" },
+      take: 100,
       select: {
         id: true,
         name: true,
@@ -105,6 +124,7 @@ export async function getSalesTargets(periodType?: TargetPeriod) {
 
     const targets = await prisma.salesTarget.findMany({
       where,
+      take: 100,
       include: {
         user: true,
       },
@@ -125,7 +145,12 @@ export async function getSalesTargets(periodType?: TargetPeriod) {
 
 export async function getSalesAchievement(userId: string, startDate: Date, endDate: Date) {
   try {
-    const transactions = await prisma.transaction.findMany({
+    const session = await auth();
+    if (!session) return 0;
+    const isAuthorized = session.user.role === "ADMIN" || session.user.role === "SUPER_ADMIN" || session.user.id === userId;
+    if (!isAuthorized) return 0;
+
+    const result = await prisma.transaction.aggregate({
       where: {
         userId,
         status: { not: "CANCELLED" },
@@ -134,15 +159,13 @@ export async function getSalesAchievement(userId: string, startDate: Date, endDa
           lte: endDate,
         },
       },
-      select: {
+      _sum: {
         totalAmount: true,
         shippingCost: true,
       },
     });
 
-    const totalInvoiceAmount = transactions.reduce((sum, trx) => {
-      return sum + Number(trx.totalAmount) + Number(trx.shippingCost || 0);
-    }, 0);
+    const totalInvoiceAmount = Number(result._sum.totalAmount || 0) + Number(result._sum.shippingCost || 0);
 
     return totalInvoiceAmount;
   } catch (error) {
