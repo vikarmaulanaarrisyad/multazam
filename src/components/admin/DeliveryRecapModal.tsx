@@ -48,44 +48,172 @@ export function DeliveryRecapModal({ isOpen, onClose }: DeliveryRecapModalProps)
 
   if (!isOpen) return null;
 
-  const handlePrint = () => {
+  const handlePrint = async () => {
     setIsPrinting(true);
+    try {
+      const res = await getDeliveryRecapAction(dateStr);
+      if (!isOpenRef.current) return;
+      if (!res.success || !res.data) {
+        alert(res.error || 'Gagal mengambil data rekap.');
+        return;
+      }
 
-    // Cleanup any existing iframe first
-    if (iframeRef.current && document.body.contains(iframeRef.current)) {
-      document.body.removeChild(iframeRef.current);
-    }
+      const items = res.data.global;
+      if (items.length === 0) {
+        alert('Tidak ada barang yang perlu disiapkan pada tanggal ini.');
+        return;
+      }
 
-    // Create hidden iframe
-    const iframe = document.createElement('iframe');
-    iframe.style.display = 'none';
-    iframe.src = `/admin/print-recap?date=${dateStr}`;
+      const { default: jsPDF } = await import('jspdf');
+      const { default: autoTable } = await import('jspdf-autotable');
 
-    iframeRef.current = iframe;
-    document.body.appendChild(iframe);
+      const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
 
-    iframe.onload = () => {
-      // Small delay to ensure all assets/fonts are loaded
-      setTimeout(() => {
-        // If modal was closed during loading, abort
-        if (!isOpenRef.current) return;
+      // Title
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(16);
+      doc.text('DIA MAKMUR ABADI', 105, 15, { align: 'center' });
+      
+      doc.setFontSize(12);
+      doc.setTextColor(29, 78, 216); // blue-700
+      doc.text('REKAP PENGIRIMAN GUDANG', 105, 22, { align: 'center' });
 
-        try {
-          iframe.contentWindow?.print();
-        } catch (e) {
-          console.error('Print failed', e);
+      // Date info
+      const displayDate = new Date(dateStr).toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+      const printTime = new Date().toLocaleString('id-ID', {
+        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'
+      });
+      
+      doc.setFont('helvetica', 'italic');
+      doc.setFontSize(10);
+      doc.setTextColor(71, 85, 105); // slate-600
+      doc.text(`Tanggal Pengiriman: ${displayDate} | Waktu Cetak: ${printTime}`, 105, 28, { align: 'center' });
+
+      // Global Table
+      const tableBody = items.map((item, idx) => {
+        const isInsufficient = item.currentStock < item.totalBaseQuantity;
+        return [
+          idx + 1,
+          item.code,
+          item.name,
+          item.contents || '-',
+          `${item.totalQuantity} ${item.unit}`,
+          { content: `${item.currentStock} ${item.stockUnit}`, styles: { textColor: isInsufficient ? [220, 38, 38] as [number, number, number] : [5, 150, 105] as [number, number, number] } },
+          ''
+        ];
+      });
+
+      autoTable(doc, {
+        startY: 35,
+        head: [['NO', 'KODE', 'NAMA BARANG', 'ISI (KEMASAN)', 'QTY DISIAPKAN', 'STOK GUDANG', 'CEK']],
+        body: tableBody,
+        theme: 'grid',
+        headStyles: { fillColor: [30, 41, 59], textColor: 255, halign: 'center', fontSize: 8 }, // slate-800
+        bodyStyles: { fontSize: 8 },
+        columnStyles: {
+          0: { halign: 'center', cellWidth: 10 },
+          1: { cellWidth: 25 },
+          3: { halign: 'center', cellWidth: 25 },
+          4: { halign: 'right', fontStyle: 'bold', textColor: [29, 78, 216], fillColor: [239, 246, 255] }, // blue-700 on blue-50
+          5: { halign: 'right', fontStyle: 'bold' },
+          6: { halign: 'center', cellWidth: 15 },
         }
-        setIsPrinting(false);
+      });
 
-        // Cleanup after print dialog is closed (with a generous delay)
-        setTimeout(() => {
-          if (iframeRef.current === iframe && document.body.contains(iframe)) {
-            document.body.removeChild(iframe);
-            if (iframeRef.current === iframe) iframeRef.current = null;
-          }
-        }, 60000);
-      }, 500);
-    };
+      // Stores section
+      const stores = res.data.stores;
+      if (stores && stores.length > 0) {
+        let finalY = (doc as any).lastAutoTable.finalY + 15;
+        
+        // Add page if needed
+        if (finalY > 260) {
+          doc.addPage();
+          finalY = 20;
+        }
+
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(12);
+        doc.setTextColor(15, 23, 42); // slate-900
+        doc.text('RINCIAN PESANAN PER TOKO', 14, finalY);
+        doc.setLineWidth(0.5);
+        doc.line(14, finalY + 2, 196, finalY + 2);
+        
+        finalY += 10;
+
+        const storeTableBody: any[] = [];
+        stores.forEach((store) => {
+          storeTableBody.push([
+            {
+              content: `TOKO: ${store.customerName.toUpperCase()} (Sales: ${store.salesName})`,
+              colSpan: 4,
+              styles: { fillColor: [241, 245, 249], textColor: [15, 23, 42], fontStyle: 'bold', halign: 'left' }
+            }
+          ]);
+          
+          store.items.forEach((item, iIdx) => {
+            storeTableBody.push([
+              iIdx + 1,
+              item.name,
+              { content: `${item.quantity} ${item.unit}`, styles: { halign: 'right', fontStyle: 'bold', textColor: [29, 78, 216], fillColor: [239, 246, 255] } },
+              ''
+            ]);
+          });
+        });
+
+        autoTable(doc, {
+          startY: finalY,
+          head: [['NO', 'NAMA BARANG', 'QTY', 'CEK']],
+          body: storeTableBody,
+          theme: 'grid',
+          headStyles: { fillColor: [30, 41, 59], textColor: 255, halign: 'center', fontSize: 8 }, // slate-800
+          bodyStyles: { fontSize: 8 },
+          columnStyles: {
+            0: { halign: 'center', cellWidth: 10 },
+            1: { cellWidth: 'auto' },
+            2: { cellWidth: 35 },
+            3: { halign: 'center', cellWidth: 15 }
+          },
+          margin: { left: 14, right: 14 }
+        });
+      }
+
+      // Signatures
+      let currentY = (doc as any).lastAutoTable.finalY + 25;
+      if (currentY > 250) {
+        doc.addPage();
+        currentY = 30;
+      }
+
+      doc.setFontSize(9);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(100, 116, 139); // slate-500
+      
+      doc.text('Disiapkan Oleh (Gudang)', 40, currentY, { align: 'center' });
+      doc.text('Diperiksa Oleh (Checker)', 105, currentY, { align: 'center' });
+      doc.text('Mengetahui (Admin / PJ)', 170, currentY, { align: 'center' });
+      
+      currentY += 25;
+      
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(15, 23, 42); // slate-900
+      
+      doc.setLineWidth(0.5);
+      doc.line(15, currentY - 4, 65, currentY - 4);
+      doc.text('Nama & Tanda Tangan', 40, currentY, { align: 'center' });
+      
+      doc.line(80, currentY - 4, 130, currentY - 4);
+      doc.text('Nama & Tanda Tangan', 105, currentY, { align: 'center' });
+      
+      doc.line(145, currentY - 4, 195, currentY - 4);
+      doc.text('Nama & Tanda Tangan', 170, currentY, { align: 'center' });
+
+      doc.save(`Rekap-Pengiriman-${dateStr}.pdf`);
+    } catch (e: any) {
+      console.error('PDF generation failed', e);
+      alert('Gagal mengunduh PDF.');
+    } finally {
+      setIsPrinting(false);
+    }
   };
 
   const handleExportExcel = async () => {
