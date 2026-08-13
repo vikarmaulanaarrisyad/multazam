@@ -98,7 +98,6 @@ export const productRepository = {
           purchasePrice: item.purchasePrice,
           contents: item.contents,
           retailPriceNote: item.retailPriceNote,
-          stock: item.stock,
           categoryId: item.categoryId,
           unitId: item.unitId,
         },
