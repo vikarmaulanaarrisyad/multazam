@@ -10,9 +10,10 @@ export const metadata = {
 export default async function PrintRecapPage({
   searchParams,
 }: {
-  searchParams: { date?: string };
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>
 }) {
-  let dateStr = searchParams.date;
+  const resolvedSearchParams = await searchParams;
+  let dateStr = resolvedSearchParams.date as string | undefined;
   if (!dateStr) {
     const today = new Date();
     const y = today.getFullYear();
