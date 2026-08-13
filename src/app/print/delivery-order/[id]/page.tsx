@@ -88,6 +88,13 @@ function SuratJalanCopy({ transaction, setting, isDivider = false }: any) {
           <div className="flex"><span className="w-24">Nama Toko</span><span className="mr-2">:</span><span>{transaction.customerName || '-'}</span></div>
           <div className="flex"><span className="w-24">Alamat</span><span className="mr-2">:</span><span className="truncate">{transaction.shippingAddress || '-'}</span></div>
           <div className="flex"><span className="w-24">Sales</span><span className="mr-2">:</span><span>{transaction.user?.name || '-'}</span></div>
+          {transaction.notes?.includes('[Metode: TEMPO]') && transaction.dueDate && (
+            <div className="flex">
+              <span className="w-24">Jatuh Tempo</span>
+              <span className="mr-2">:</span>
+              <span>{new Date(transaction.dueDate).toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
+            </div>
+          )}
         </div>
       </div>
 
