@@ -211,7 +211,7 @@ function SuratJalanCopy({ transaction, setting, isDivider = false }: any) {
               <div className="mt-2">
                 {/* FOOTER TOTAL */}
                 <div className="flex justify-between items-center py-1 border-b-2 border-slate-900 border-dashed">
-                  <div className="flex flex-1 items-center uppercase text-xs font-semibold text-slate-900 pr-4">
+                  <div className="flex flex-1 items-center uppercase text-[13px] font-semibold text-slate-900 pr-4">
                     <span className="mr-2">TERBILANG :</span>
                     <span className="truncate flex-1 italic">{toTerbilang(totalKeseluruhan)}</span>
                   </div>
@@ -257,8 +257,13 @@ export default async function PrintDeliveryOrderPage({ params, searchParams }: {
   const sp = await searchParams;
   const orientation = sp.orientation === 'landscape' ? 'landscape' : 'portrait';
 
-  const transaction = await prisma.transaction.findUnique({
-    where: { id },
+  const transaction = await prisma.transaction.findFirst({
+    where: {
+      OR: [
+        { id: id },
+        { invoiceNumber: id }
+      ]
+    },
     include: {
       user: true,
       items: {
