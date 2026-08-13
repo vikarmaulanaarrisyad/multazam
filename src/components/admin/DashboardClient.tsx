@@ -1,7 +1,8 @@
 'use client';
 
-import React from 'react';
-import { Package, Tags, ShoppingCart, DollarSign, WalletCards, TrendingUp, TrendingDown, Clock, AlertTriangle, ArrowRight } from 'lucide-react';
+import React, { useState } from 'react';
+import { Package, Tags, ShoppingCart, DollarSign, WalletCards, TrendingUp, TrendingDown, Clock, AlertTriangle, ArrowRight, FileSpreadsheet } from 'lucide-react';
+import { DeliveryRecapModal } from './DeliveryRecapModal';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { cn } from '@/lib/utils';
 import { ExportReports } from './ExportReports';
@@ -47,6 +48,8 @@ interface DashboardClientProps {
 }
 
 export function DashboardClient({ data, role }: DashboardClientProps) {
+  const [isRecapModalOpen, setIsRecapModalOpen] = useState(false);
+
   const formatRupiah = (val: number) => {
     if (val >= 1000000000) return `Rp ${(val / 1000000000).toFixed(1)}M`; // Milyar
     if (val >= 1000000) return `Rp ${(val / 1000000).toFixed(1)}Jt`; // Juta
@@ -237,9 +240,17 @@ export function DashboardClient({ data, role }: DashboardClientProps) {
               </h3>
               <p className="text-sm text-slate-500 mt-1">Daftar pesanan yang menunggu untuk dikirim, diurutkan berdasarkan tanggal pengiriman terdekat.</p>
             </div>
-            <a href={`/${role === 'SUPER_ADMIN' ? 'super-admin' : 'admin'}/transactions`} className="text-sm font-bold text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1">
-              Lihat Semua <ArrowRight className="w-4 h-4" />
-            </a>
+            <div className="flex items-center gap-2">
+              <button 
+                onClick={() => setIsRecapModalOpen(true)}
+                className="text-sm font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 shadow-sm border border-slate-200"
+              >
+                <FileSpreadsheet className="w-4 h-4" /> Rekap Gudang
+              </button>
+              <a href={`/${role === 'SUPER_ADMIN' ? 'super-admin' : 'admin'}/transactions`} className="text-sm font-bold text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1">
+                Lihat Semua <ArrowRight className="w-4 h-4" />
+              </a>
+            </div>
           </div>
 
           <div className="overflow-x-auto">
@@ -442,6 +453,11 @@ export function DashboardClient({ data, role }: DashboardClientProps) {
           </a>
         </div>
       )}
+
+      <DeliveryRecapModal 
+        isOpen={isRecapModalOpen} 
+        onClose={() => setIsRecapModalOpen(false)} 
+      />
     </div>
   );
 }
