@@ -19,12 +19,13 @@ interface DashboardClientProps {
   data: {
     todayRevenue: number;
     monthRevenue: number;
+    monthProfit: number;
     yearRevenue: number;
     totalProducts: number;
     totalCategories: number;
     newTransactions: number;
     recentActivities: Activity[];
-    chartData: { name: string; total: number }[];
+    chartData: { name: string; total: number; profit?: number }[];
     pendingActions?: {
       shipment: number;
       approval: number;
@@ -66,9 +67,20 @@ export function DashboardClient({ data, role }: DashboardClientProps) {
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       return (
-        <div className="bg-white p-3 border border-slate-100 shadow-xl rounded-xl">
-          <p className="text-slate-500 font-medium text-xs mb-1">{label}</p>
-          <p className="font-bold text-blue-700">Rp {payload[0].value.toLocaleString('id-ID')}</p>
+        <div className="bg-white p-4 border border-slate-100 shadow-xl rounded-xl min-w-50">
+          <p className="text-slate-500 font-bold text-xs mb-3 border-b border-slate-100 pb-2">{label}</p>
+          <div className="space-y-2">
+            <div className="flex justify-between items-center gap-4">
+              <span className="text-xs text-slate-500 flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-blue-500"></div> Omset (Kotor)</span>
+              <span className="font-bold text-blue-700 text-sm">Rp {payload[0]?.value?.toLocaleString('id-ID')}</span>
+            </div>
+            {payload[1] && (
+              <div className="flex justify-between items-center gap-4">
+                <span className="text-xs text-slate-500 flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-emerald-500"></div> Laba Bersih</span>
+                <span className="font-bold text-emerald-700 text-sm">Rp {payload[1].value?.toLocaleString('id-ID')}</span>
+              </div>
+            )}
+          </div>
         </div>
       );
     }
@@ -90,53 +102,53 @@ export function DashboardClient({ data, role }: DashboardClientProps) {
       {/* Metric Cards */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         
-        {/* Today's Revenue */}
-        <div className="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm relative overflow-hidden group">
-          <div className="absolute right-0 top-0 w-24 h-24 bg-blue-500/5 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
-          <div className="flex justify-between items-start mb-4">
-            <div>
-              <p className="text-sm font-medium text-slate-500">Omset Hari Ini</p>
-              <h3 className="text-2xl font-black text-slate-900 mt-1">{formatRupiah(data.todayRevenue)}</h3>
-            </div>
-            <div className="p-3 bg-blue-50 text-blue-600 rounded-xl">
-              <DollarSign className="w-5 h-5" />
-            </div>
-          </div>
-          <div className="flex items-center gap-1.5 text-xs font-medium text-emerald-600 bg-emerald-50 w-fit px-2 py-1 rounded-md">
-            <TrendingUp className="w-3.5 h-3.5" /> Berjalan Hari Ini
-          </div>
-        </div>
-
         {/* Month's Revenue */}
         <div className="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm relative overflow-hidden group">
-          <div className="absolute right-0 top-0 w-24 h-24 bg-indigo-500/5 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
+          <div className="absolute right-0 top-0 w-24 h-24 bg-blue-500/5 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
           <div className="flex justify-between items-start mb-4">
             <div>
               <p className="text-sm font-medium text-slate-500">Omset Bulan Ini</p>
               <h3 className="text-2xl font-black text-slate-900 mt-1">{formatRupiah(data.monthRevenue)}</h3>
             </div>
-            <div className="p-3 bg-indigo-50 text-indigo-600 rounded-xl">
-              <WalletCards className="w-5 h-5" />
+            <div className="p-3 bg-blue-50 text-blue-600 rounded-xl">
+              <DollarSign className="w-5 h-5" />
             </div>
           </div>
-          <div className="flex items-center gap-1.5 text-xs font-medium text-indigo-600 bg-indigo-50 w-fit px-2 py-1 rounded-md">
-            Akumulasi Bulanan
+          <div className="flex items-center gap-1.5 text-xs font-medium text-blue-600 bg-blue-50 w-fit px-2 py-1 rounded-md">
+            Pendapatan Kotor
+          </div>
+        </div>
+
+        {/* Net Profit */}
+        <div className="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm relative overflow-hidden group">
+          <div className="absolute right-0 top-0 w-24 h-24 bg-emerald-500/5 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
+          <div className="flex justify-between items-start mb-4">
+            <div>
+              <p className="text-sm font-medium text-slate-500">Laba Bersih Bulan Ini</p>
+              <h3 className="text-2xl font-black text-slate-900 mt-1">{formatRupiah(data.monthProfit || 0)}</h3>
+            </div>
+            <div className="p-3 bg-emerald-50 text-emerald-600 rounded-xl">
+              <TrendingUp className="w-5 h-5" />
+            </div>
+          </div>
+          <div className="flex items-center gap-1.5 text-xs font-medium text-emerald-600 bg-emerald-50 w-fit px-2 py-1 rounded-md">
+            Estimasi Profit
           </div>
         </div>
 
         {/* Total Transactions (Month) */}
         <div className="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm relative overflow-hidden group">
-          <div className="absolute right-0 top-0 w-24 h-24 bg-emerald-500/5 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
+          <div className="absolute right-0 top-0 w-24 h-24 bg-indigo-500/5 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
           <div className="flex justify-between items-start mb-4">
             <div>
               <p className="text-sm font-medium text-slate-500">Transaksi Bulan Ini</p>
               <h3 className="text-2xl font-black text-slate-900 mt-1">{data.newTransactions}</h3>
             </div>
-            <div className="p-3 bg-emerald-50 text-emerald-600 rounded-xl">
+            <div className="p-3 bg-indigo-50 text-indigo-600 rounded-xl">
               <ShoppingCart className="w-5 h-5" />
             </div>
           </div>
-          <div className="flex items-center gap-1.5 text-xs font-medium text-emerald-600 bg-emerald-50 w-fit px-2 py-1 rounded-md">
+          <div className="flex items-center gap-1.5 text-xs font-medium text-indigo-600 bg-indigo-50 w-fit px-2 py-1 rounded-md">
             Transaksi Aktif
           </div>
         </div>
@@ -209,8 +221,12 @@ export function DashboardClient({ data, role }: DashboardClientProps) {
         <div className="lg:col-span-4 bg-white rounded-2xl border border-slate-100 shadow-sm p-5 flex flex-col">
           <div className="flex justify-between items-center mb-6">
             <div>
-              <h3 className="font-bold text-slate-900">Statistik Omset Tahunan</h3>
-              <p className="text-xs text-slate-500 mt-1">Total Omset Tahun Ini: <strong className="text-slate-900">{formatRupiah(data.yearRevenue)}</strong></p>
+              <h3 className="font-bold text-slate-900">Statistik Omset & Laba Tahunan</h3>
+              <p className="text-xs text-slate-500 mt-1 flex items-center gap-4">
+                <span>Total Omset: <strong className="text-slate-900">{formatRupiah(data.yearRevenue)}</strong></span>
+                <span className="w-1 h-1 rounded-full bg-slate-300"></span>
+                <span>Total Laba: <strong className="text-emerald-600">{formatRupiah(data.chartData.reduce((s, c) => s + (c.profit || 0), 0))}</strong></span>
+              </p>
             </div>
           </div>
           <div className="flex-1 w-full h-75">
@@ -220,6 +236,10 @@ export function DashboardClient({ data, role }: DashboardClientProps) {
                   <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
                     <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                  </linearGradient>
+                  <linearGradient id="colorProfit" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.3}/>
+                    <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
@@ -240,10 +260,20 @@ export function DashboardClient({ data, role }: DashboardClientProps) {
                 <Area 
                   type="monotone" 
                   dataKey="total" 
+                  name="Omset"
                   stroke="#3b82f6" 
                   strokeWidth={3}
                   fillOpacity={1} 
                   fill="url(#colorRevenue)" 
+                />
+                <Area 
+                  type="monotone" 
+                  dataKey="profit" 
+                  name="Laba Bersih"
+                  stroke="#10b981" 
+                  strokeWidth={3}
+                  fillOpacity={1} 
+                  fill="url(#colorProfit)" 
                 />
               </AreaChart>
             </ResponsiveContainer>

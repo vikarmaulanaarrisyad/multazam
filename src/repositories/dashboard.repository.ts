@@ -17,7 +17,11 @@ export class DashboardRepository {
           createdAt: { gte: startOfMonth },
           status: { in: validStatus }
         },
-        select: { totalAmount: true, createdAt: true }
+        select: { 
+          totalAmount: true, 
+          createdAt: true,
+          items: { select: { quantity: true, purchasePrice: true, product: { select: { purchasePrice: true } } } }
+        }
       }),
       // Year's revenue and chart data
       prisma.transaction.findMany({
@@ -25,7 +29,11 @@ export class DashboardRepository {
           createdAt: { gte: startOfYear },
           status: { in: validStatus }
         },
-        select: { totalAmount: true, createdAt: true }
+        select: { 
+          totalAmount: true, 
+          createdAt: true,
+          items: { select: { quantity: true, purchasePrice: true, product: { select: { purchasePrice: true } } } }
+        }
       }),
       // Counts
       prisma.product.count(),

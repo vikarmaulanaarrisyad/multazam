@@ -23,6 +23,7 @@ import {
   Store,
   MapPin,
   ShieldAlert,
+  FileSpreadsheet
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -109,6 +110,12 @@ export function AdminSidebar({ role, className, onNavigate, logoUrl }: SidebarPr
       href: `${basePath}/analytics`,
       icon: BarChart3,
       visible: role === 'SUPER_ADMIN',
+    },
+    {
+      title: 'Pusat Laporan',
+      href: `${basePath}/reports`,
+      icon: FileSpreadsheet,
+      visible: true,
     },
     {
       title: 'Tugaskan Kunjungan',

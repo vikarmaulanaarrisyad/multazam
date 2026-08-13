@@ -18,14 +18,32 @@ export class DashboardService {
     const todayRevenue = Number(todayTx._sum.totalAmount || 0);
     const monthRevenue = monthTx.reduce((sum, tx) => sum + Number(tx.totalAmount), 0);
     const yearRevenue = yearTx.reduce((sum, tx) => sum + Number(tx.totalAmount), 0);
+    
+    // Calculate month profit
+    const monthProfit = monthTx.reduce((sum, tx) => {
+      const cogs = tx.items.reduce((itemSum, item) => {
+        const cost = Number(item.purchasePrice || item.product?.purchasePrice || 0);
+        return itemSum + (cost * item.quantity);
+      }, 0);
+      return sum + (Number(tx.totalAmount) - cogs);
+    }, 0);
+
     const newTransactions = monthTx.length;
 
     const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
     const chartData = monthNames.map((name, index) => {
-      const monthSum = yearTx
-        .filter(tx => tx.createdAt.getMonth() === index)
-        .reduce((sum, tx) => sum + Number(tx.totalAmount), 0);
-      return { name, total: monthSum };
+      const txInMonth = yearTx.filter(tx => tx.createdAt.getMonth() === index);
+      const monthSum = txInMonth.reduce((sum, tx) => sum + Number(tx.totalAmount), 0);
+      
+      const profitSum = txInMonth.reduce((sum, tx) => {
+        const cogs = tx.items.reduce((itemSum, item) => {
+          const cost = Number(item.purchasePrice || item.product?.purchasePrice || 0);
+          return itemSum + (cost * item.quantity);
+        }, 0);
+        return sum + (Number(tx.totalAmount) - cogs);
+      }, 0);
+
+      return { name, total: monthSum, profit: profitSum };
     });
 
     const serializedActivities = recentActivities.map(act => ({
@@ -38,6 +56,7 @@ export class DashboardService {
     return {
       todayRevenue,
       monthRevenue,
+      monthProfit,
       yearRevenue,
       totalProducts,
       totalCategories,
