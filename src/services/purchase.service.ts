@@ -5,7 +5,9 @@ import { createNotification } from '@/lib/createNotification';
 import { calculateBaseQuantity } from '@/utils/inventory';
 
 async function generateInvoiceNumber(): Promise<string> {
-  const dateStr = format(new Date(), 'yyyyMMdd');
+  const d = new Date();
+  d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+  const dateStr = format(d, 'yyyyMMdd');
   const prefix = `PO-${dateStr}-`;
   
   const latestInvoice = await purchaseRepository.getLatestInvoiceNumber();
@@ -87,7 +89,7 @@ export const purchaseService = {
     }
   },
 
-  async completePurchase(id: string): Promise<{ success: boolean; message: string }> {
+  async completePurchase(id: string, userId: string): Promise<{ success: boolean; message: string }> {
     try {
       const purchase = await purchaseRepository.findById(id);
       
@@ -155,7 +157,8 @@ export const purchaseService = {
               balanceBefore: updatedProduct.stock - baseQtyToAdd,
               balanceAfter: updatedProduct.stock,
               reference: lockedPurchase.invoiceNumber,
-              notes: `Restock dari supplier: ${lockedPurchase.supplier.name} - Qty: ${item.quantity} ${(product as any).stockBaseUnit || 'PCS'}`
+              notes: `Restock dari supplier: ${lockedPurchase.supplier.name} - Qty: ${item.quantity} ${(product as any).stockBaseUnit || 'PCS'}`,
+              userId: userId
             }
           });
         }
@@ -187,19 +190,17 @@ export const purchaseService = {
     }
   },
 
-  async cancelPurchase(id: string): Promise<{ success: boolean; message: string }> {
+  async cancelPurchase(id: string, userId: string): Promise<{ success: boolean; message: string }> {
     try {
-      const purchase = await purchaseRepository.findById(id);
+      const updateResult = await prisma.purchase.updateMany({
+        where: { id, status: 'PENDING' },
+        data: { status: 'CANCELLED' }
+      });
       
-      if (!purchase) {
-        return { success: false, message: 'Transaksi tidak ditemukan.' };
-      }
-      
-      if (purchase.status === 'COMPLETED') {
-        return { success: false, message: 'Transaksi sudah selesai tidak bisa dibatalkan.' };
+      if (updateResult.count === 0) {
+        return { success: false, message: 'Transaksi sudah selesai atau dibatalkan oleh user lain.' };
       }
 
-      await purchaseRepository.updateStatus(id, 'CANCELLED');
       return { success: true, message: 'Pembelian berhasil dibatalkan.' };
     } catch (error) {
       console.error('Cancel purchase error:', error);

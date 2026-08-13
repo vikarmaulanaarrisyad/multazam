@@ -194,6 +194,9 @@ model TransactionItem {
   originalPrice Decimal?    @db.Decimal(18, 2)
   purchasePrice Decimal?    @db.Decimal(18, 2)
   unitNote      String?
+
+  @@index([transactionId])
+  @@index([productId])
 }
 
 model StockMovement {
@@ -210,6 +213,8 @@ model StockMovement {
   user          User?        @relation(fields: [userId], references: [id])
   createdAt     DateTime     @default(now())
   updatedAt     DateTime     @updatedAt
+
+  @@index([productId])
 }
 
 model PaymentHistory {
@@ -261,6 +266,9 @@ model PurchaseItem {
   product    Product  @relation(fields: [productId], references: [id])
   quantity   Int
   price      Decimal  @db.Decimal(18, 2)
+
+  @@index([purchaseId])
+  @@index([productId])
 }
 
 model Setting {
@@ -356,6 +364,8 @@ model ReturnItem {
   price               Decimal           @db.Decimal(18, 2)
   unitNote            String?
   totalPrice          Decimal?          @db.Decimal(18, 2)
+
+  @@index([returnTransactionId])
 }
 
 model UnitConversion {

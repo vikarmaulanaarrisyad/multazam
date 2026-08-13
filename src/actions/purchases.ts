@@ -47,10 +47,10 @@ export async function createPurchaseAction(data: {
 
 export async function completePurchaseAction(id: string) {
   const session = await auth();
-  if (!session?.user || (session.user.role !== 'ADMIN' && session.user.role !== 'SUPER_ADMIN')) {
+  if (!session?.user?.id || (session.user.role !== 'ADMIN' && session.user.role !== 'SUPER_ADMIN')) {
     return { success: false, message: 'Unauthorized / Akses Ditolak' };
   }
-  const result = await purchaseService.completePurchase(id);
+  const result = await purchaseService.completePurchase(id, session.user.id);
   if (result.success) {
     revalidatePath('/admin/purchases');
     revalidatePath('/admin/products');
@@ -61,10 +61,10 @@ export async function completePurchaseAction(id: string) {
 
 export async function cancelPurchaseAction(id: string) {
   const session = await auth();
-  if (!session?.user || (session.user.role !== 'ADMIN' && session.user.role !== 'SUPER_ADMIN')) {
+  if (!session?.user?.id || (session.user.role !== 'ADMIN' && session.user.role !== 'SUPER_ADMIN')) {
     return { success: false, message: 'Unauthorized / Akses Ditolak' };
   }
-  const result = await purchaseService.cancelPurchase(id);
+  const result = await purchaseService.cancelPurchase(id, session.user.id);
   if (result.success) {
     revalidatePath('/admin/purchases');
   }
