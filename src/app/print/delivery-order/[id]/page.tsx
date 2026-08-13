@@ -60,7 +60,7 @@ function SuratJalanCopy({ transaction, setting, isDivider = false }: any) {
   const shippingCost = Number(transaction.shippingCost) || 0;
   const totalKeseluruhan = totalItemAmount + shippingCost;
 
-  const MAX_ITEMS = 13;
+  const MAX_ITEMS = 15;
   const allRows = [...transaction.items];
   if (shippingCost > 0) {
     allRows.push({ isShipping: true, id: 'shipping' });
@@ -91,7 +91,7 @@ function SuratJalanCopy({ transaction, setting, isDivider = false }: any) {
               <div className="flex justify-between w-full mb-1 uppercase font-semibold">
                 {/* Kiri */}
                 <div className="flex flex-col w-1/2">
-                  <span className="text-[21px] font-bold tracking-wider -mt-2">{setting?.companyName || 'E - DIA MAKMUR ABADI'}</span>
+                  <span className="text-[22px] font-bold tracking-wider -mt-2">{setting?.companyName || 'E - DIA MAKMUR ABADI'}</span>
                   <span className="text-xs font-semibold tracking-wide mt-1">
                     {transaction.notes?.includes('[Metode: COD]') || transaction.notes?.includes('[Metode: CASH]') || (!transaction.notes?.includes('[Metode: TEMPO]') && !transaction.notes?.includes('[Metode: TRANSFER]'))
                       ? 'FAKTUR PENJUALAN TUNAI'
@@ -122,18 +122,18 @@ function SuratJalanCopy({ transaction, setting, isDivider = false }: any) {
               </div>
 
               {/* TABLE */}
-              <table className="w-full text-left uppercase border-collapse mt-1 text-[12px] font-semibold">
+              <table className="w-full text-left uppercase border-collapse mt-1 text-[14px] font-semibold">
                 <thead>
                   <tr className="border-t-4 border-b border-double border-slate-900">
                     <th className="py-1 px-1 font-semibold text-center w-8">NO</th>
                     <th className="py-1 px-1 font-semibold w-16">KODE</th>
                     <th className="py-1 px-1 font-semibold">NAMA PRODUK</th>
-                    <th className="py-1 px-1 font-semibold text-center w-16">QTY</th>
+                    <th className="py-1 px-1 font-semibold text-center w-24">QTY</th>
                     <th className="py-1 px-1 font-semibold text-right w-28">HARGA</th>
                     <th className="py-1 px-1 font-semibold text-right w-32">TOTAL</th>
                   </tr>
                 </thead>
-                <tbody className="border-b border-slate-900">
+                <tbody className={isLastPage ? "border-b border-slate-900" : ""}>
                   {chunk.map((item: any, idx: number) => {
                     const actualIndex = chunkIndex * MAX_ITEMS + idx + 1;
 
@@ -210,7 +210,7 @@ function SuratJalanCopy({ transaction, setting, isDivider = false }: any) {
             {isLastPage && (
               <div className="mt-2">
                 {/* FOOTER TOTAL */}
-                <div className="flex justify-between items-center py-1 border-y-2 border-slate-900 border-dashed">
+                <div className="flex justify-between items-center py-1 border-b-2 border-slate-900 border-dashed">
                   <div className="flex flex-1 items-center uppercase text-xs font-semibold text-slate-900 pr-4">
                     <span className="mr-2">TERBILANG :</span>
                     <span className="truncate flex-1 italic">{toTerbilang(totalKeseluruhan)}</span>
@@ -229,14 +229,14 @@ function SuratJalanCopy({ transaction, setting, isDivider = false }: any) {
                 {/* SIGNATURES */}
                 <div className="flex justify-center gap-48 mt-3 mb-1 uppercase text-center text-xs font-semibold text-slate-900">
                   <div className="flex flex-col items-center w-40">
-                    <div className="w-full flex justify-between mb-4">
+                    <div className="w-full flex justify-between mb-6">
                       <span>(</span>
                       <span>)</span>
                     </div>
                     <p>Penerima</p>
                   </div>
                   <div className="flex flex-col items-center w-40">
-                    <div className="w-full flex justify-between mb-4">
+                    <div className="w-full flex justify-between mb-6">
                       <span>(</span>
                       <span>)</span>
                     </div>

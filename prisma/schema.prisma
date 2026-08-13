@@ -43,6 +43,27 @@ enum ReturnCondition {
   BAD
 }
 
+enum TargetPeriod {
+  DAILY
+  WEEKLY
+  MONTHLY
+}
+
+model SalesTarget {
+  id           String       @id @default(cuid())
+  userId       String
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  targetAmount Decimal      @db.Decimal(18, 2)
+  periodType   TargetPeriod
+  startDate    DateTime     
+  endDate      DateTime     
+  notes        String?      @db.Text
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  @@index([userId, startDate, endDate])
+}
+
 model User {
   id            String    @id @default(cuid())
   name          String?
@@ -64,6 +85,7 @@ model User {
   visits           Visit[]
   returns          ReturnTransaction[]
   auditLogs        AuditLog[]
+  salesTargets     SalesTarget[]
 }
 
 model Account {

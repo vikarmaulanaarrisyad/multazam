@@ -24,7 +24,8 @@ import {
   MapPin,
   ShieldAlert,
   FileSpreadsheet,
-  Database
+  Database,
+  Target
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -99,6 +100,12 @@ export function AdminSidebar({ role, className, onNavigate, logoUrl }: SidebarPr
       href: `${basePath}/users`,
       icon: Users,
       visible: role === 'SUPER_ADMIN',
+    },
+    {
+      title: 'Target Penjualan',
+      href: `${basePath}/targets`,
+      icon: Target,
+      visible: true,
     },
     {
       title: 'Sinkronisasi',

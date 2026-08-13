@@ -11,18 +11,29 @@ export default async function SalesDashboardPage() {
   const now = new Date();
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
   
-  // 1. Total Penjualan Bulan Ini (Target = 150M)
+  // 1. Target Penjualan Bulan Ini
+  // Cek target di database
+  const salesTarget = await prisma.salesTarget.findFirst({
+    where: {
+      userId: session.user.id,
+      periodType: 'MONTHLY',
+      startDate: { gte: startOfMonth },
+    },
+    orderBy: { createdAt: 'desc' }
+  });
+
+  const targetSales = salesTarget ? Number(salesTarget.targetAmount) : 0;
+
   const monthlySalesResult = await prisma.transaction.aggregate({
     where: {
       userId: session.user.id,
-      status: { in: ['COMPLETED', 'SHIPPED', 'APPROVED', 'PENDING', 'PENDING_APPROVAL'] },
+      status: { not: 'CANCELLED' }, // Sesuai kesepakatan: total nilai pesanan (Invoice)
       createdAt: { gte: startOfMonth }
     },
-    _sum: { totalAmount: true }
+    _sum: { totalAmount: true, shippingCost: true }
   });
-  const totalSales = Number(monthlySalesResult._sum.totalAmount || 0);
-  const targetSales = 150000000;
-  const progressPercent = Math.min(Math.round((totalSales / targetSales) * 100), 100);
+  const totalSales = Number(monthlySalesResult._sum.totalAmount || 0) + Number(monthlySalesResult._sum.shippingCost || 0);
+  const progressPercent = targetSales > 0 ? Math.min(Math.round((totalSales / targetSales) * 100), 100) : 0;
 
   // 2. Jumlah Pesanan Bulan Ini
   const totalOrders = await prisma.transaction.count({
@@ -75,7 +86,12 @@ export default async function SalesDashboardPage() {
           <div>
             <span className="text-xs font-bold text-primary uppercase tracking-wider">Target Penjualan Bulanan</span>
             <div className="text-2xl font-bold text-slate-900 mt-1">
-              Rp {(totalSales / 1000000).toFixed(1)}Jt <span className="text-sm font-normal text-slate-500">/ Rp 150Jt</span>
+              Rp {(totalSales / 1000000).toFixed(1)}Jt 
+              {targetSales > 0 ? (
+                <span className="text-sm font-normal text-slate-500"> / Rp {(targetSales / 1000000).toFixed(1)}Jt</span>
+              ) : (
+                <span className="text-sm font-normal text-slate-500"> / (Belum diatur)</span>
+              )}
             </div>
           </div>
           <div className="px-2 py-1 bg-primary text-primary-foreground text-xs font-bold rounded-md shadow-sm">
@@ -85,12 +101,16 @@ export default async function SalesDashboardPage() {
         <div className="space-y-2">
           <div className="w-full bg-slate-200 rounded-full h-3 overflow-hidden border border-slate-300">
             <div className="bg-primary h-full rounded-full relative transition-all duration-1000" style={{ width: `${progressPercent}%` }}>
-              <div className="absolute inset-0 bg-linear-to-r from-transparent via-white/30 to-transparent w-full animate-[shimmer_2s_infinite]"></div>
+              {progressPercent > 0 && (
+                <div className="absolute inset-0 bg-linear-to-r from-transparent via-white/30 to-transparent w-full animate-[shimmer_2s_infinite]"></div>
+              )}
             </div>
           </div>
           <div className="flex justify-between text-xs font-medium">
             <span className="text-primary">Tercapai: Rp {(totalSales / 1000000).toFixed(1)}Jt</span>
-            <span className="text-slate-500">Sisa: Rp {Math.max((targetSales - totalSales) / 1000000, 0).toFixed(1)}Jt</span>
+            <span className="text-slate-500">
+              Sisa: {targetSales > 0 ? `Rp ${Math.max((targetSales - totalSales) / 1000000, 0).toFixed(1)}Jt` : '-'}
+            </span>
           </div>
         </div>
       </section>
