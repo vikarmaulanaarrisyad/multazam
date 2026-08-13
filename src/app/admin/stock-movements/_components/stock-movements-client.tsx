@@ -313,6 +313,29 @@ export function StockMovementsClient({ initialData, metadata }: StockMovementsCl
       },
     },
     {
+      id: 'sisa_stok_konversi',
+      header: 'Sisa Stok (Konversi)',
+      cell: ({ row }: { row: any }) => {
+        const movement = row.original as StockMovementWithProduct;
+        const convQty = movement.product.conversionQty || 1;
+        const purchaseUnit = movement.product.purchaseUnit || 'DUS';
+        const smallestUnit = movement.product.stockBaseUnit || 'PCS';
+        
+        const formattedQty = formatConvertedQuantity(
+          movement.balanceAfter,
+          smallestUnit,
+          purchaseUnit,
+          convQty
+        );
+
+        return (
+          <span className="text-slate-600 font-medium">
+            {formattedQty}
+          </span>
+        );
+      },
+    },
+    {
       id: 'keterangan',
       header: 'Keterangan',
       cell: ({ row }: { row: any }) => {
