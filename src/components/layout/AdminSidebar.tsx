@@ -170,13 +170,13 @@ export function AdminSidebar({ role, className, onNavigate, logoUrl }: SidebarPr
                 href={item.href}
                 onClick={onNavigate}
                 className={cn(
-                  "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
+                  "group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-300",
                   isActive
-                    ? "bg-primary text-primary-foreground"
-                    : "text-slate-300 hover:bg-slate-800 hover:text-white"
+                    ? "bg-primary text-primary-foreground shadow-md shadow-primary/20"
+                    : "text-slate-300 hover:bg-slate-800/80 hover:text-white hover:translate-x-1"
                 )}
               >
-                <item.icon className="h-5 w-5 shrink-0" />
+                <item.icon className={cn("h-5 w-5 shrink-0 transition-transform duration-300", !isActive && "group-hover:scale-110")} />
                 {item.title}
               </Link>
             );
