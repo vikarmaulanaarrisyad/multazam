@@ -24,11 +24,11 @@ export default async function PrintRecapPage({
 
   const recapRes = await getDeliveryRecapAction(dateStr);
 
-  if (!recapRes.success) {
+  if (!recapRes.success || !recapRes.data) {
     redirect('/admin');
   }
 
-  const items = recapRes.data || [];
+  const { global, stores } = recapRes.data;
   
   // Format tanggal dengan aman tanpa pergeseran Timezone Node
   const [year, month, day] = dateStr.split('-');
@@ -85,7 +85,7 @@ export default async function PrintRecapPage({
           </div>
         </div>
 
-        {items.length === 0 ? (
+        {global.length === 0 ? (
           <div className="text-center py-20 text-slate-500 border-2 border-dashed border-slate-200 rounded-xl">
             Tidak ada barang yang perlu disiapkan untuk tanggal ini.
           </div>
@@ -111,7 +111,7 @@ export default async function PrintRecapPage({
                 </tr>
               </thead>
               <tbody>
-                {items.map((item, index) => {
+                {global.map((item, index) => {
                   const isInsufficient = item.currentStock < item.totalBaseQuantity;
                   return (
                     <tr key={`${item.productId}-${item.unit}`} className={`border-b border-slate-200 ${index % 2 === 0 ? 'bg-white' : 'bg-slate-50'} ${isInsufficient ? 'bg-red-50/50' : ''}`}>
@@ -134,10 +134,46 @@ export default async function PrintRecapPage({
                 })}
               </tbody>
             </table>
+            
+            {/* Bagian Rincian Per Toko */}
+            {stores.length > 0 && (
+              <div className="mt-12">
+                <h2 className="text-xl font-bold text-slate-900 mb-6 border-b-2 border-slate-800 pb-2">RINCIAN PESANAN PER TOKO</h2>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 print:grid-cols-2">
+                  {stores.map((store, sIdx) => (
+                    <div key={sIdx} className="border border-slate-300 rounded-lg overflow-hidden print:break-inside-avoid shadow-sm">
+                      <div className="bg-slate-100 px-4 py-3 border-b border-slate-300 flex justify-between items-center">
+                        <div className="font-bold text-slate-800 text-sm uppercase">{store.customerName}</div>
+                        <div className="text-xs bg-slate-200 text-slate-700 px-2 py-1 rounded font-semibold border border-slate-300">Sales: {store.salesName}</div>
+                      </div>
+                      <table className="w-full text-left border-collapse">
+                        <thead>
+                          <tr className="bg-white border-b border-slate-200">
+                            <th className="py-2 px-3 text-[10px] font-bold text-slate-500 uppercase w-8 text-center border-r border-slate-200">No</th>
+                            <th className="py-2 px-3 text-[10px] font-bold text-slate-500 uppercase border-r border-slate-200">Nama Barang</th>
+                            <th className="py-2 px-3 text-[10px] font-bold text-slate-500 uppercase text-right w-24">Qty</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {store.items.map((item, iIdx) => (
+                            <tr key={iIdx} className="border-b border-slate-100 last:border-0 bg-white">
+                              <td className="py-1.5 px-3 text-xs text-slate-500 text-center border-r border-slate-100">{iIdx + 1}</td>
+                              <td className="py-1.5 px-3 text-xs font-medium text-slate-800 border-r border-slate-100">{item.name}</td>
+                              <td className="py-1.5 px-3 text-xs font-bold text-blue-700 text-right bg-blue-50/20">{item.quantity} <span className="text-[10px] text-blue-500 font-normal">{item.unit}</span></td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </>
         )}
 
-        <div className="mt-16 flex justify-around text-center">
+        <div className="mt-16 flex justify-around text-center print:break-inside-avoid">
           <div className="w-48">
             <p className="text-sm font-medium text-slate-500 mb-20">Disiapkan Oleh (Gudang)</p>
             <div className="border-t-2 border-slate-800 pt-2">
@@ -165,3 +201,4 @@ export default async function PrintRecapPage({
     </div>
   );
 }
+

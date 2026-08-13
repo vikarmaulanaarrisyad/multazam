@@ -101,7 +101,7 @@ export function DeliveryRecapModal({ isOpen, onClose }: DeliveryRecapModalProps)
         return;
       }
 
-      const items = res.data;
+      const items = res.data.global;
       if (items.length === 0) {
         alert('Tidak ada barang yang perlu disiapkan pada tanggal ini.');
         return;
@@ -156,7 +156,7 @@ export function DeliveryRecapModal({ isOpen, onClose }: DeliveryRecapModalProps)
         };
       });
 
-      // Data
+      // Data Global
       items.forEach((item, idx) => {
         const isInsufficient = item.currentStock < item.totalBaseQuantity;
         const row = sheet.addRow([
@@ -194,6 +194,41 @@ export function DeliveryRecapModal({ isOpen, onClose }: DeliveryRecapModalProps)
           }
         });
       });
+
+      // Add Store Details if available
+      const stores = res.data.stores;
+      if (stores && stores.length > 0) {
+        sheet.addRow([]);
+        sheet.addRow([]);
+        
+        const storeTitleRow = sheet.addRow(['RINCIAN PESANAN PER TOKO']);
+        storeTitleRow.getCell(1).font = { bold: true, size: 14 };
+        sheet.mergeCells(`A${storeTitleRow.number}:G${storeTitleRow.number}`);
+        sheet.addRow([]);
+        
+        stores.forEach((store) => {
+          const storeHeaderRow = sheet.addRow([`TOKO: ${store.customerName.toUpperCase()} (Sales: ${store.salesName})`]);
+          storeHeaderRow.getCell(1).font = { bold: true };
+          storeHeaderRow.getCell(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF1F5F9' } };
+          sheet.mergeCells(`A${storeHeaderRow.number}:G${storeHeaderRow.number}`);
+          
+          const colHeader = sheet.addRow(['No', 'Nama Barang', '', '', 'Qty']);
+          colHeader.eachCell((cell, colNumber) => {
+            if (colNumber === 1 || colNumber === 2 || colNumber === 5) {
+              cell.font = { bold: true, size: 10 };
+              cell.border = { bottom: { style: 'thin' } };
+            }
+          });
+          
+          store.items.forEach((item, iIdx) => {
+            const row = sheet.addRow([iIdx + 1, item.name, '', '', `${item.quantity} ${item.unit}`]);
+            row.getCell(5).font = { bold: true };
+            row.getCell(5).alignment = { horizontal: 'left' };
+          });
+          
+          sheet.addRow([]); // Blank row between stores
+        });
+      }
 
       // Column widths
       sheet.getColumn(1).width = 5;

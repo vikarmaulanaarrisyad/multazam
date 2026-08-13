@@ -16,7 +16,24 @@ export type DeliveryRecapItem = {
   stockUnit: string;
 };
 
-export async function getDeliveryRecapAction(dateString: string): Promise<{ success: boolean; data?: DeliveryRecapItem[]; error?: string }> {
+export type StoreRecapItem = {
+  customerName: string;
+  salesName: string;
+  items: {
+    productId: string;
+    code: string;
+    name: string;
+    quantity: number;
+    unit: string;
+  }[];
+};
+
+export type DeliveryRecapResponse = {
+  global: DeliveryRecapItem[];
+  stores: StoreRecapItem[];
+};
+
+export async function getDeliveryRecapAction(dateString: string): Promise<{ success: boolean; data?: DeliveryRecapResponse; error?: string }> {
   try {
     const session = await auth();
     if (!session || (session.user.role !== 'SUPER_ADMIN' && session.user.role !== 'ADMIN')) {
@@ -40,6 +57,7 @@ export async function getDeliveryRecapAction(dateString: string): Promise<{ succ
         }
       },
       include: {
+        user: true, // Untuk ambil nama sales
         items: {
           include: {
             product: {
@@ -53,13 +71,31 @@ export async function getDeliveryRecapAction(dateString: string): Promise<{ succ
     });
 
     if (transactions.length === 0) {
-      return { success: true, data: [] };
+      return { success: true, data: { global: [], stores: [] } };
     }
 
-    // Map untuk agregasi kuantitas
-    const recapMap = new Map<string, DeliveryRecapItem>();
+    // Map untuk agregasi kuantitas global
+    const globalRecapMap = new Map<string, DeliveryRecapItem>();
+    
+    // Map untuk agregasi per toko & sales
+    // Key format: "CustomerName___SalesName"
+    const storesMap = new Map<string, StoreRecapItem>();
 
     for (const tx of transactions) {
+      const customerName = tx.customerName || 'Tanpa Nama Toko';
+      const salesName = tx.user?.name || 'Tanpa Nama Sales';
+      const storeKey = `${customerName}___${salesName}`;
+      
+      let storeRecap = storesMap.get(storeKey);
+      if (!storeRecap) {
+        storeRecap = {
+          customerName,
+          salesName,
+          items: []
+        };
+        storesMap.set(storeKey, storeRecap);
+      }
+
       for (const item of tx.items) {
         const prod = item.product;
         
@@ -75,14 +111,15 @@ export async function getDeliveryRecapAction(dateString: string): Promise<{ succ
         // Hitung kuantitas dalam satuan dasar untuk pengecekan stok
         const baseQty = calculateBaseQuantity(item.quantity, requestedUnit, prod);
 
-        const key = `${prod.id}_${requestedUnit}`;
+        // --- GLOBAL RECAP ---
+        const globalKey = `${prod.id}_${requestedUnit}`;
 
-        if (recapMap.has(key)) {
-          const existing = recapMap.get(key)!;
+        if (globalRecapMap.has(globalKey)) {
+          const existing = globalRecapMap.get(globalKey)!;
           existing.totalQuantity += item.quantity;
           existing.totalBaseQuantity += baseQty;
         } else {
-          recapMap.set(key, {
+          globalRecapMap.set(globalKey, {
             productId: prod.id,
             code: prod.code,
             name: prod.name,
@@ -94,17 +131,44 @@ export async function getDeliveryRecapAction(dateString: string): Promise<{ succ
             stockUnit: stockUnit
           });
         }
+        
+        // --- STORE RECAP ---
+        // Cek apakah item dengan satuan yang sama sudah ada di rincian toko ini
+        const existingStoreItem = storeRecap.items.find(si => si.productId === prod.id && si.unit === requestedUnit);
+        if (existingStoreItem) {
+          existingStoreItem.quantity += item.quantity;
+        } else {
+          storeRecap.items.push({
+            productId: prod.id,
+            code: prod.code,
+            name: prod.name,
+            quantity: item.quantity,
+            unit: requestedUnit
+          });
+        }
       }
     }
 
-    // Ubah map menjadi array dan urutkan berdasarkan nama barang lalu satuan
-    const recapArray = Array.from(recapMap.values()).sort((a, b) => {
+    // Ubah map menjadi array dan urutkan
+    const globalArray = Array.from(globalRecapMap.values()).sort((a, b) => {
       const nameCompare = a.name.localeCompare(b.name);
       if (nameCompare !== 0) return nameCompare;
       return a.unit.localeCompare(b.unit);
     });
+    
+    // Sort storesMap by customerName
+    const storesArray = Array.from(storesMap.values()).sort((a, b) => a.customerName.localeCompare(b.customerName));
+    
+    // Sort items inside each store
+    storesArray.forEach(store => {
+      store.items.sort((a, b) => {
+        const nameCompare = a.name.localeCompare(b.name);
+        if (nameCompare !== 0) return nameCompare;
+        return a.unit.localeCompare(b.unit);
+      });
+    });
 
-    return { success: true, data: recapArray };
+    return { success: true, data: { global: globalArray, stores: storesArray } };
 
   } catch (error: any) {
     console.error('Error fetching delivery recap:', error);
