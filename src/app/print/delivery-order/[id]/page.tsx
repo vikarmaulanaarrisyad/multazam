@@ -122,7 +122,7 @@ function SuratJalanCopy({ transaction, setting, isDivider = false }: any) {
               </div>
 
               {/* TABLE */}
-              <table className="w-full text-left uppercase border-collapse mt-1 text-[13px] font-semibold">
+              <table className="w-full text-left uppercase border-collapse mt-1 text-[12px] font-semibold">
                 <thead>
                   <tr className="border-t-4 border-b border-double border-slate-900">
                     <th className="py-1 px-1 font-semibold text-center w-8">NO</th>
