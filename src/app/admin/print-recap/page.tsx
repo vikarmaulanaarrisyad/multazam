@@ -1,7 +1,7 @@
 import { getDeliveryRecapAction } from '@/actions/delivery-actions';
 import { Package, Printer } from 'lucide-react';
 import { redirect } from 'next/navigation';
-import PrintButton from './PrintButton';
+import PrintButton from '@/app/admin/print-recap/PrintButton';
 
 export const metadata = {
   title: 'Cetak Rekap Pengiriman',
@@ -12,7 +12,15 @@ export default async function PrintRecapPage({
 }: {
   searchParams: { date?: string };
 }) {
-  const dateStr = searchParams.date || new Date().toISOString().split('T')[0];
+  let dateStr = searchParams.date;
+  if (!dateStr) {
+    const today = new Date();
+    const y = today.getFullYear();
+    const m = String(today.getMonth() + 1).padStart(2, '0');
+    const d = String(today.getDate()).padStart(2, '0');
+    dateStr = `${y}-${m}-${d}`;
+  }
+
   const recapRes = await getDeliveryRecapAction(dateStr);
 
   if (!recapRes.success) {
@@ -21,7 +29,9 @@ export default async function PrintRecapPage({
 
   const items = recapRes.data || [];
   
-  const displayDate = new Date(dateStr).toLocaleDateString('id-ID', {
+  // Format tanggal dengan aman tanpa pergeseran Timezone Node
+  const [year, month, day] = dateStr.split('-');
+  const displayDate = new Date(Number(year), Number(month) - 1, Number(day)).toLocaleDateString('id-ID', {
     weekday: 'long',
     year: 'numeric',
     month: 'long',

@@ -20,7 +20,11 @@ export function DeliveryRecapModal({ isOpen, onClose }: DeliveryRecapModalProps)
     if (isOpen) {
       const tomorrow = new Date();
       tomorrow.setDate(tomorrow.getDate() + 1);
-      setDateStr(tomorrow.toISOString().split('T')[0]);
+      // Format ke YYYY-MM-DD dengan aman tanpa terpengaruh pergeseran UTC
+      const y = tomorrow.getFullYear();
+      const m = String(tomorrow.getMonth() + 1).padStart(2, '0');
+      const d = String(tomorrow.getDate()).padStart(2, '0');
+      setDateStr(`${y}-${m}-${d}`);
     }
   }, [isOpen]);
 
