@@ -67,7 +67,7 @@ export async function createProductAction(dataInput: {
   }
   const result = await productService.createProduct(dataInput);
   if (result.success) {
-    await logAudit('CREATE', 'PRODUCT', result.data.id, `Membuat produk baru: ${dataInput.code} - ${dataInput.name} (Harga: Rp${dataInput.price})`);
+    await logAudit('CREATE', 'PRODUCT', (result as any).data?.id || 'NEW_PRODUCT', `Membuat produk baru: ${dataInput.code} - ${dataInput.name} (Harga: Rp${dataInput.price})`);
     revalidatePath('/admin/products');
   }
   return result;

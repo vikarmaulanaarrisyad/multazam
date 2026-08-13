@@ -6,12 +6,11 @@ export const metadata = {
   description: 'Log Aktivitas Sistem',
 };
 
-export default async function AuditLogsPage({
-  searchParams,
-}: {
-  searchParams: { page?: string };
+export default async function AuditLogsPage(props: {
+  searchParams: Promise<{ page?: string }>;
 }) {
-  const page = searchParams.page ? parseInt(searchParams.page) : 1;
+  const searchParams = await props.searchParams;
+  const page = searchParams?.page ? parseInt(searchParams.page) : 1;
   const result = await getAuditLogs(page, 50);
 
   if (!result.success || !result.data) {
