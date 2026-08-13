@@ -17,6 +17,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { AdminSidebar } from './AdminSidebar';
 import { NotificationBell } from './NotificationBell';
+import { LiveClock } from './LiveClock';
 import { signOut } from 'next-auth/react';
 import { useState } from 'react';
 
@@ -76,6 +77,7 @@ export function AdminHeader({ role, userName = 'Admin', userEmail, userImage }: 
         </form>
 
         <div className="flex items-center gap-x-4 lg:gap-x-6">
+          <LiveClock />
           <NotificationBell role={role} />
 
           {/* Separator */}

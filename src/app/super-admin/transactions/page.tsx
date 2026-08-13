@@ -1,6 +1,7 @@
 import React from 'react';
 import prisma from '@/lib/prisma';
 import { TransactionsClient, TransactionDetail } from '@/components/admin/TransactionsClient';
+import { AutoRefreshTimer } from '@/components/layout/AutoRefreshTimer';
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {
@@ -83,9 +84,14 @@ export default async function SuperAdminTransactionsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Daftar Pre-Order & Penjualan</h1>
-        <p className="text-slate-500 mt-1 text-sm">Kelola status pesanan dari Sales, mulai dari pengiriman hingga selesai.</p>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <div className="flex items-center gap-3">
+            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Daftar Pre-Order & Penjualan</h1>
+            <AutoRefreshTimer intervalMinutes={5} />
+          </div>
+          <p className="text-slate-500 mt-1 text-sm">Kelola status pesanan dari Sales, mulai dari pengiriman hingga selesai.</p>
+        </div>
       </div>
 
       <TransactionsClient transactions={serializedTransactions} />

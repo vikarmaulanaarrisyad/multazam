@@ -89,6 +89,13 @@ export class TransactionRepository {
         }
       }
 
+      let finalDeliveryDate = data.deliveryDate;
+      if (!finalDeliveryDate) {
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        finalDeliveryDate = tomorrow;
+      }
+
       // 1. Create the Transaction record
       const newTransaction = await tx.transaction.create({
         data: {
@@ -101,7 +108,7 @@ export class TransactionRepository {
           shippingAddress: data.shippingAddress || null,
           shippingCost: data.shippingCost || null,
           dueDate: data.dueDate,
-          deliveryDate: data.deliveryDate,
+          deliveryDate: finalDeliveryDate,
           notes: data.paymentMethod ? `[Metode: ${data.paymentMethod}]\n${data.notes || ''}`.trim() : data.notes,
           latitude: data.latitude,
           longitude: data.longitude,
