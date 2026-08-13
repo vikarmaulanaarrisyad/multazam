@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { signOut } from 'next-auth/react';
 import { cn } from '@/lib/utils';
@@ -146,7 +147,7 @@ export function AdminSidebar({ role, className, onNavigate, logoUrl }: SidebarPr
       <div className="p-6">
         <h2 className="text-2xl font-bold tracking-tight text-white flex items-center gap-2">
           {logoUrl ? (
-            <img src={logoUrl} alt="Logo" className="h-8 w-auto rounded object-contain bg-white p-1" />
+            <Image src={logoUrl} alt="Logo" width={32} height={32} className="h-8 w-auto rounded object-contain bg-white p-1" priority />
           ) : (
             <span className="bg-primary text-primary-foreground p-1 rounded-md">M</span>
           )}
