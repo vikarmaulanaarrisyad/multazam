@@ -21,6 +21,12 @@ export function LiveClock() {
   const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
   const dayName = days[time.getDay()];
   
+  const dateString = time.toLocaleDateString('id-ID', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric'
+  });
+
   const timeString = time.toLocaleTimeString('id-ID', {
     hour: '2-digit',
     minute: '2-digit',
@@ -30,7 +36,7 @@ export function LiveClock() {
   return (
     <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 bg-slate-50 text-slate-700 border border-slate-200 rounded-lg text-sm font-medium">
       <Clock className="w-4 h-4 text-blue-600" />
-      <span>{dayName}, {timeString.replace(/\./g, ':')}</span>
+      <span>{dayName}, {dateString} - {timeString.replace(/\./g, ':')}</span>
     </div>
   );
 }
