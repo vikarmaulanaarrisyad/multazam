@@ -16,6 +16,7 @@ export type TransactionDetail = {
   customerName: string | null;
   customerPhone: string | null;
   dueDate: Date | null;
+  deliveryDate: Date | null;
   shippingAddress: string | null;
   shippingCost: number | null;
   notes: string | null;
@@ -538,10 +539,24 @@ export function TransactionsClient({ transactions }: { transactions: Transaction
     },
     {
       accessorKey: 'createdAt',
-      header: 'Tanggal',
+      header: 'Tgl Transaksi',
       cell: ({ row }) => new Date(row.original.createdAt).toLocaleDateString('id-ID', {
-        day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'
+        day: 'numeric', month: 'short', year: 'numeric'
       })
+    },
+    {
+      accessorKey: 'deliveryDate',
+      header: 'Tgl Pengiriman',
+      cell: ({ row }) => row.original.deliveryDate ? new Date(row.original.deliveryDate).toLocaleDateString('id-ID', {
+        day: 'numeric', month: 'short', year: 'numeric'
+      }) : '-'
+    },
+    {
+      accessorKey: 'dueDate',
+      header: 'Jatuh Tempo',
+      cell: ({ row }) => row.original.dueDate ? new Date(row.original.dueDate).toLocaleDateString('id-ID', {
+        day: 'numeric', month: 'short', year: 'numeric'
+      }) : '-'
     },
     {
       accessorKey: 'totalAmount',
@@ -778,7 +793,7 @@ export function TransactionsClient({ transactions }: { transactions: Transaction
                     <div className="flex justify-between">
                       <span className="text-slate-500">Tgl Pengiriman:</span> 
                       <span className="font-semibold text-slate-900">
-                        {selectedTx.status === 'SHIPPED' || selectedTx.status === 'COMPLETED' ? new Date(selectedTx.updatedAt).toLocaleDateString('id-ID') : 'Belum Dikirim'}
+                        {selectedTx.deliveryDate ? new Date(selectedTx.deliveryDate).toLocaleDateString('id-ID') : 'Belum Ditentukan'}
                       </span>
                     </div>
                     <div className="flex justify-between"><span className="text-slate-500">Jatuh Tempo:</span> <span className="font-semibold text-red-600">{selectedTx.dueDate ? new Date(selectedTx.dueDate).toLocaleDateString('id-ID') : '-'}</span></div>

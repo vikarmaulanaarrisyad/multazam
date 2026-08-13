@@ -48,6 +48,7 @@ export default async function AdminTransactionsPage() {
     customerName: tx.customerName,
     customerPhone: tx.customerPhone,
     dueDate: tx.dueDate,
+    deliveryDate: tx.deliveryDate,
     shippingAddress: tx.shippingAddress,
     shippingCost: tx.shippingCost ? Number(tx.shippingCost) : null,
     notes: tx.notes,
