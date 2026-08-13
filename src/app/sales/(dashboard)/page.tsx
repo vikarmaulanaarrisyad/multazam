@@ -11,72 +11,82 @@ export default async function SalesDashboardPage() {
   const now = new Date();
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
   
-  // 1. Target Penjualan Bulan Ini
-  // Cek target di database
-  const salesTarget = await prisma.salesTarget.findFirst({
-    where: {
-      userId: session.user.id,
-      periodType: 'MONTHLY',
-      startDate: { gte: startOfMonth },
-    },
-    orderBy: { createdAt: 'desc' }
-  });
-
-  const targetSales = salesTarget ? Number(salesTarget.targetAmount) : 0;
-
-  const monthlySalesResult = await prisma.transaction.aggregate({
-    where: {
-      userId: session.user.id,
-      status: { not: 'CANCELLED' }, // Sesuai kesepakatan: total nilai pesanan (Invoice)
-      createdAt: { gte: startOfMonth }
-    },
-    _sum: { totalAmount: true, shippingCost: true }
-  });
-  const totalSales = Number(monthlySalesResult._sum.totalAmount || 0) + Number(monthlySalesResult._sum.shippingCost || 0);
-  const progressPercent = targetSales > 0 ? Math.min(Math.round((totalSales / targetSales) * 100), 100) : 0;
-
-  // 2. Jumlah Pesanan Bulan Ini
-  const totalOrders = await prisma.transaction.count({
-    where: {
-      userId: session.user.id,
-      createdAt: { gte: startOfMonth }
-    }
-  });
-
-  // 3. Menunggu Persetujuan
-  const pendingApprovals = await prisma.transaction.count({
-    where: {
-      userId: session.user.id,
-      status: 'PENDING_APPROVAL'
-    }
-  });
-
-  // 4. Pesanan Terbaru (5 Transaksi Terakhir)
-  const recentTransactions = await prisma.transaction.findMany({
-    where: { userId: session.user.id },
-    orderBy: { createdAt: 'desc' },
-    take: 5
-  });
-
-  // 5. Kunjungan Hari Ini
   const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const endOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
-  
-  const todaysVisits = await prisma.visit.findMany({
-    where: {
-      userId: session.user.id,
-      scheduledAt: {
-        gte: startOfToday,
-        lte: endOfToday,
+
+  // Jalankan semua kueri secara paralel untuk performa yang lebih baik (Mencegah N+1 Sequential)
+  const [
+    salesTarget,
+    monthlySalesResult,
+    totalOrders,
+    pendingApprovals,
+    recentTransactions,
+    todaysVisits
+  ] = await Promise.all([
+    // 1. Target Penjualan Bulan Ini
+    prisma.salesTarget.findFirst({
+      where: {
+        userId: session.user.id,
+        periodType: 'MONTHLY',
+        startDate: { gte: startOfMonth },
+      },
+      orderBy: { createdAt: 'desc' }
+    }),
+    
+    // 2. Monthly Sales Result
+    prisma.transaction.aggregate({
+      where: {
+        userId: session.user.id,
+        status: { not: 'CANCELLED' }, // Sesuai kesepakatan: total nilai pesanan (Invoice)
+        createdAt: { gte: startOfMonth }
+      },
+      _sum: { totalAmount: true, shippingCost: true }
+    }),
+
+    // 3. Jumlah Pesanan Bulan Ini
+    prisma.transaction.count({
+      where: {
+        userId: session.user.id,
+        createdAt: { gte: startOfMonth }
       }
-    },
-    include: {
-      store: true
-    },
-    orderBy: {
-      scheduledAt: 'asc'
-    }
-  });
+    }),
+
+    // 4. Menunggu Persetujuan
+    prisma.transaction.count({
+      where: {
+        userId: session.user.id,
+        status: 'PENDING_APPROVAL'
+      }
+    }),
+
+    // 5. Pesanan Terbaru (5 Transaksi Terakhir)
+    prisma.transaction.findMany({
+      where: { userId: session.user.id },
+      orderBy: { createdAt: 'desc' },
+      take: 5
+    }),
+
+    // 6. Kunjungan Hari Ini
+    prisma.visit.findMany({
+      where: {
+        userId: session.user.id,
+        scheduledAt: {
+          gte: startOfToday,
+          lte: endOfToday,
+        }
+      },
+      include: {
+        store: true
+      },
+      orderBy: {
+        scheduledAt: 'asc'
+      }
+    })
+  ]);
+
+  const targetSales = salesTarget ? Number(salesTarget.targetAmount) : 0;
+  const totalSales = Number(monthlySalesResult._sum.totalAmount || 0) + Number(monthlySalesResult._sum.shippingCost || 0);
+  const progressPercent = targetSales > 0 ? Math.min(Math.round((totalSales / targetSales) * 100), 100) : 0;
 
   return (
     <main className="flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-6 pb-24 h-full">

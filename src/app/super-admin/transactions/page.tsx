@@ -12,6 +12,7 @@ export const dynamic = 'force-dynamic';
 
 export default async function SuperAdminTransactionsPage() {
   const transactions = await prisma.transaction.findMany({
+    take: 200, // Cegah Memory Exhaustion (DoS)
     where: {
       status: {
         in: ['PENDING_APPROVAL', 'PENDING', 'APPROVED', 'SHIPPED', 'COMPLETED', 'CANCELLED', 'REJECTED']
