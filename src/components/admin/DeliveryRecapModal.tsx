@@ -14,6 +14,7 @@ interface DeliveryRecapModalProps {
 export function DeliveryRecapModal({ isOpen, onClose }: DeliveryRecapModalProps) {
   const [dateStr, setDateStr] = useState<string>('');
   const [isExporting, setIsExporting] = useState(false);
+  const [isPrinting, setIsPrinting] = useState(false);
 
   // Set default ke besok
   useEffect(() => {
@@ -31,8 +32,34 @@ export function DeliveryRecapModal({ isOpen, onClose }: DeliveryRecapModalProps)
   if (!isOpen) return null;
 
   const handlePrint = () => {
-    window.open(`/admin/print-recap?date=${dateStr}`, '_blank');
-    onClose();
+    setIsPrinting(true);
+    
+    // Create hidden iframe
+    const iframe = document.createElement('iframe');
+    iframe.style.display = 'none';
+    iframe.src = `/admin/print-recap?date=${dateStr}`;
+    
+    document.body.appendChild(iframe);
+    
+    iframe.onload = () => {
+      // Small delay to ensure all assets/fonts are loaded
+      setTimeout(() => {
+        try {
+          iframe.contentWindow?.print();
+        } catch (e) {
+          console.error('Print failed', e);
+        }
+        setIsPrinting(false);
+        onClose(); // Close modal after print dialog appears/closes
+        
+        // Cleanup after print dialog is closed (with a generous delay)
+        setTimeout(() => {
+          if (document.body.contains(iframe)) {
+            document.body.removeChild(iframe);
+          }
+        }, 60000);
+      }, 500);
+    };
   };
 
   const handleExportExcel = async () => {
@@ -148,13 +175,22 @@ export function DeliveryRecapModal({ isOpen, onClose }: DeliveryRecapModalProps)
           <div className="grid grid-cols-2 gap-3">
             <button
               onClick={handlePrint}
-              className="flex items-center justify-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold py-3 rounded-xl transition-colors"
+              disabled={isPrinting || isExporting}
+              className="flex items-center justify-center gap-2 bg-slate-100 hover:bg-slate-200 disabled:opacity-50 text-slate-800 font-bold py-3 rounded-xl transition-colors"
             >
-              <Printer className="w-5 h-5" /> Cetak (PDF)
+              {isPrinting ? (
+                <>
+                  <Printer className="w-5 h-5 animate-pulse" /> Memproses...
+                </>
+              ) : (
+                <>
+                  <Printer className="w-5 h-5" /> Cetak (PDF)
+                </>
+              )}
             </button>
             <button
               onClick={handleExportExcel}
-              disabled={isExporting}
+              disabled={isExporting || isPrinting}
               className="flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-bold py-3 rounded-xl transition-colors"
             >
               {isExporting ? <Download className="w-5 h-5 animate-bounce" /> : <FileSpreadsheet className="w-5 h-5" />}
