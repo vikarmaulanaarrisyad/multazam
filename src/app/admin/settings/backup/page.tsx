@@ -167,7 +167,7 @@ export default function BackupRestorePage() {
 
         {/* Restore Card */}
         <div className="bg-white rounded-2xl border border-red-200 shadow-sm p-6 flex flex-col relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-24 h-24 bg-red-50 rounded-bl-full -z-0"></div>
+          <div className="absolute top-0 right-0 w-24 h-24 bg-red-50 rounded-bl-full z-0"></div>
           <div className="w-12 h-12 bg-red-50 text-red-600 rounded-xl flex items-center justify-center mb-4 relative z-10 border border-red-100">
             <Upload className="w-6 h-6" />
           </div>
