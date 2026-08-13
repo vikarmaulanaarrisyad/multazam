@@ -12,6 +12,7 @@ export default async function VisitsPage() {
   }
 
   const visits = await prisma.visit.findMany({
+    take: 100, // Proteksi DoS/Memory Leak
     where: {
       userId: session.user.id,
     },

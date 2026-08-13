@@ -119,14 +119,14 @@ export function DashboardClient({ data, role }: DashboardClientProps) {
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         
         {/* Month's Revenue */}
-        <div className="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm relative overflow-hidden group">
-          <div className="absolute right-0 top-0 w-24 h-24 bg-blue-500/5 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
+        <div className="bg-white/60 backdrop-blur-xl rounded-2xl p-5 border border-white/80 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] transition-all duration-300 relative overflow-hidden group">
+          <div className="absolute right-0 top-0 w-24 h-24 bg-linear-to-bl from-blue-500/10 to-transparent rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
           <div className="flex justify-between items-start mb-4">
             <div>
               <p className="text-sm font-medium text-slate-500">Omset Bulan Ini</p>
               <h3 className="text-2xl font-black text-slate-900 mt-1">{formatRupiah(data.monthRevenue)}</h3>
             </div>
-            <div className="p-3 bg-blue-50 text-blue-600 rounded-xl">
+            <div className="p-3 bg-linear-to-br from-blue-500 to-indigo-600 text-white rounded-xl shadow-lg shadow-blue-500/30">
               <DollarSign className="w-5 h-5" />
             </div>
           </div>
@@ -136,14 +136,14 @@ export function DashboardClient({ data, role }: DashboardClientProps) {
         </div>
 
         {/* Net Profit */}
-        <div className="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm relative overflow-hidden group">
-          <div className="absolute right-0 top-0 w-24 h-24 bg-emerald-500/5 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
+        <div className="bg-white/60 backdrop-blur-xl rounded-2xl p-5 border border-white/80 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] transition-all duration-300 relative overflow-hidden group">
+          <div className="absolute right-0 top-0 w-24 h-24 bg-linear-to-bl from-emerald-500/10 to-transparent rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
           <div className="flex justify-between items-start mb-4">
             <div>
               <p className="text-sm font-medium text-slate-500">Laba Bersih Bulan Ini</p>
               <h3 className="text-2xl font-black text-slate-900 mt-1">{formatRupiah(data.monthProfit || 0)}</h3>
             </div>
-            <div className="p-3 bg-emerald-50 text-emerald-600 rounded-xl">
+            <div className="p-3 bg-linear-to-br from-emerald-400 to-emerald-600 text-white rounded-xl shadow-lg shadow-emerald-500/30">
               <TrendingUp className="w-5 h-5" />
             </div>
           </div>
@@ -153,14 +153,14 @@ export function DashboardClient({ data, role }: DashboardClientProps) {
         </div>
 
         {/* Total Transactions (Month) */}
-        <div className="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm relative overflow-hidden group">
-          <div className="absolute right-0 top-0 w-24 h-24 bg-indigo-500/5 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
+        <div className="bg-white/60 backdrop-blur-xl rounded-2xl p-5 border border-white/80 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] transition-all duration-300 relative overflow-hidden group">
+          <div className="absolute right-0 top-0 w-24 h-24 bg-linear-to-bl from-indigo-500/10 to-transparent rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
           <div className="flex justify-between items-start mb-4">
             <div>
               <p className="text-sm font-medium text-slate-500">Transaksi Bulan Ini</p>
               <h3 className="text-2xl font-black text-slate-900 mt-1">{data.newTransactions}</h3>
             </div>
-            <div className="p-3 bg-indigo-50 text-indigo-600 rounded-xl">
+            <div className="p-3 bg-linear-to-br from-indigo-500 to-purple-600 text-white rounded-xl shadow-lg shadow-indigo-500/30">
               <ShoppingCart className="w-5 h-5" />
             </div>
           </div>
@@ -170,14 +170,14 @@ export function DashboardClient({ data, role }: DashboardClientProps) {
         </div>
 
         {/* Catalog Stats */}
-        <div className="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm relative overflow-hidden group flex flex-col justify-between">
-          <div className="absolute right-0 top-0 w-24 h-24 bg-violet-500/5 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
+        <div className="bg-white/60 backdrop-blur-xl rounded-2xl p-5 border border-white/80 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] transition-all duration-300 relative overflow-hidden group flex flex-col justify-between">
+          <div className="absolute right-0 top-0 w-24 h-24 bg-linear-to-bl from-violet-500/10 to-transparent rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
           <div className="flex justify-between items-center pb-3 border-b border-slate-50">
             <div>
               <p className="text-xs font-medium text-slate-500">Total Produk</p>
               <h3 className="text-lg font-bold text-slate-900">{data.totalProducts}</h3>
             </div>
-            <div className="p-2 bg-violet-50 text-violet-600 rounded-lg"><Package className="w-4 h-4" /></div>
+            <div className="p-2 bg-linear-to-br from-violet-500 to-fuchsia-600 text-white rounded-lg shadow-md shadow-violet-500/30"><Package className="w-4 h-4" /></div>
           </div>
           <div className="flex justify-between items-center pt-3">
             <div>

@@ -24,6 +24,7 @@ export default async function AdminVisitsPage() {
 
   // Pre-fetch stores grouped by sales for the dropdown
   const stores = await prisma.store.findMany({
+    take: 500, // Proteksi DoS/Memory Leak
     select: { id: true, name: true, address: true, userId: true },
     orderBy: { name: 'asc' }
   });

@@ -13,7 +13,7 @@ interface AdminLayoutProps {
 
 export function AdminLayout({ children, role, userName, userEmail, userImage, logoUrl }: AdminLayoutProps) {
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-[radial-gradient(ellipse_at_top_right,var(--tw-gradient-stops))] from-indigo-50/70 via-white to-purple-50/70">
       {/* Static sidebar for desktop */}
       <div className="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-64 lg:flex-col">
         <AdminSidebar role={role} logoUrl={logoUrl} />

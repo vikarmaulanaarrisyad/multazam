@@ -29,6 +29,7 @@ export class VisitRepository {
 
   static async findAllVisits() {
     return prisma.visit.findMany({
+      take: 200, // Proteksi DoS/Memory Leak
       include: {
         store: {
           include: {

@@ -12,6 +12,7 @@ export class StoreRepository {
 
   static async findByUserId(userId: string) {
     return prisma.store.findMany({
+      take: 300, // Proteksi DoS/Memory Leak
       where: { userId },
       select: { id: true, name: true, address: true, ownerName: true, latitude: true, longitude: true },
       orderBy: { name: 'asc' }
@@ -20,6 +21,7 @@ export class StoreRepository {
 
   static async findStoresWithCoordinates() {
     return prisma.store.findMany({
+      take: 300, // Proteksi DoS/Memory Leak
       where: {
         latitude: { not: null },
         longitude: { not: null }

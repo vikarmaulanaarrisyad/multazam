@@ -159,20 +159,20 @@ export function TransactionsClient({ transactions }: { transactions: Transaction
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'PENDING':
-        return <span className="px-2.5 py-1 text-xs font-bold rounded-full bg-blue-100 text-blue-700">Menunggu Diproses</span>;
+        return <span className="px-3 py-1 text-xs font-bold rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-600 shadow-[0_0_10px_rgba(59,130,246,0.15)]">Menunggu Diproses</span>;
       case 'PENDING_APPROVAL':
-        return <span className="px-2.5 py-1 text-xs font-bold rounded-full bg-amber-100 text-amber-700">Nego Harga</span>;
+        return <span className="px-3 py-1 text-xs font-bold rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-600 shadow-[0_0_10px_rgba(245,158,11,0.15)]">Nego Harga</span>;
       case 'APPROVED':
-        return <span className="px-2.5 py-1 text-xs font-bold rounded-full bg-indigo-100 text-indigo-700">Harga Disetujui</span>;
+        return <span className="px-3 py-1 text-xs font-bold rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-600 shadow-[0_0_10px_rgba(99,102,241,0.15)]">Harga Disetujui</span>;
       case 'SHIPPED':
-        return <span className="px-2.5 py-1 text-xs font-bold rounded-full bg-purple-100 text-purple-700">Sedang Dikirim</span>;
+        return <span className="px-3 py-1 text-xs font-bold rounded-full bg-purple-500/10 border border-purple-500/20 text-purple-600 shadow-[0_0_10px_rgba(168,85,247,0.15)]">Sedang Dikirim</span>;
       case 'COMPLETED':
-        return <span className="px-2.5 py-1 text-xs font-bold rounded-full bg-green-100 text-green-700">Selesai</span>;
+        return <span className="px-3 py-1 text-xs font-bold rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 shadow-[0_0_10px_rgba(16,185,129,0.15)]">Selesai</span>;
       case 'CANCELLED':
       case 'REJECTED':
-        return <span className="px-2.5 py-1 text-xs font-bold rounded-full bg-red-100 text-red-700">Dibatalkan</span>;
+        return <span className="px-3 py-1 text-xs font-bold rounded-full bg-rose-500/10 border border-rose-500/20 text-rose-600 shadow-[0_0_10px_rgba(244,63,94,0.15)]">Dibatalkan</span>;
       default:
-        return <span className="px-2.5 py-1 text-xs font-bold rounded-full bg-slate-100 text-slate-700">{status}</span>;
+        return <span className="px-3 py-1 text-xs font-bold rounded-full bg-slate-500/10 border border-slate-500/20 text-slate-600">{status}</span>;
     }
   };
 
@@ -636,7 +636,7 @@ export function TransactionsClient({ transactions }: { transactions: Transaction
 
   return (
     <div className="space-y-4">
-      <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex flex-col gap-4">
+      <div className="bg-white/60 backdrop-blur-xl p-4 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-white/80 flex flex-col gap-4">
         <div className="flex flex-col md:flex-row gap-4">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
@@ -695,12 +695,12 @@ export function TransactionsClient({ transactions }: { transactions: Transaction
       </div>
 
       {/* Table */}
-      <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+      <div className="bg-white/60 backdrop-blur-xl rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-white/80 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
               {table.getHeaderGroups().map(headerGroup => (
-                <tr key={headerGroup.id} className="bg-slate-50 border-b border-slate-100">
+                <tr key={headerGroup.id} className="bg-slate-50/50 border-b border-slate-100/50">
                   {headerGroup.headers.map(header => (
                     <th key={header.id} className="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">
                       {flexRender(header.column.columnDef.header, header.getContext())}
