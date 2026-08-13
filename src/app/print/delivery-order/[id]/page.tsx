@@ -210,21 +210,18 @@ function SuratJalanCopy({ transaction, setting, isDivider = false }: any) {
             {isLastPage && (
               <div className="mt-2">
                 {/* FOOTER TOTAL */}
-                <div className="flex flex-col border-t border-slate-900 border-dashed">
-                  <div className="flex justify-between items-center py-2 uppercase text-sm font-bold text-slate-900 border-b-2 border-slate-900">
-                    <div className="flex-1 text-right pr-6 tracking-widest">
-                      TOTAL KESELURUHAN :
+                <div className="flex justify-between items-center py-2 border-t border-slate-900 border-dashed border-b-4 border-double border-slate-900">
+                  <div className="flex flex-1 items-center uppercase text-xs font-semibold text-slate-900 pr-4">
+                    <span className="mr-2">TERBILANG :</span>
+                    <span className="truncate flex-1 italic">{toTerbilang(totalKeseluruhan)}</span>
+                  </div>
+                  <div className="flex items-center uppercase text-sm font-bold text-slate-900">
+                    <div className="text-right pr-4 tracking-widest whitespace-nowrap">
+                      TOTAL :
                     </div>
-                    <div className="w-32 flex justify-between px-1 pl-2 font-bold text-[15px]">
+                    <div className="w-[105px] flex justify-between font-bold text-[15px]">
                       <span>Rp</span>
                       <span>{totalKeseluruhan.toLocaleString('id-ID')},00</span>
-                    </div>
-                  </div>
-                  <div className="flex items-center py-1 uppercase text-xs font-semibold border-b-4 border-double border-slate-900 text-slate-900">
-                    <div className="flex flex-1 pl-12">
-                      <span className="w-24">TERBILANG</span>
-                      <span className="mx-2">:</span>
-                      <span className="truncate flex-1 italic">{toTerbilang(totalKeseluruhan)}</span>
                     </div>
                   </div>
                 </div>
