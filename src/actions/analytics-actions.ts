@@ -15,68 +15,57 @@ export async function getDashboardAnalytics(months = 6) {
     const currentMonthStart = startOfMonth(today);
     const currentMonthEnd = endOfMonth(today);
 
-    // Single Query Batching for N months trend + current month
-    const nMonthsAgoStart = startOfMonth(subMonths(today, months - 1));
-
-    const allTrendTransactions = await prisma.transaction.findMany({
-      where: {
-        createdAt: {
-          gte: nMonthsAgoStart,
-          lte: currentMonthEnd,
-        },
-        status: {
-          in: ['COMPLETED', 'SHIPPED', 'APPROVED']
-        }
-      },
-      include: {
-        items: true,
-      }
-    });
-
-    let currentRevenue = 0;
-    let currentCogs = 0;
-
-    // Filter current month transactions in memory
-    const currentMonthTransactions = allTrendTransactions.filter(tx => 
-      tx.createdAt >= currentMonthStart && tx.createdAt <= currentMonthEnd
-    );
-
-    currentMonthTransactions.forEach(tx => {
-      currentRevenue += Number(tx.totalAmount);
-      tx.items.forEach(item => {
-        const itemCogs = Number(item.purchasePrice || 0) * item.quantity;
-        currentCogs += itemCogs;
-      });
-    });
-
-    const currentGrossProfit = currentRevenue - currentCogs;
-
-    // 2. Monthly Trend Data (last N months) filtered in memory
-    const trendData = [];
-    for (let i = months - 1; i >= 0; i--) {
+    // Optimized: Use DB aggregation instead of loading all transactions into RAM
+    const monthPromises = Array.from({ length: months }, (_, i) => {
       const monthStart = startOfMonth(subMonths(today, i));
       const monthEnd = endOfMonth(subMonths(today, i));
       
-      const txs = allTrendTransactions.filter(tx => 
-        tx.createdAt >= monthStart && tx.createdAt <= monthEnd
-      );
-
-      let rev = 0;
-      let cogs = 0;
-      txs.forEach(tx => {
-        rev += Number(tx.totalAmount);
-        tx.items.forEach(item => {
-          cogs += Number(item.purchasePrice || 0) * item.quantity;
+      return (async () => {
+        // 1. Get Revenue via Prisma Aggregate
+        const revAgg = await prisma.transaction.aggregate({
+          where: {
+            createdAt: { gte: monthStart, lte: monthEnd },
+            status: { in: ['COMPLETED', 'SHIPPED', 'APPROVED'] }
+          },
+          _sum: { totalAmount: true }
         });
-      });
+        const rev = Number(revAgg._sum.totalAmount || 0);
 
-      trendData.push({
-        month: format(monthStart, 'MMM yyyy', { locale: id }),
-        revenue: rev,
-        profit: rev - cogs,
-        cogs: cogs
-      });
-    }
+        // 2. Get COGS via Raw SQL (Since Prisma aggregate doesn't support column multiplication)
+        const cogsResult: any[] = await prisma.$queryRaw`
+          SELECT SUM(ti.quantity * COALESCE(ti."purchasePrice", 0)) as "totalCogs"
+          FROM "TransactionItem" ti
+          JOIN "Transaction" t ON t.id = ti."transactionId"
+          WHERE t."createdAt" >= ${monthStart} 
+            AND t."createdAt" <= ${monthEnd}
+            AND t.status IN ('COMPLETED', 'SHIPPED', 'APPROVED')
+        `;
+        const cogs = Number(cogsResult[0]?.totalCogs || 0);
+
+        return {
+          month: format(monthStart, 'MMM yyyy', { locale: id }),
+          revenue: rev,
+          profit: rev - cogs,
+          cogs: cogs,
+          index: i
+        };
+      })();
+    });
+
+    const resolvedTrendData = await Promise.all(monthPromises);
+    resolvedTrendData.sort((a, b) => b.index - a.index); // Oldest first
+
+    const currentMonthData = resolvedTrendData.find(d => d.index === 0);
+    const currentRevenue = currentMonthData?.revenue || 0;
+    const currentCogs = currentMonthData?.cogs || 0;
+    const currentGrossProfit = currentMonthData?.profit || 0;
+
+    const trendData = resolvedTrendData.map(d => ({
+      month: d.month,
+      revenue: d.revenue,
+      profit: d.profit,
+      cogs: d.cogs
+    }));
 
     // 3. Top 5 Products
     const topProductsRaw = await prisma.transactionItem.groupBy({
