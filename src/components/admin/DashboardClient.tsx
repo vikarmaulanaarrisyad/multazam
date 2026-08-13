@@ -227,6 +227,71 @@ export function DashboardClient({ data, role }: DashboardClientProps) {
         </div>
       )}
 
+      {/* Delivery Queue Widget */}
+      {data.pendingDeliveries && data.pendingDeliveries.length > 0 && (
+        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5 mt-6">
+          <div className="flex justify-between items-center mb-6">
+            <div>
+              <h3 className="font-bold text-slate-900 flex items-center gap-2">
+                <Package className="w-5 h-5 text-blue-600" /> Antrean Pengiriman
+              </h3>
+              <p className="text-sm text-slate-500 mt-1">Daftar pesanan yang menunggu untuk dikirim, diurutkan berdasarkan tanggal pengiriman terdekat.</p>
+            </div>
+            <a href={`/${role === 'SUPER_ADMIN' ? 'super-admin' : 'admin'}/transactions`} className="text-sm font-bold text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1">
+              Lihat Semua <ArrowRight className="w-4 h-4" />
+            </a>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="border-b border-slate-100">
+                  <th className="pb-3 text-xs font-bold text-slate-400 uppercase tracking-wider pl-2">Tgl Kirim</th>
+                  <th className="pb-3 text-xs font-bold text-slate-400 uppercase tracking-wider">No. Invoice</th>
+                  <th className="pb-3 text-xs font-bold text-slate-400 uppercase tracking-wider">Toko / Pelanggan</th>
+                  <th className="pb-3 text-xs font-bold text-slate-400 uppercase tracking-wider">Sales</th>
+                  <th className="pb-3 text-xs font-bold text-slate-400 uppercase tracking-wider text-right pr-2">Total Estimasi</th>
+                </tr>
+              </thead>
+              <tbody>
+                {data.pendingDeliveries.map((delivery) => {
+                  const isTodayOrPast = delivery.deliveryDate && new Date(delivery.deliveryDate).getTime() <= new Date().getTime();
+                  return (
+                    <tr key={delivery.id} className="border-b border-slate-50 hover:bg-slate-50/50 transition-colors group">
+                      <td className="py-3 pl-2">
+                        {delivery.deliveryDate ? (
+                          <div className={cn(
+                            "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-bold",
+                            isTodayOrPast ? "bg-red-50 text-red-600" : "bg-blue-50 text-blue-600"
+                          )}>
+                            <Clock className="w-3.5 h-3.5" />
+                            {new Date(delivery.deliveryDate).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })}
+                          </div>
+                        ) : (
+                          <span className="text-xs text-slate-400 font-medium italic">Tidak ditentukan</span>
+                        )}
+                      </td>
+                      <td className="py-3">
+                        <span className="text-sm font-bold text-slate-900">{delivery.invoiceNumber}</span>
+                      </td>
+                      <td className="py-3">
+                        <span className="text-sm font-medium text-slate-700">{delivery.customerName || '-'}</span>
+                      </td>
+                      <td className="py-3">
+                        <span className="text-xs text-slate-500 bg-slate-100 px-2 py-1 rounded-md">{delivery.user.name || '-'}</span>
+                      </td>
+                      <td className="py-3 pr-2 text-right">
+                        <span className="text-sm font-bold text-blue-700">{formatRupiah(delivery.totalAmount)}</span>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
       {/* Main Content Area */}
       <div className="grid gap-6 lg:grid-cols-7">
         
@@ -339,71 +404,6 @@ export function DashboardClient({ data, role }: DashboardClientProps) {
         </div>
 
       </div>
-
-      {/* Delivery Queue Widget */}
-      {data.pendingDeliveries && data.pendingDeliveries.length > 0 && (
-        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5 mt-6">
-          <div className="flex justify-between items-center mb-6">
-            <div>
-              <h3 className="font-bold text-slate-900 flex items-center gap-2">
-                <Package className="w-5 h-5 text-blue-600" /> Antrean Pengiriman
-              </h3>
-              <p className="text-sm text-slate-500 mt-1">Daftar pesanan yang menunggu untuk dikirim, diurutkan berdasarkan tanggal pengiriman terdekat.</p>
-            </div>
-            <a href={`/${role === 'SUPER_ADMIN' ? 'super-admin' : 'admin'}/transactions`} className="text-sm font-bold text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1">
-              Lihat Semua <ArrowRight className="w-4 h-4" />
-            </a>
-          </div>
-
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="border-b border-slate-100">
-                  <th className="pb-3 text-xs font-bold text-slate-400 uppercase tracking-wider pl-2">Tgl Kirim</th>
-                  <th className="pb-3 text-xs font-bold text-slate-400 uppercase tracking-wider">No. Invoice</th>
-                  <th className="pb-3 text-xs font-bold text-slate-400 uppercase tracking-wider">Toko / Pelanggan</th>
-                  <th className="pb-3 text-xs font-bold text-slate-400 uppercase tracking-wider">Sales</th>
-                  <th className="pb-3 text-xs font-bold text-slate-400 uppercase tracking-wider text-right pr-2">Total Estimasi</th>
-                </tr>
-              </thead>
-              <tbody>
-                {data.pendingDeliveries.map((delivery) => {
-                  const isTodayOrPast = delivery.deliveryDate && new Date(delivery.deliveryDate).getTime() <= new Date().getTime();
-                  return (
-                    <tr key={delivery.id} className="border-b border-slate-50 hover:bg-slate-50/50 transition-colors group">
-                      <td className="py-3 pl-2">
-                        {delivery.deliveryDate ? (
-                          <div className={cn(
-                            "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-bold",
-                            isTodayOrPast ? "bg-red-50 text-red-600" : "bg-blue-50 text-blue-600"
-                          )}>
-                            <Clock className="w-3.5 h-3.5" />
-                            {new Date(delivery.deliveryDate).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })}
-                          </div>
-                        ) : (
-                          <span className="text-xs text-slate-400 font-medium italic">Tidak ditentukan</span>
-                        )}
-                      </td>
-                      <td className="py-3">
-                        <span className="text-sm font-bold text-slate-900">{delivery.invoiceNumber}</span>
-                      </td>
-                      <td className="py-3">
-                        <span className="text-sm font-medium text-slate-700">{delivery.customerName || '-'}</span>
-                      </td>
-                      <td className="py-3">
-                        <span className="text-xs text-slate-500 bg-slate-100 px-2 py-1 rounded-md">{delivery.user.name || '-'}</span>
-                      </td>
-                      <td className="py-3 pr-2 text-right">
-                        <span className="text-sm font-bold text-blue-700">{formatRupiah(delivery.totalAmount)}</span>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
 
       {/* Additional Alerts Row */}
       {data.lowStockProducts && data.lowStockProducts.length > 0 && (
