@@ -57,7 +57,7 @@ export class DashboardRepository {
       }),
       // Pending Deliveries (Antrean Pengiriman)
       prisma.transaction.findMany({
-        where: { status: 'PENDING' },
+        where: { status: { in: ['PENDING', 'APPROVED'] } },
         orderBy: [
           { deliveryDate: 'asc' },
           { createdAt: 'asc' }
