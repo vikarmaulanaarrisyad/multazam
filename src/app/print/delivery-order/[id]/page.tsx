@@ -60,7 +60,7 @@ function SuratJalanCopy({ transaction, setting, isDivider = false }: any) {
   const shippingCost = Number(transaction.shippingCost) || 0;
   const totalKeseluruhan = totalItemAmount + shippingCost;
 
-  const MAX_ITEMS = 12;
+  const MAX_ITEMS = 13;
   const allRows = [...transaction.items];
   if (shippingCost > 0) {
     allRows.push({ isShipping: true, id: 'shipping' });
