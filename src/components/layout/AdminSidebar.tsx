@@ -23,7 +23,8 @@ import {
   Store,
   MapPin,
   ShieldAlert,
-  FileSpreadsheet
+  FileSpreadsheet,
+  Database
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -140,6 +141,12 @@ export function AdminSidebar({ role, className, onNavigate, logoUrl }: SidebarPr
       href: `${basePath}/settings`,
       icon: Settings,
       visible: true,
+    },
+    {
+      title: 'Backup Data',
+      href: `${basePath}/settings/backup`,
+      icon: Database,
+      visible: role === 'SUPER_ADMIN',
     },
     {
       title: 'Log Aktivitas',
