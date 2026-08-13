@@ -229,14 +229,14 @@ function SuratJalanCopy({ transaction, setting, isDivider = false }: any) {
                 {/* SIGNATURES */}
                 <div className="flex justify-center gap-48 mt-3 mb-1 uppercase text-center text-xs font-semibold text-slate-900">
                   <div className="flex flex-col items-center w-40">
-                    <div className="w-full flex justify-between mb-6">
+                    <div className="w-full flex justify-between mb-4">
                       <span>(</span>
                       <span>)</span>
                     </div>
                     <p>Penerima</p>
                   </div>
                   <div className="flex flex-col items-center w-40">
-                    <div className="w-full flex justify-between mb-6">
+                    <div className="w-full flex justify-between mb-4">
                       <span>(</span>
                       <span>)</span>
                     </div>
