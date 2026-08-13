@@ -168,6 +168,7 @@ model Transaction {
   shippingAddress  String?   @db.Text
   shippingCost     Decimal?  @db.Decimal(18, 2)
   dueDate          DateTime?
+  deliveryDate     DateTime?
   notes            String?   @db.Text
   adminNotes       String?   @db.Text
   latitude         Float?

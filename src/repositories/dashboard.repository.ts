@@ -54,6 +54,24 @@ export class DashboardRepository {
         take: 5,
         orderBy: { stock: 'asc' },
         select: { id: true, name: true, code: true, stock: true }
+      }),
+      // Pending Deliveries (Antrean Pengiriman)
+      prisma.transaction.findMany({
+        where: { status: 'PENDING' },
+        orderBy: [
+          { deliveryDate: 'asc' },
+          { createdAt: 'asc' }
+        ],
+        take: 10,
+        select: {
+          id: true,
+          invoiceNumber: true,
+          customerName: true,
+          totalAmount: true,
+          deliveryDate: true,
+          createdAt: true,
+          user: { select: { name: true } }
+        }
       })
     ]);
   }

@@ -10,6 +10,7 @@ export const PreOrderSchema = z.object({
   shippingCost: z.number().nonnegative().optional(),
   dpAmount: z.number().nonnegative().optional(),
   dueDate: z.preprocess(arg => new Date(arg as string), z.date()),
+  deliveryDate: z.preprocess(arg => arg ? new Date(arg as string) : undefined, z.date().optional()),
   notes: z.string().optional(),
   paymentMethod: z.string().optional(),
   latitude: z.number().optional(),

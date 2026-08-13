@@ -12,7 +12,7 @@ export class DashboardService {
     const [
       todayTx, monthTx, yearTx, totalProducts, totalCategories, recentActivities,
       pendingShipmentCount, pendingApprovalCount, pendingReturnCount,
-      lowStockProducts
+      lowStockProducts, pendingDeliveries
     ] = await DashboardRepository.getDashboardData(startOfToday, startOfMonth, startOfYear, validStatus);
 
     const todayRevenue = Number(todayTx._sum.totalAmount || 0);
@@ -52,6 +52,11 @@ export class DashboardService {
       shippingCost: act.shippingCost ? Number(act.shippingCost) : null,
       paidAmount: Number(act.paidAmount)
     }));
+    
+    const serializedPendingDeliveries = pendingDeliveries.map(p => ({
+      ...p,
+      totalAmount: Number(p.totalAmount)
+    }));
 
     return {
       todayRevenue,
@@ -68,7 +73,8 @@ export class DashboardService {
         approval: pendingApprovalCount,
         returns: pendingReturnCount
       },
-      lowStockProducts
+      lowStockProducts,
+      pendingDeliveries: serializedPendingDeliveries
     };
   }
 }

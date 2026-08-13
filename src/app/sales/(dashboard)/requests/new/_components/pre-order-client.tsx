@@ -33,6 +33,7 @@ export function PreOrderClient({ stores }: PreOrderClientProps) {
     dpAmount: '',
     paymentMethod: 'CASH',
     dueDate: '',
+    deliveryDate: '',
     notes: ''
   });
   const [isFormLoaded, setIsFormLoaded] = useState(false);
@@ -116,13 +117,16 @@ export function PreOrderClient({ stores }: PreOrderClientProps) {
       }
     }
     
-    // Set default due date to 1 week if empty
     if (!loadedForm || !loadedForm.dueDate) {
       const nextWeek = new Date();
       nextWeek.setDate(nextWeek.getDate() + 7);
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      
       setFormData((prev: any) => ({
         ...prev,
-        dueDate: prev.dueDate || nextWeek.toISOString().split('T')[0]
+        dueDate: prev.dueDate || nextWeek.toISOString().split('T')[0],
+        deliveryDate: prev.deliveryDate || tomorrow.toISOString().split('T')[0]
       }));
     }
     
@@ -212,6 +216,7 @@ export function PreOrderClient({ stores }: PreOrderClientProps) {
         dpAmount: formData.dpAmount ? Number(formData.dpAmount.replace(/\D/g, '')) : undefined,
         paymentMethod: formData.paymentMethod,
         dueDate: new Date(formData.dueDate),
+        deliveryDate: formData.deliveryDate ? new Date(formData.deliveryDate) : undefined,
         notes: formData.notes,
         latitude: lat,
         longitude: lng,
@@ -580,6 +585,17 @@ export function PreOrderClient({ stores }: PreOrderClientProps) {
                       readOnly
                       value={formData.dueDate}
                       className="w-full h-11 px-3 rounded-lg bg-slate-100 border-slate-200 text-slate-500 cursor-not-allowed border"
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs font-bold text-slate-500" htmlFor="deliveryDate">Tanggal Pengiriman Barang</label>
+                    <input 
+                      id="deliveryDate"
+                      type="date" 
+                      required
+                      value={formData.deliveryDate}
+                      onChange={e => setFormData({...formData, deliveryDate: e.target.value})}
+                      className="w-full h-11 px-3 rounded-lg bg-slate-50 border-slate-200 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all border"
                     />
                   </div>
                   <div className="flex flex-col gap-1.5">

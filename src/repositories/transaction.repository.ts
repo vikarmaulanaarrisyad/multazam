@@ -101,6 +101,7 @@ export class TransactionRepository {
           shippingAddress: data.shippingAddress || null,
           shippingCost: data.shippingCost || null,
           dueDate: data.dueDate,
+          deliveryDate: data.deliveryDate,
           notes: data.paymentMethod ? `[Metode: ${data.paymentMethod}]\n${data.notes || ''}`.trim() : data.notes,
           latitude: data.latitude,
           longitude: data.longitude,
