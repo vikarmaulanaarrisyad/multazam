@@ -38,3 +38,32 @@ export function calculateBaseQuantity(
   // If no conversion is found, fallback to orderQuantity
   return orderQuantity;
 }
+
+export function formatConvertedQuantity(
+  quantityInBaseUnit: number,
+  baseUnit: string,
+  targetUnit: string,
+  conversionQty: number
+): string {
+  if (conversionQty <= 1 || baseUnit.toUpperCase() === targetUnit.toUpperCase()) {
+    return `${quantityInBaseUnit} ${baseUnit}`;
+  }
+
+  const isNegative = quantityInBaseUnit < 0;
+  const absQuantity = Math.abs(quantityInBaseUnit);
+  
+  const majorQty = Math.floor(absQuantity / conversionQty);
+  const remainderQty = Math.round(absQuantity % conversionQty);
+
+  const sign = isNegative ? '-' : '';
+
+  if (majorQty > 0) {
+    if (remainderQty > 0) {
+      return `${sign}${majorQty} ${targetUnit} ${remainderQty} ${baseUnit}`;
+    } else {
+      return `${sign}${majorQty} ${targetUnit}`;
+    }
+  }
+
+  return `${sign}${absQuantity} ${baseUnit}`;
+}

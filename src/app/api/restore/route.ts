@@ -19,6 +19,27 @@ export async function POST(req: Request) {
     }
 
     const currentUserId = session.user.id;
+    const currentUser = await prisma.user.findUnique({ where: { id: currentUserId } });
+    
+    // Auto-remap old admin's ID to current admin's ID if email matches but ID is different
+    // (This happens if DB was dropped, user registered a new admin account with same email, then restored)
+    if (currentUser?.email) {
+      const oldIdentity = data.users.find((u: any) => u.email === currentUser.email);
+      if (oldIdentity && oldIdentity.id !== currentUserId) {
+        const oldId = oldIdentity.id;
+        if (data.stores) data.stores.forEach((s: any) => { if (s.userId === oldId) s.userId = currentUserId });
+        if (data.visits) data.visits.forEach((v: any) => { if (v.userId === oldId) v.userId = currentUserId });
+        if (data.purchases) data.purchases.forEach((p: any) => { if (p.userId === oldId) p.userId = currentUserId });
+        if (data.transactions) data.transactions.forEach((t: any) => { if (t.userId === oldId) t.userId = currentUserId });
+        if (data.paymentHistories) data.paymentHistories.forEach((p: any) => { if (p.userId === oldId) p.userId = currentUserId });
+        if (data.returnTransactions) data.returnTransactions.forEach((r: any) => { if (r.userId === oldId) r.userId = currentUserId });
+        if (data.stockMovements) data.stockMovements.forEach((m: any) => { if (m.userId === oldId) m.userId = currentUserId });
+        if (data.auditLogs) data.auditLogs.forEach((a: any) => { if (a.userId === oldId) a.userId = currentUserId });
+        
+        // Remove the old identity from users array so we don't try to insert it (which would cause email unique constraint error)
+        data.users = data.users.filter((u: any) => u.id !== oldId);
+      }
+    }
 
     // Lakukan Restore di dalam transaksi agar bisa di-rollback jika gagal
     await prisma.$transaction(async (tx) => {
@@ -77,9 +98,14 @@ export async function POST(req: Request) {
       if (data.returnItems?.length > 0) await tx.returnItem.createMany({ data: data.returnItems });
       if (data.stockMovements?.length > 0) await tx.stockMovement.createMany({ data: data.stockMovements });
       if (data.auditLogs?.length > 0) await tx.auditLog.createMany({ data: data.auditLogs });
+
+      // Reset sequence for InvoiceCounter to avoid unique constraint error on next insert
+      if (data.invoiceCounters?.length > 0) {
+        await tx.$executeRawUnsafe(`SELECT setval(pg_get_serial_sequence('"InvoiceCounter"', 'id'), coalesce(max(id), 1), max(id) IS NOT null) FROM "InvoiceCounter"`);
+      }
     }, {
       maxWait: 10000, // 10 seconds max wait for connection
-      timeout: 60000, // 60 seconds max transaction time
+      timeout: 120000, // 120 seconds max transaction time (increased for large backups)
     });
 
     return NextResponse.json({ success: true, message: 'Restore berhasil dilakukan.' });

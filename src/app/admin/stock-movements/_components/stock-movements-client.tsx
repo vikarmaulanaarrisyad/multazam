@@ -11,6 +11,7 @@ import ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
+import { formatConvertedQuantity } from '@/utils/inventory';
 
 interface StockMovementsClientProps {
   initialData: StockMovementWithProduct[];
@@ -120,8 +121,19 @@ export function StockMovementsClient({ initialData, metadata }: StockMovementsCl
         const quantitySmallestUnit = movement.quantity;
         const balanceAfterSmallestUnit = movement.balanceAfter;
 
-        const quantityBigUnit = (quantitySmallestUnit / convQty).toFixed(2).replace(/\.00$/, '');
-        const balanceAfterBigUnit = (balanceAfterSmallestUnit / convQty).toFixed(2).replace(/\.00$/, '');
+        // Use formatConvertedQuantity for readable converted string
+        const formattedQuantityBigUnit = formatConvertedQuantity(
+          quantitySmallestUnit,
+          smallestUnit,
+          purchaseUnit,
+          convQty
+        );
+        const formattedBalanceAfterBigUnit = formatConvertedQuantity(
+          balanceAfterSmallestUnit,
+          smallestUnit,
+          purchaseUnit,
+          convQty
+        );
 
         const tipeStr = movement.type === 'IN' ? 'Masuk' : movement.type === 'OUT' ? 'Keluar' : 'Penyesuaian';
         const qtyPrefix = movement.type === 'IN' ? '+' : movement.type === 'OUT' ? '-' : '';
@@ -145,9 +157,9 @@ export function StockMovementsClient({ initialData, metadata }: StockMovementsCl
           movement.product.name,
           tipeStr,
           `${qtyPrefix}${quantitySmallestUnit} ${smallestUnit}`,
-          `${qtyPrefix}${quantityBigUnit} ${purchaseUnit}`,
+          movement.type === 'OUT' && quantitySmallestUnit > 0 ? `-${formattedQuantityBigUnit}` : movement.type === 'IN' && quantitySmallestUnit > 0 ? `+${formattedQuantityBigUnit}` : formattedQuantityBigUnit,
           `${balanceAfterSmallestUnit} ${smallestUnit}`,
-          `${balanceAfterBigUnit} ${purchaseUnit}`,
+          formattedBalanceAfterBigUnit,
           movement.transaction?.user?.name || '-',
           movement.transaction?.customerName || '-',
           poNumber,
@@ -269,10 +281,20 @@ export function StockMovementsClient({ initialData, metadata }: StockMovementsCl
         const movement = row.original as StockMovementWithProduct;
         const convQty = movement.product.conversionQty || 1;
         const purchaseUnit = movement.product.purchaseUnit || 'DUS';
-        const qtyBigUnit = (movement.quantity / convQty).toFixed(2).replace(/\.00$/, '');
+        const smallestUnit = movement.product.stockBaseUnit || 'PCS';
+        
+        const formattedQty = formatConvertedQuantity(
+          movement.quantity,
+          smallestUnit,
+          purchaseUnit,
+          convQty
+        );
+
+        const prefix = movement.type === 'IN' && movement.quantity > 0 ? '+' : movement.type === 'OUT' && movement.quantity > 0 ? '-' : '';
+        
         return (
           <span className={`text-sm ${movement.type === 'IN' ? 'text-green-600/70' : 'text-red-600/70'}`}>
-            {movement.type === 'IN' ? '+' : '-'}{qtyBigUnit} {purchaseUnit}
+            {prefix}{formattedQty}
           </span>
         );
       },
