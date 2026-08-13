@@ -152,7 +152,8 @@ export default async function PrintRecapPage({
                           <tr className="bg-white border-b border-slate-200">
                             <th className="py-2 px-3 text-[10px] font-bold text-slate-500 uppercase w-8 text-center border-r border-slate-200">No</th>
                             <th className="py-2 px-3 text-[10px] font-bold text-slate-500 uppercase border-r border-slate-200">Nama Barang</th>
-                            <th className="py-2 px-3 text-[10px] font-bold text-slate-500 uppercase text-right w-24">Qty</th>
+                            <th className="py-2 px-3 text-[10px] font-bold text-slate-500 uppercase text-right w-24 border-r border-slate-200">Qty</th>
+                            <th className="py-2 px-3 text-[10px] font-bold text-slate-500 uppercase text-center w-12">Cek</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -160,7 +161,10 @@ export default async function PrintRecapPage({
                             <tr key={iIdx} className="border-b border-slate-100 last:border-0 bg-white">
                               <td className="py-1.5 px-3 text-xs text-slate-500 text-center border-r border-slate-100">{iIdx + 1}</td>
                               <td className="py-1.5 px-3 text-xs font-medium text-slate-800 border-r border-slate-100">{item.name}</td>
-                              <td className="py-1.5 px-3 text-xs font-bold text-blue-700 text-right bg-blue-50/20">{item.quantity} <span className="text-[10px] text-blue-500 font-normal">{item.unit}</span></td>
+                              <td className="py-1.5 px-3 text-xs font-bold text-blue-700 text-right bg-blue-50/20 border-r border-slate-100">{item.quantity} <span className="text-[10px] text-blue-500 font-normal">{item.unit}</span></td>
+                              <td className="py-1.5 px-3 text-center">
+                                <div className="w-4 h-4 border-2 border-slate-300 rounded mx-auto bg-white"></div>
+                              </td>
                             </tr>
                           ))}
                         </tbody>
