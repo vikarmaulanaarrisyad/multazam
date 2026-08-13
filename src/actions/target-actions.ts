@@ -3,9 +3,10 @@
 import prisma from "@/lib/prisma";
 import { auth } from "@/auth";
 import { revalidatePath } from "next/cache";
+import { logAudit } from "./audit-actions";
 
 // Type imports generated from Prisma
-import { TargetPeriod } from "@prisma/client";
+import { TargetPeriod } from "@/generated/prisma/client";
 
 export async function setSalesTarget(data: {
   userId: string;
@@ -40,10 +41,22 @@ export async function setSalesTarget(data: {
           notes: data.notes,
         },
       });
+      await logAudit(
+        "UPDATE",
+        "SALES_TARGET",
+        existingTarget.id,
+        `Mengubah target penjualan untuk Sales ID: ${data.userId} menjadi Rp${data.targetAmount}`
+      );
     } else {
-      await prisma.salesTarget.create({
+      const newTarget = await prisma.salesTarget.create({
         data,
       });
+      await logAudit(
+        "CREATE",
+        "SALES_TARGET",
+        newTarget.id,
+        `Membuat target penjualan baru untuk Sales ID: ${data.userId} sebesar Rp${data.targetAmount}`
+      );
     }
 
     revalidatePath("/admin/targets");
@@ -100,7 +113,10 @@ export async function getSalesTargets(periodType?: TargetPeriod) {
       },
     });
 
-    return targets;
+    return targets.map(t => ({
+      ...t,
+      targetAmount: Number(t.targetAmount)
+    }));
   } catch (error) {
     console.error("Failed to fetch targets:", error);
     return [];
@@ -142,9 +158,21 @@ export async function deleteSalesTarget(id: string) {
       return { success: false, message: "Unauthorized" };
     }
 
+    const target = await prisma.salesTarget.findUnique({ where: { id } });
+    if (!target) {
+      return { success: false, message: "Target tidak ditemukan" };
+    }
+
     await prisma.salesTarget.delete({
       where: { id },
     });
+
+    await logAudit(
+      "DELETE",
+      "SALES_TARGET",
+      id,
+      `Menghapus target penjualan sebesar Rp${target.targetAmount} (Sales ID: ${target.userId})`
+    );
 
     revalidatePath("/admin/targets");
     revalidatePath("/sales");
