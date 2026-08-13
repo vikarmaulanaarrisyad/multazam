@@ -41,10 +41,13 @@ export async function getDeliveryRecapAction(dateString: string): Promise<{ succ
       return { success: false, error: 'Unauthorized' };
     }
 
-    // Tentukan rentang waktu (00:00:00 hingga 23:59:59 pada zona UTC agar aman menutupi tanggal tersebut)
-    const targetDate = new Date(dateString);
-    const startDate = new Date(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate(), 0, 0, 0);
-    const endDate = new Date(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate(), 23, 59, 59);
+    // Parse tanggal dan gunakan rentang UTC yang merepresentasikan 00:00 hingga 23:59 WIB (UTC+7)
+    const [year, month, day] = dateString.split('-').map(Number);
+    
+    // 00:00 WIB hari H adalah 17:00 UTC hari H-1
+    const startDate = new Date(Date.UTC(year, month - 1, day - 1, 17, 0, 0));
+    // 23:59:59 WIB hari H adalah 16:59:59 UTC hari H
+    const endDate = new Date(Date.UTC(year, month - 1, day, 16, 59, 59));
 
     // Ambil transaksi yang pengirimannya dijadwalkan pada hari tersebut dan status valid
     const transactions = await prisma.transaction.findMany({
@@ -54,7 +57,7 @@ export async function getDeliveryRecapAction(dateString: string): Promise<{ succ
           lte: endDate,
         },
         status: {
-          in: ['PENDING', 'COMPLETED', 'APPROVED'], 
+          in: ['PENDING', 'COMPLETED', 'APPROVED', 'SHIPPED'], 
         }
       },
       include: {
