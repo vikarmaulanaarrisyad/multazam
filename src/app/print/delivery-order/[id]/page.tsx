@@ -75,17 +75,17 @@ function SuratJalanCopy({ transaction, setting, isDivider = false }: any) {
     <>
       {chunks.map((chunk, chunkIndex) => {
         const isLastPage = chunkIndex === chunks.length - 1;
-        
+
         return (
-          <div 
-            key={chunkIndex} 
-            style={{ 
+          <div
+            key={chunkIndex}
+            style={{
               fontFamily: 'Calibri, sans-serif',
               pageBreakBefore: chunkIndex > 0 ? 'always' : 'auto'
-            }} 
-            className={`w-full min-h-[14cm] print:min-h-0 bg-white p-4 print:px-[1.5cm] print:pt-[0.7cm] print:pb-[0.5cm] relative flex flex-col text-xs leading-tight text-slate-900 ${isDivider ? 'border-b-2 border-dashed border-slate-300 print:border-slate-400 pb-12 mb-12 print:pb-12 print:mb-12' : ''}`}
+            }}
+            className={`w-full min-h-[14cm] print:min-h-0 bg-white p-4 print:px-[1.2cm] print:pt-[0.7cm] print:pb-[0.5cm] relative flex flex-col text-xs leading-tight text-slate-900 ${isDivider ? 'border-b-2 border-dashed border-slate-300 print:border-slate-400 pb-12 mb-12 print:pb-12 print:mb-12' : ''}`}
           >
-            
+
             <div className="w-full">
               {/* HEADER SECTION */}
               <div className="flex justify-between w-full mb-2 uppercase font-semibold">
@@ -94,17 +94,17 @@ function SuratJalanCopy({ transaction, setting, isDivider = false }: any) {
                   <span className="text-[22px] font-bold tracking-wider -mt-1">{setting?.companyName || 'E - DIA MAKMUR ABADI'}</span>
                   <span className="text-xs font-semibold tracking-wide mt-1">
                     {transaction.notes?.includes('[Metode: COD]') || transaction.notes?.includes('[Metode: CASH]') || (!transaction.notes?.includes('[Metode: TEMPO]') && !transaction.notes?.includes('[Metode: TRANSFER]'))
-                      ? 'FAKTUR PENJUALAN TUNAI' 
+                      ? 'FAKTUR PENJUALAN TUNAI'
                       : 'FAKTUR PENJUALAN'}
                   </span>
-                  
+
                   <div className="flex mt-auto pt-2">
                     <span className="w-24">TANGGAL</span>
                     <span className="mr-6">:</span>
                     <span>{date}</span>
                   </div>
                 </div>
-                
+
                 {/* Kanan */}
                 <div className="flex flex-col w-[45%]">
                   <div className="flex"><span className="w-24">NO</span><span className="mr-2">:</span><span>{invoiceNumber} {chunks.length > 1 ? `(Hal ${chunkIndex + 1}/${chunks.length})` : ''}</span></div>
@@ -129,14 +129,14 @@ function SuratJalanCopy({ transaction, setting, isDivider = false }: any) {
                     <th className="py-1 px-1 font-semibold w-16">KODE</th>
                     <th className="py-1 px-1 font-semibold">NAMA PRODUK</th>
                     <th className="py-1 px-1 font-semibold text-center w-16">QTY</th>
-                    <th className="py-1 px-1 font-semibold text-right w-24">HARGA</th>
-                    <th className="py-1 px-1 font-semibold text-right w-24">TOTAL</th>
+                    <th className="py-1 px-1 font-semibold text-right w-28">HARGA</th>
+                    <th className="py-1 px-1 font-semibold text-right w-32">TOTAL</th>
                   </tr>
                 </thead>
                 <tbody className="border-b border-slate-900">
                   {chunk.map((item: any, idx: number) => {
                     const actualIndex = chunkIndex * MAX_ITEMS + idx + 1;
-                    
+
                     if (item.isShipping) {
                       return (
                         <tr key="shipping" className="break-inside-avoid">
@@ -163,23 +163,23 @@ function SuratJalanCopy({ transaction, setting, isDivider = false }: any) {
                     // Determine Unit string
                     let isEceran = false;
                     const eceranPrice = getEceranPrice(item.product);
-                    
+
                     if (eceranPrice !== null) {
-                       if (Number(item.price) === eceranPrice) {
-                         isEceran = true;
-                       } else if (Number(item.price) <= eceranPrice * 1.5) {
-                         isEceran = true;
-                       }
+                      if (Number(item.price) === eceranPrice) {
+                        isEceran = true;
+                      } else if (Number(item.price) <= eceranPrice * 1.5) {
+                        isEceran = true;
+                      }
                     }
 
                     let unitString = item.product.unit?.name || 'Dus';
                     if (isEceran && item.product.retailPriceNote) {
-                       const match = item.product.retailPriceNote.match(/[a-zA-Z]+/);
-                       if (match) {
-                         unitString = match[0].toUpperCase();
-                       } else {
-                         unitString = 'PCS';
-                       }
+                      const match = item.product.retailPriceNote.match(/[a-zA-Z]+/);
+                      if (match) {
+                        unitString = match[0].toUpperCase();
+                      } else {
+                        unitString = 'PCS';
+                      }
                     }
 
                     return (
@@ -206,11 +206,11 @@ function SuratJalanCopy({ transaction, setting, isDivider = false }: any) {
                 </tbody>
               </table>
             </div>
-            
+
             {isLastPage && (
               <div className="mt-2">
                 {/* FOOTER TOTAL */}
-                <div className="flex justify-between items-center py-2 border-t border-slate-900 border-dashed border-b-4 border-double border-slate-900">
+                <div className="flex justify-between items-center py-1 border-y-2 border-slate-900 border-dashed">
                   <div className="flex flex-1 items-center uppercase text-xs font-semibold text-slate-900 pr-4">
                     <span className="mr-2">TERBILANG :</span>
                     <span className="truncate flex-1 italic">{toTerbilang(totalKeseluruhan)}</span>
@@ -219,7 +219,7 @@ function SuratJalanCopy({ transaction, setting, isDivider = false }: any) {
                     <div className="text-right pr-4 tracking-widest whitespace-nowrap">
                       TOTAL :
                     </div>
-                    <div className="w-[105px] flex justify-between font-bold text-[15px]">
+                    <div className="w-28 flex justify-between font-bold text-[15px]">
                       <span>Rp</span>
                       <span>{totalKeseluruhan.toLocaleString('id-ID')},00</span>
                     </div>
@@ -227,7 +227,7 @@ function SuratJalanCopy({ transaction, setting, isDivider = false }: any) {
                 </div>
 
                 {/* SIGNATURES */}
-                <div className="flex justify-center gap-48 mt-4 mb-1 uppercase text-center text-xs font-semibold text-slate-900">
+                <div className="flex justify-center gap-48 mt-3 mb-1 uppercase text-center text-xs font-semibold text-slate-900">
                   <div className="flex flex-col items-center w-40">
                     <div className="w-full flex justify-between mb-6">
                       <span>(</span>
@@ -287,7 +287,7 @@ export default async function PrintDeliveryOrderPage({ params, searchParams }: {
 
   const role = session.user.role;
   const isOwner = transaction.userId === session.user.id;
-  
+
   if (role === 'SALES' && !isOwner) {
     return (
       <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-8 text-center">
@@ -303,7 +303,8 @@ export default async function PrintDeliveryOrderPage({ params, searchParams }: {
 
   return (
     <div className="min-h-screen bg-slate-50 print:bg-white flex flex-col items-center p-8 print:p-0 w-full">
-      <style dangerouslySetInnerHTML={{__html: `
+      <style dangerouslySetInnerHTML={{
+        __html: `
         @media print {
           @page {
             margin: 0;
@@ -321,7 +322,7 @@ export default async function PrintDeliveryOrderPage({ params, searchParams }: {
         <Suspense fallback={<div />}>
           <PrintButton invoiceNumber={transaction.invoiceNumber} />
         </Suspense>
-        
+
         {/* Salinan Tunggal (Karena kertas Bagi 2) */}
         <SuratJalanCopy transaction={transaction} setting={setting} isDivider={false} />
       </div>
