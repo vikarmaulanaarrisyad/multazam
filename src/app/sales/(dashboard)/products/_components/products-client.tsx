@@ -6,8 +6,9 @@ import { Search, ScanBarcode, Plus, Minus, ShoppingCart } from 'lucide-react';
 import { Product, Category, Unit } from '@/generated/prisma/client';
 import { cn } from '@/lib/utils';
 
-type ProductWithRelations = Omit<Product, 'price'> & {
+type ProductWithRelations = Omit<Product, 'price' | 'purchasePrice'> & {
   price: number;
+  purchasePrice: number | null;
   category: Category;
   unit: Unit | null;
 };

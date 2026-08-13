@@ -18,7 +18,8 @@ export default async function SalesProductsPage() {
 
   const products = rawProducts.map(p => ({
     ...p,
-    price: p.price.toNumber()
+    price: p.price.toNumber(),
+    purchasePrice: p.purchasePrice ? p.purchasePrice.toNumber() : null
   }));
 
   return (
