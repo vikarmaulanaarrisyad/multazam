@@ -124,7 +124,7 @@ export default async function PrintRecapPage({
                       <td className="py-2.5 px-4 text-sm text-slate-600 text-center border-r border-slate-200">{item.contents || '-'}</td>
                       <td className="py-2.5 px-4 text-base font-bold text-blue-700 text-right bg-blue-50/30 border-r border-slate-200">{item.totalQuantity} <span className="text-xs text-blue-500 font-medium ml-1">{item.unit}</span></td>
                       <td className={`py-2.5 px-4 text-base font-bold text-right border-r border-slate-200 ${isInsufficient ? 'text-red-600' : 'text-emerald-600'}`}>
-                        {item.currentStock} <span className={`text-xs font-medium ml-1 ${isInsufficient ? 'text-red-400' : 'text-emerald-400'}`}>{item.stockUnit}</span>
+                        {item.formattedStock}
                       </td>
                       <td className="py-2.5 px-4 text-center">
                         <div className="w-5 h-5 border-2 border-slate-300 rounded mx-auto bg-white"></div>

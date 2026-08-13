@@ -98,7 +98,7 @@ export function DeliveryRecapModal({ isOpen, onClose }: DeliveryRecapModalProps)
           item.name,
           item.contents || '-',
           `${item.totalQuantity} ${item.unit}`,
-          { content: `${item.currentStock} ${item.stockUnit}`, styles: { textColor: isInsufficient ? [220, 38, 38] as [number, number, number] : [5, 150, 105] as [number, number, number] } },
+          { content: item.formattedStock, styles: { textColor: isInsufficient ? [220, 38, 38] as [number, number, number] : [5, 150, 105] as [number, number, number] } },
           ''
         ];
       });
@@ -293,7 +293,7 @@ export function DeliveryRecapModal({ isOpen, onClose }: DeliveryRecapModalProps)
           item.name,
           item.contents || '-',
           `${item.totalQuantity} ${item.unit}`,
-          `${item.currentStock} ${item.stockUnit}`,
+          item.formattedStock,
           ''
         ]);
 

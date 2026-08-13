@@ -14,6 +14,7 @@ export type DeliveryRecapItem = {
   currentStock: number;
   unit: string;
   stockUnit: string;
+  formattedStock: string;
 };
 
 export type StoreRecapItem = {
@@ -114,6 +115,26 @@ export async function getDeliveryRecapAction(dateString: string): Promise<{ succ
         // --- GLOBAL RECAP ---
         const globalKey = `${prod.id}_${requestedUnit}`;
 
+        let conversionQty = 1;
+        if (item.quantity > 0) {
+          conversionQty = baseQty / item.quantity;
+        }
+
+        let formattedStock = `${prod.stock} ${stockUnit}`;
+        if (conversionQty > 1 && requestedUnit !== stockUnit && prod.stock > 0) {
+          const majorQty = Math.floor(prod.stock / conversionQty);
+          // Use Math.round to avoid floating point issues like 5.000000001
+          const remainderQty = Math.round(prod.stock % conversionQty);
+          
+          if (majorQty > 0) {
+            if (remainderQty > 0) {
+              formattedStock = `${majorQty} ${requestedUnit} ${remainderQty} ${stockUnit}`;
+            } else {
+              formattedStock = `${majorQty} ${requestedUnit}`;
+            }
+          }
+        }
+
         if (globalRecapMap.has(globalKey)) {
           const existing = globalRecapMap.get(globalKey)!;
           existing.totalQuantity += item.quantity;
@@ -128,7 +149,8 @@ export async function getDeliveryRecapAction(dateString: string): Promise<{ succ
             totalBaseQuantity: baseQty,
             currentStock: prod.stock,
             unit: requestedUnit,
-            stockUnit: stockUnit
+            stockUnit: stockUnit,
+            formattedStock: formattedStock
           });
         }
         

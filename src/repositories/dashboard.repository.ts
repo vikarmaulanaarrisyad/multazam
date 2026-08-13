@@ -60,7 +60,7 @@ export class DashboardRepository {
         where: { status: { in: ['PENDING', 'APPROVED'] } },
         orderBy: [
           { deliveryDate: 'asc' },
-          { createdAt: 'asc' }
+          { createdAt: 'desc' }
         ],
         take: 10,
         select: {
