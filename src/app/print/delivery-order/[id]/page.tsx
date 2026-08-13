@@ -126,7 +126,7 @@ function SuratJalanCopy({ transaction, setting, isDivider = false }: any) {
                 <thead>
                   <tr className="border-t-4 border-b border-double border-slate-900">
                     <th className="py-1 px-1 font-semibold text-center w-8">NO</th>
-                    <th className="py-1 px-1 font-semibold w-16">KODE</th>
+                    <th className="py-1 px-1 font-semibold w-24">KODE</th>
                     <th className="py-1 px-1 font-semibold">NAMA PRODUK</th>
                     <th className="py-1 px-1 font-semibold text-center w-24">QTY</th>
                     <th className="py-1 px-1 font-semibold text-right w-28">HARGA</th>
@@ -211,7 +211,7 @@ function SuratJalanCopy({ transaction, setting, isDivider = false }: any) {
               <div className="mt-2">
                 {/* FOOTER TOTAL */}
                 <div className="flex justify-between items-center py-1 border-b-2 border-slate-900 border-dashed">
-                  <div className="flex flex-1 items-center uppercase text-[13px] font-semibold text-slate-900 pr-4">
+                  <div className="flex flex-1 items-center uppercase text-[15px] font-semibold text-slate-900 pr-4">
                     <span className="mr-2">TERBILANG :</span>
                     <span className="truncate flex-1 italic">{toTerbilang(totalKeseluruhan)}</span>
                   </div>
