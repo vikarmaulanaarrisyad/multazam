@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { X, Calendar, FileSpreadsheet, Printer, Download } from 'lucide-react';
 import { getDeliveryRecapAction } from '@/actions/delivery-actions';
 import ExcelJS from 'exceljs';
@@ -15,6 +15,23 @@ export function DeliveryRecapModal({ isOpen, onClose }: DeliveryRecapModalProps)
   const [dateStr, setDateStr] = useState<string>('');
   const [isExporting, setIsExporting] = useState(false);
   const [isPrinting, setIsPrinting] = useState(false);
+
+  const iframeRef = useRef<HTMLIFrameElement | null>(null);
+  const isOpenRef = useRef(isOpen);
+
+  // Update isOpenRef whenever isOpen changes
+  useEffect(() => {
+    isOpenRef.current = isOpen;
+    if (!isOpen) {
+      // Cleanup if closed
+      setIsPrinting(false);
+      setIsExporting(false);
+      if (iframeRef.current && document.body.contains(iframeRef.current)) {
+        document.body.removeChild(iframeRef.current);
+        iframeRef.current = null;
+      }
+    }
+  }, [isOpen]);
 
   // Set default ke besok
   useEffect(() => {
@@ -33,28 +50,38 @@ export function DeliveryRecapModal({ isOpen, onClose }: DeliveryRecapModalProps)
 
   const handlePrint = () => {
     setIsPrinting(true);
-    
+
+    // Cleanup any existing iframe first
+    if (iframeRef.current && document.body.contains(iframeRef.current)) {
+      document.body.removeChild(iframeRef.current);
+    }
+
     // Create hidden iframe
     const iframe = document.createElement('iframe');
     iframe.style.display = 'none';
     iframe.src = `/admin/print-recap?date=${dateStr}`;
-    
+
+    iframeRef.current = iframe;
     document.body.appendChild(iframe);
-    
+
     iframe.onload = () => {
       // Small delay to ensure all assets/fonts are loaded
       setTimeout(() => {
+        // If modal was closed during loading, abort
+        if (!isOpenRef.current) return;
+
         try {
           iframe.contentWindow?.print();
         } catch (e) {
           console.error('Print failed', e);
         }
         setIsPrinting(false);
-        
+
         // Cleanup after print dialog is closed (with a generous delay)
         setTimeout(() => {
-          if (document.body.contains(iframe)) {
+          if (iframeRef.current === iframe && document.body.contains(iframe)) {
             document.body.removeChild(iframe);
+            if (iframeRef.current === iframe) iframeRef.current = null;
           }
         }, 60000);
       }, 500);
@@ -65,6 +92,10 @@ export function DeliveryRecapModal({ isOpen, onClose }: DeliveryRecapModalProps)
     setIsExporting(true);
     try {
       const res = await getDeliveryRecapAction(dateStr);
+
+      // If modal was closed while fetching data, abort
+      if (!isOpenRef.current) return;
+
       if (!res.success || !res.data) {
         alert(res.error || 'Gagal mengambil data rekap.');
         return;
@@ -75,6 +106,7 @@ export function DeliveryRecapModal({ isOpen, onClose }: DeliveryRecapModalProps)
         alert('Tidak ada barang yang perlu disiapkan pada tanggal ini.');
         return;
       }
+
 
       const workbook = new ExcelJS.Workbook();
       const sheet = workbook.addWorksheet('Rekap Gudang');
@@ -91,7 +123,7 @@ export function DeliveryRecapModal({ isOpen, onClose }: DeliveryRecapModalProps)
 
       // Header Laporan (Kop Surat)
       const displayDate = new Date(dateStr).toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-      
+
       sheet.mergeCells('A1:G1');
       const titleCell = sheet.getCell('A1');
       titleCell.value = 'DIA MAKMUR ABADI';
@@ -126,14 +158,14 @@ export function DeliveryRecapModal({ isOpen, onClose }: DeliveryRecapModalProps)
 
       // Data
       items.forEach((item, idx) => {
-        const isInsufficient = item.currentStock < item.totalQuantity;
+        const isInsufficient = item.currentStock < item.totalBaseQuantity;
         const row = sheet.addRow([
           idx + 1,
           item.code,
           item.name,
           item.contents || '-',
-          item.totalQuantity,
-          item.currentStock,
+          `${item.totalQuantity} ${item.unit}`,
+          `${item.currentStock} ${item.stockUnit}`,
           ''
         ]);
 
@@ -142,17 +174,17 @@ export function DeliveryRecapModal({ isOpen, onClose }: DeliveryRecapModalProps)
             top: { style: 'thin' }, left: { style: 'thin' },
             bottom: { style: 'thin' }, right: { style: 'thin' }
           };
-          
+
           if (colNumber === 1 || colNumber === 4 || colNumber === 5 || colNumber === 6) {
             cell.alignment = { horizontal: 'center' };
           }
-          
+
           // Style untuk Qty Disiapkan
           if (colNumber === 5) {
             cell.font = { bold: true, color: { argb: 'FF1D4ED8' } };
             cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFEFF6FF' } }; // light blue bg
           }
-          
+
           // Style untuk Stok Gudang
           if (colNumber === 6) {
             cell.font = { bold: true, color: { argb: isInsufficient ? 'FFDC2626' : 'FF059669' } }; // red if insufficient, else green
@@ -174,7 +206,7 @@ export function DeliveryRecapModal({ isOpen, onClose }: DeliveryRecapModalProps)
 
       const buffer = await workbook.xlsx.writeBuffer();
       saveAs(new Blob([buffer]), `Rekap_Gudang_${dateStr}.xlsx`);
-      
+
     } catch (err) {
       console.error(err);
       alert('Terjadi kesalahan saat membuat Excel.');
@@ -202,8 +234,8 @@ export function DeliveryRecapModal({ isOpen, onClose }: DeliveryRecapModalProps)
 
           <div className="mb-6">
             <label className="block text-sm font-bold text-slate-700 mb-2">Tanggal Pengiriman</label>
-            <input 
-              type="date" 
+            <input
+              type="date"
               value={dateStr}
               onChange={(e) => setDateStr(e.target.value)}
               className="w-full border border-slate-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium"

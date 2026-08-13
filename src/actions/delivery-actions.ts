@@ -2,6 +2,7 @@
 
 import prisma from '@/lib/prisma';
 import { auth } from '@/auth';
+import { calculateBaseQuantity } from '@/utils/inventory';
 
 export type DeliveryRecapItem = {
   productId: string;
@@ -9,7 +10,10 @@ export type DeliveryRecapItem = {
   name: string;
   contents: string | null;
   totalQuantity: number;
+  totalBaseQuantity: number;
   currentStock: number;
+  unit: string;
+  stockUnit: string;
 };
 
 export async function getDeliveryRecapAction(dateString: string): Promise<{ success: boolean; data?: DeliveryRecapItem[]; error?: string }> {
@@ -38,7 +42,11 @@ export async function getDeliveryRecapAction(dateString: string): Promise<{ succ
       include: {
         items: {
           include: {
-            product: true
+            product: {
+              include: {
+                unitConversions: true
+              }
+            }
           }
         }
       }
@@ -54,24 +62,47 @@ export async function getDeliveryRecapAction(dateString: string): Promise<{ succ
     for (const tx of transactions) {
       for (const item of tx.items) {
         const prod = item.product;
-        if (recapMap.has(prod.id)) {
-          const existing = recapMap.get(prod.id)!;
+        
+        // Tentukan satuan yang di-request
+        let requestedUnit = item.unitNote;
+        if (!requestedUnit) {
+          requestedUnit = prod.purchaseUnit || 'KARTON';
+        }
+        requestedUnit = requestedUnit.toUpperCase();
+        
+        const stockUnit = (prod.stockBaseUnit || 'PCS').toUpperCase();
+        
+        // Hitung kuantitas dalam satuan dasar untuk pengecekan stok
+        const baseQty = calculateBaseQuantity(item.quantity, requestedUnit, prod);
+
+        const key = `${prod.id}_${requestedUnit}`;
+
+        if (recapMap.has(key)) {
+          const existing = recapMap.get(key)!;
           existing.totalQuantity += item.quantity;
+          existing.totalBaseQuantity += baseQty;
         } else {
-          recapMap.set(prod.id, {
+          recapMap.set(key, {
             productId: prod.id,
             code: prod.code,
             name: prod.name,
             contents: prod.contents,
             totalQuantity: item.quantity,
-            currentStock: prod.stock
+            totalBaseQuantity: baseQty,
+            currentStock: prod.stock,
+            unit: requestedUnit,
+            stockUnit: stockUnit
           });
         }
       }
     }
 
-    // Ubah map menjadi array dan urutkan berdasarkan nama barang
-    const recapArray = Array.from(recapMap.values()).sort((a, b) => a.name.localeCompare(b.name));
+    // Ubah map menjadi array dan urutkan berdasarkan nama barang lalu satuan
+    const recapArray = Array.from(recapMap.values()).sort((a, b) => {
+      const nameCompare = a.name.localeCompare(b.name);
+      if (nameCompare !== 0) return nameCompare;
+      return a.unit.localeCompare(b.unit);
+    });
 
     return { success: true, data: recapArray };
 

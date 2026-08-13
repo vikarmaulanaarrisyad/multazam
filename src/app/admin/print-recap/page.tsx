@@ -112,9 +112,9 @@ export default async function PrintRecapPage({
               </thead>
               <tbody>
                 {items.map((item, index) => {
-                  const isInsufficient = item.currentStock < item.totalQuantity;
+                  const isInsufficient = item.currentStock < item.totalBaseQuantity;
                   return (
-                    <tr key={item.productId} className={`border-b border-slate-200 ${index % 2 === 0 ? 'bg-white' : 'bg-slate-50'} ${isInsufficient ? 'bg-red-50/50' : ''}`}>
+                    <tr key={`${item.productId}-${item.unit}`} className={`border-b border-slate-200 ${index % 2 === 0 ? 'bg-white' : 'bg-slate-50'} ${isInsufficient ? 'bg-red-50/50' : ''}`}>
                       <td className="py-2.5 px-4 text-sm font-medium text-slate-600 text-center border-r border-slate-200">{index + 1}</td>
                       <td className="py-2.5 px-4 text-sm text-slate-600 font-mono border-r border-slate-200">{item.code}</td>
                       <td className="py-2.5 px-4 text-sm font-bold text-slate-900 border-r border-slate-200">
@@ -122,8 +122,10 @@ export default async function PrintRecapPage({
                         {isInsufficient && <span className="ml-2 inline-block px-2 py-0.5 bg-red-100 text-red-700 text-[10px] font-bold rounded-full align-middle">STOK KURANG</span>}
                       </td>
                       <td className="py-2.5 px-4 text-sm text-slate-600 text-center border-r border-slate-200">{item.contents || '-'}</td>
-                      <td className="py-2.5 px-4 text-base font-bold text-blue-700 text-right bg-blue-50/30 border-r border-slate-200">{item.totalQuantity}</td>
-                      <td className={`py-2.5 px-4 text-base font-bold text-right border-r border-slate-200 ${isInsufficient ? 'text-red-600' : 'text-emerald-600'}`}>{item.currentStock}</td>
+                      <td className="py-2.5 px-4 text-base font-bold text-blue-700 text-right bg-blue-50/30 border-r border-slate-200">{item.totalQuantity} <span className="text-xs text-blue-500 font-medium ml-1">{item.unit}</span></td>
+                      <td className={`py-2.5 px-4 text-base font-bold text-right border-r border-slate-200 ${isInsufficient ? 'text-red-600' : 'text-emerald-600'}`}>
+                        {item.currentStock} <span className={`text-xs font-medium ml-1 ${isInsufficient ? 'text-red-400' : 'text-emerald-400'}`}>{item.stockUnit}</span>
+                      </td>
                       <td className="py-2.5 px-4 text-center">
                         <div className="w-5 h-5 border-2 border-slate-300 rounded mx-auto bg-white"></div>
                       </td>
