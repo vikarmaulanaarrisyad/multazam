@@ -22,13 +22,13 @@ export async function createReturn(data: {
 
     // Generate return number
     const today = new Date();
-    const yyyy = today.getFullYear();
-    const mm = String(today.getMonth() + 1).padStart(2, '0');
-    const dd = String(today.getDate()).padStart(2, '0');
+    today.setMinutes(today.getMinutes() - today.getTimezoneOffset());
+    const yyyy = today.getUTCFullYear();
+    const mm = String(today.getUTCMonth() + 1).padStart(2, '0');
+    const dd = String(today.getUTCDate()).padStart(2, '0');
     const dateStr = `${yyyy}${mm}${dd}`;
     
     // Counter logic based on local day inside transaction to minimize race conditions
-    const startOfDay = new Date(yyyy, today.getMonth(), today.getDate());
     
     const newReturn = await prisma.$transaction(async (tx) => {
       const counterKey = `RET-${dateStr}`;

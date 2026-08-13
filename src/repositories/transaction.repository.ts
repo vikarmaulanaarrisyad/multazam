@@ -30,7 +30,10 @@ export class TransactionRepository {
 
   static async createPreOrder(data: PreOrderData, userId: string) {
     // Generate unique Invoice Number using atomic upsert on InvoiceCounter
-    const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+    const d = new Date();
+    d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+    const dateStr = d.toISOString().slice(0, 10).replace(/-/g, '');
+    
     const counter = await prisma.$transaction(async (tx) => {
       return await tx.invoiceCounter.upsert({
         where: { date: dateStr },

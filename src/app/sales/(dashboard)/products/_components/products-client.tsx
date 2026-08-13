@@ -22,6 +22,7 @@ export function SalesProductsClient({ initialProducts, categories }: SalesProduc
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [cart, setCart] = useState<Record<string, number>>({});
+  const [displayCount, setDisplayCount] = useState(20);
 
   useEffect(() => {
     const stored = sessionStorage.getItem('preOrderCart');
@@ -107,6 +108,8 @@ export function SalesProductsClient({ initialProducts, categories }: SalesProduc
     return matchesSearch && matchesCategory;
   });
 
+  const visibleProducts = filteredProducts.slice(0, displayCount);
+
   const formatCurrency = (amount: any) => {
     return new Intl.NumberFormat('id-ID', {
       style: 'currency',
@@ -167,8 +170,8 @@ export function SalesProductsClient({ initialProducts, categories }: SalesProduc
       </div>
       
       {/* Product Grid */}
-      <div className="grid grid-cols-2 gap-3 px-4 pb-36 pt-4">
-        {filteredProducts.map(product => {
+      <div className="grid grid-cols-2 gap-3 px-4 pt-4 pb-4">
+        {visibleProducts.map(product => {
           const isOutOfStock = product.stock <= 0;
           const isLowStock = product.stock > 0 && product.stock <= 10;
           const isReview = (product as any).salesMode === 'REVIEW';
@@ -290,6 +293,23 @@ export function SalesProductsClient({ initialProducts, categories }: SalesProduc
           );
         })}
       </div>
+      
+      {/* Load More Button */}
+      {displayCount < filteredProducts.length && (
+        <div className="flex justify-center px-4 mb-32 mt-4">
+          <button 
+            onClick={() => setDisplayCount(prev => prev + 20)}
+            className="px-6 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-full text-sm font-semibold transition-colors active:scale-95"
+          >
+            Muat Lebih Banyak
+          </button>
+        </div>
+      )}
+
+      {/* Spacer if no load more button */}
+      {displayCount >= filteredProducts.length && (
+        <div className="h-32"></div>
+      )}
       
       {filteredProducts.length === 0 && (
         <div className="flex flex-col items-center justify-center h-40 text-slate-400">
