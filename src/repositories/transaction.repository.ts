@@ -91,9 +91,21 @@ export class TransactionRepository {
 
       let finalDeliveryDate = data.deliveryDate;
       if (!finalDeliveryDate) {
-        const tomorrow = new Date();
-        tomorrow.setDate(tomorrow.getDate() + 1);
-        finalDeliveryDate = tomorrow;
+        // Dapatkan waktu saat ini di WIB (Asia/Jakarta)
+        const formatter = new Intl.DateTimeFormat('en-US', {
+          timeZone: 'Asia/Jakarta',
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit'
+        });
+        const parts = formatter.formatToParts(new Date());
+        const y = parseInt(parts.find(p => p.type === 'year')!.value, 10);
+        const m = parseInt(parts.find(p => p.type === 'month')!.value, 10) - 1;
+        const d = parseInt(parts.find(p => p.type === 'day')!.value, 10);
+        
+        const jakartaToday = new Date(y, m, d);
+        jakartaToday.setDate(jakartaToday.getDate() + 1); // Set ke besok harinya di WIB
+        finalDeliveryDate = jakartaToday;
       }
 
       // 1. Create the Transaction record
