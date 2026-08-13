@@ -450,7 +450,10 @@ export function PreOrderClient({ stores }: PreOrderClientProps) {
                         >
                           {(item.product as any).purchaseUnit || 'Karton'}
                         </button>
-                        {getEceranPrice(item.product) !== null && (item.product as any).salesMode !== 'WHOLESALE_ONLY' && (
+                        {getEceranPrice(item.product) !== null && 
+                         (item.product as any).salesMode !== 'WHOLESALE_ONLY' && 
+                         (item.product as any).allowUnitSale !== false && 
+                         (!(item.product as any).retailEndDate || new Date((item.product as any).retailEndDate) >= new Date()) && (
                           <button
                             type="button"
                             onClick={() => {

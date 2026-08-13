@@ -57,6 +57,8 @@ export function ProductForm({ open, onOpenChange, onSuccess, initialData }: Prod
   const [selectedCategory, setSelectedCategory] = useState<{value: string, label: string} | null>(null);
   const [selectedUnit, setSelectedUnit] = useState<{value: string, label: string} | null>(null);
   const [unitConversions, setUnitConversions] = useState<{fromUnit: string, toUnit: string, conversionQty: number, active: boolean}[]>([]);
+  const [allowUnitSale, setAllowUnitSale] = useState(true);
+  const [retailEndDate, setRetailEndDate] = useState<string>('');
   
   const isEditing = !!initialData;
 
@@ -83,12 +85,22 @@ export function ProductForm({ open, onOpenChange, onSuccess, initialData }: Prod
       setPrice(initialPrice);
       setPurchasePrice(initialPurchasePrice);
       setUnitConversions(initialData?.unitConversions || []);
+      setAllowUnitSale(initialData?.allowUnitSale ?? true);
+      if (initialData?.retailEndDate) {
+        const d = new Date(initialData.retailEndDate);
+        d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+        setRetailEndDate(d.toISOString().slice(0, 16));
+      } else {
+        setRetailEndDate('');
+      }
     } else {
       setPrice('');
       setPurchasePrice('');
       setSelectedCategory(null);
       setSelectedUnit(null);
       setUnitConversions([]);
+      setAllowUnitSale(true);
+      setRetailEndDate('');
     }
   }, [open, initialPrice, initialPurchasePrice, initialData]);
 
@@ -112,6 +124,8 @@ export function ProductForm({ open, onOpenChange, onSuccess, initialData }: Prod
       conversionQty: formData.get('conversionQty') ? parseInt(formData.get('conversionQty') as string) : null,
       legacyCode: formData.get('legacyCode') as string || null,
       retailPriceNote: formData.get('retailPriceNote') as string || null,
+      allowUnitSale,
+      retailEndDate: allowUnitSale && retailEndDate ? new Date(retailEndDate).toISOString() : null,
       unitConversions: unitConversions.map(uc => ({
         ...uc,
         conversionQty: Number(uc.conversionQty)
@@ -363,6 +377,39 @@ export function ProductForm({ open, onOpenChange, onSuccess, initialData }: Prod
                 rows={3}
                 className="flex w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm ring-offset-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950 focus-visible:ring-offset-2"
               />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4 border-t border-slate-200 pt-4 mt-2">
+              <div className="space-y-2 flex flex-col justify-center">
+                <Label>Boleh Jual Satuan/Ecer?</Label>
+                <div className="flex items-center space-x-2 mt-2">
+                  <input
+                    type="checkbox"
+                    id="allowUnitSale"
+                    checked={allowUnitSale}
+                    onChange={(e) => setAllowUnitSale(e.target.checked)}
+                    className="h-5 w-5 rounded border-slate-300 text-slate-900 focus:ring-slate-900"
+                  />
+                  <Label htmlFor="allowUnitSale" className="font-normal cursor-pointer">
+                    Ya, produk ini bisa diecer
+                  </Label>
+                </div>
+              </div>
+              
+              {allowUnitSale && (
+                <div className="space-y-2">
+                  <Label htmlFor="retailEndDate">Batas Akhir Ecer (Opsional)</Label>
+                  <Input
+                    id="retailEndDate"
+                    type="datetime-local"
+                    value={retailEndDate}
+                    onChange={(e) => setRetailEndDate(e.target.value)}
+                  />
+                  <p className="text-xs text-slate-500">
+                    Lewat tanggal ini, sistem menolak penjualan ecer.
+                  </p>
+                </div>
+              )}
             </div>
 
             {/* Unit Conversions Section */}

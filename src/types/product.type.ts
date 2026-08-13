@@ -23,6 +23,7 @@ export type ProductType = {
   unitId: string | null;
   createdAt: Date;
   updatedAt: Date;
+  retailEndDate?: Date | null;
   unitConversions?: {
     id: string;
     fromUnit: string;
@@ -58,6 +59,7 @@ export type ProductInput = {
   allowUnitSale?: boolean;
   allowFractional?: boolean;
   legacyCode?: string | null;
+  retailEndDate?: Date | string | null;
   unitConversions?: {
     id?: string;
     fromUnit: string;

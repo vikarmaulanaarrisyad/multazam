@@ -138,6 +138,7 @@ model Product {
   allowUnitSale   Boolean @default(true)
   allowFractional Boolean @default(false)
   legacyCode      String?
+  retailEndDate   DateTime?
 
   stock      Int      @default(0)
   badStock   Int      @default(0)

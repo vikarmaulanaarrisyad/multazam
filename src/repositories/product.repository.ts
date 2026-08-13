@@ -87,6 +87,7 @@ export const productRepository = {
         allowUnitSale: data.allowUnitSale,
         allowFractional: data.allowFractional,
         legacyCode: data.legacyCode,
+        retailEndDate: data.retailEndDate ? new Date(data.retailEndDate) : null,
         ...(data.unitConversions?.length ? {
           unitConversions: {
             create: data.unitConversions.map(uc => ({
@@ -132,6 +133,7 @@ export const productRepository = {
           allowUnitSale: item.allowUnitSale,
           allowFractional: item.allowFractional,
           legacyCode: item.legacyCode,
+          retailEndDate: item.retailEndDate ? new Date(item.retailEndDate) : null,
         },
         create: {
           code: item.code,
@@ -153,6 +155,7 @@ export const productRepository = {
           allowUnitSale: item.allowUnitSale,
           allowFractional: item.allowFractional,
           legacyCode: item.legacyCode,
+          retailEndDate: item.retailEndDate ? new Date(item.retailEndDate) : null,
         }
       })
     );
@@ -183,6 +186,7 @@ export const productRepository = {
         allowUnitSale: data.allowUnitSale,
         allowFractional: data.allowFractional,
         legacyCode: data.legacyCode,
+        retailEndDate: data.retailEndDate ? new Date(data.retailEndDate) : null,
         ...(data.unitConversions !== undefined ? {
           unitConversions: {
             deleteMany: {},

@@ -23,6 +23,7 @@ export const productSchema = z.object({
   allowUnitSale: z.boolean().optional().default(true),
   allowFractional: z.boolean().optional().default(false),
   legacyCode: z.string().max(50).optional().nullable(),
+  retailEndDate: z.union([z.date(), z.string(), z.null()]).optional(),
   unitConversions: z.array(z.object({
     id: z.string().optional(),
     fromUnit: z.string().min(1, 'Satuan asal wajib diisi').max(20),
