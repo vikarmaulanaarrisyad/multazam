@@ -49,4 +49,21 @@ export type ProductInput = {
   stock: number;
   categoryId: string;
   unitId?: string | null;
+  purchaseUnit?: string | null;
+  stockBaseUnit?: string | null;
+  conversionQty?: number | null;
+  brand?: string | null;
+  status?: string;
+  salesMode?: string | null;
+  allowUnitSale?: boolean;
+  allowFractional?: boolean;
+  legacyCode?: string | null;
+  unitConversions?: {
+    id?: string;
+    fromUnit: string;
+    toUnit: string;
+    conversionQty: number;
+    conversionType: string;
+    active: boolean;
+  }[];
 };

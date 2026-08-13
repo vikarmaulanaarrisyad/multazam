@@ -23,4 +23,12 @@ export const productSchema = z.object({
   allowUnitSale: z.boolean().optional().default(true),
   allowFractional: z.boolean().optional().default(false),
   legacyCode: z.string().max(50).optional().nullable(),
+  unitConversions: z.array(z.object({
+    id: z.string().optional(),
+    fromUnit: z.string().min(1, 'Satuan asal wajib diisi').max(20),
+    toUnit: z.string().min(1, 'Satuan tujuan wajib diisi').max(20),
+    conversionQty: z.coerce.number().int().min(1, 'Qty konversi minimal 1'),
+    conversionType: z.string().optional().default('MULTIPLY'),
+    active: z.boolean().optional().default(true),
+  })).optional(),
 });

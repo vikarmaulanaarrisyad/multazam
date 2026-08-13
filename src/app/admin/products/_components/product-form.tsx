@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Trash2, Plus } from 'lucide-react';
 import { createProductAction, updateProductAction } from '@/actions/products';
 import { getCategories } from '@/actions/categories';
 import { getUnits } from '@/actions/units';
@@ -56,6 +56,7 @@ export function ProductForm({ open, onOpenChange, onSuccess, initialData }: Prod
   
   const [selectedCategory, setSelectedCategory] = useState<{value: string, label: string} | null>(null);
   const [selectedUnit, setSelectedUnit] = useState<{value: string, label: string} | null>(null);
+  const [unitConversions, setUnitConversions] = useState<{fromUnit: string, toUnit: string, conversionQty: number, active: boolean}[]>([]);
   
   const isEditing = !!initialData;
 
@@ -81,13 +82,15 @@ export function ProductForm({ open, onOpenChange, onSuccess, initialData }: Prod
       });
       setPrice(initialPrice);
       setPurchasePrice(initialPurchasePrice);
+      setUnitConversions(initialData?.unitConversions || []);
     } else {
       setPrice('');
       setPurchasePrice('');
       setSelectedCategory(null);
       setSelectedUnit(null);
+      setUnitConversions([]);
     }
-  }, [open, initialPrice, initialPurchasePrice]);
+  }, [open, initialPrice, initialPurchasePrice, initialData]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -109,6 +112,10 @@ export function ProductForm({ open, onOpenChange, onSuccess, initialData }: Prod
       conversionQty: formData.get('conversionQty') ? parseInt(formData.get('conversionQty') as string) : null,
       legacyCode: formData.get('legacyCode') as string || null,
       retailPriceNote: formData.get('retailPriceNote') as string || null,
+      unitConversions: unitConversions.map(uc => ({
+        ...uc,
+        conversionQty: Number(uc.conversionQty)
+      })).filter(uc => uc.fromUnit && uc.toUnit && uc.conversionQty > 0),
     };
 
     try {
@@ -356,6 +363,86 @@ export function ProductForm({ open, onOpenChange, onSuccess, initialData }: Prod
                 rows={3}
                 className="flex w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm ring-offset-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950 focus-visible:ring-offset-2"
               />
+            </div>
+
+            {/* Unit Conversions Section */}
+            <div className="space-y-4 border-t border-slate-200 pt-4 mt-2">
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label className="text-base">Konversi Unit (Multi-satuan)</Label>
+                  <p className="text-xs text-slate-500">Contoh: 1 DUS = 24 PCS</p>
+                </div>
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => setUnitConversions([...unitConversions, { fromUnit: '', toUnit: '', conversionQty: 1, active: true }])}
+                >
+                  <Plus className="mr-1 h-3 w-3" /> Tambah
+                </Button>
+              </div>
+              
+              {unitConversions.length === 0 ? (
+                <div className="text-center py-4 bg-slate-50 rounded-md border border-slate-200 border-dashed">
+                  <p className="text-sm text-slate-500">Belum ada data konversi unit.</p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {unitConversions.map((uc, index) => (
+                    <div key={index} className="flex items-center gap-2">
+                      <div className="flex-1">
+                        <Input 
+                          placeholder="Dari (cth: DUS)" 
+                          value={uc.fromUnit}
+                          onChange={(e) => {
+                            const newConv = [...unitConversions];
+                            newConv[index].fromUnit = e.target.value.toUpperCase();
+                            setUnitConversions(newConv);
+                          }}
+                        />
+                      </div>
+                      <span className="text-sm text-slate-500">=</span>
+                      <div className="w-24">
+                        <Input 
+                          type="number"
+                          placeholder="Qty" 
+                          min="1"
+                          value={uc.conversionQty}
+                          onChange={(e) => {
+                            const newConv = [...unitConversions];
+                            newConv[index].conversionQty = parseInt(e.target.value) || 0;
+                            setUnitConversions(newConv);
+                          }}
+                        />
+                      </div>
+                      <div className="flex-1">
+                        <Input 
+                          placeholder="Ke (cth: PCS)" 
+                          value={uc.toUnit}
+                          onChange={(e) => {
+                            const newConv = [...unitConversions];
+                            newConv[index].toUnit = e.target.value.toUpperCase();
+                            setUnitConversions(newConv);
+                          }}
+                        />
+                      </div>
+                      <Button 
+                        type="button" 
+                        variant="ghost" 
+                        size="sm"
+                        className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                        onClick={() => {
+                          const newConv = [...unitConversions];
+                          newConv.splice(index, 1);
+                          setUnitConversions(newConv);
+                        }}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
           </div>

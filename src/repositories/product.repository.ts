@@ -8,6 +8,7 @@ export const productRepository = {
       include: {
         category: true,
         unit: true,
+        unitConversions: true,
       }
     });
   },
@@ -28,6 +29,7 @@ export const productRepository = {
         include: {
           category: { select: { id: true, name: true } },
           unit: { select: { id: true, name: true } },
+          unitConversions: true,
         },
         orderBy: { createdAt: 'desc' },
       }),
@@ -43,6 +45,7 @@ export const productRepository = {
       include: {
         category: { select: { id: true, name: true } },
         unit: { select: { id: true, name: true } },
+        unitConversions: true,
       },
     });
   },
@@ -75,6 +78,26 @@ export const productRepository = {
         stock: data.stock,
         categoryId: data.categoryId,
         unitId: data.unitId,
+        brand: data.brand,
+        status: data.status,
+        purchaseUnit: data.purchaseUnit,
+        stockBaseUnit: data.stockBaseUnit,
+        conversionQty: data.conversionQty,
+        salesMode: data.salesMode,
+        allowUnitSale: data.allowUnitSale,
+        allowFractional: data.allowFractional,
+        legacyCode: data.legacyCode,
+        ...(data.unitConversions?.length ? {
+          unitConversions: {
+            create: data.unitConversions.map(uc => ({
+              fromUnit: uc.fromUnit,
+              toUnit: uc.toUnit,
+              conversionQty: uc.conversionQty,
+              conversionType: uc.conversionType,
+              active: uc.active
+            }))
+          }
+        } : {})
       },
     });
   },
@@ -100,6 +123,15 @@ export const productRepository = {
           retailPriceNote: item.retailPriceNote,
           categoryId: item.categoryId,
           unitId: item.unitId,
+          brand: item.brand,
+          status: item.status,
+          purchaseUnit: item.purchaseUnit,
+          stockBaseUnit: item.stockBaseUnit,
+          conversionQty: item.conversionQty,
+          salesMode: item.salesMode,
+          allowUnitSale: item.allowUnitSale,
+          allowFractional: item.allowFractional,
+          legacyCode: item.legacyCode,
         },
         create: {
           code: item.code,
@@ -112,6 +144,15 @@ export const productRepository = {
           stock: item.stock,
           categoryId: item.categoryId,
           unitId: item.unitId,
+          brand: item.brand,
+          status: item.status,
+          purchaseUnit: item.purchaseUnit,
+          stockBaseUnit: item.stockBaseUnit,
+          conversionQty: item.conversionQty,
+          salesMode: item.salesMode,
+          allowUnitSale: item.allowUnitSale,
+          allowFractional: item.allowFractional,
+          legacyCode: item.legacyCode,
         }
       })
     );
@@ -133,6 +174,27 @@ export const productRepository = {
         stock: data.stock,
         categoryId: data.categoryId,
         unitId: data.unitId,
+        brand: data.brand,
+        status: data.status,
+        purchaseUnit: data.purchaseUnit,
+        stockBaseUnit: data.stockBaseUnit,
+        conversionQty: data.conversionQty,
+        salesMode: data.salesMode,
+        allowUnitSale: data.allowUnitSale,
+        allowFractional: data.allowFractional,
+        legacyCode: data.legacyCode,
+        ...(data.unitConversions !== undefined ? {
+          unitConversions: {
+            deleteMany: {},
+            create: data.unitConversions.map(uc => ({
+              fromUnit: uc.fromUnit,
+              toUnit: uc.toUnit,
+              conversionQty: uc.conversionQty,
+              conversionType: uc.conversionType,
+              active: uc.active
+            }))
+          }
+        } : {})
       },
     });
   },
