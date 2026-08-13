@@ -9,21 +9,22 @@ export function AutoRefreshTimer({ intervalMinutes = 5 }: { intervalMinutes?: nu
   const [timeLeft, setTimeLeft] = useState(intervalMinutes * 60);
 
   useEffect(() => {
+    if (timeLeft <= 0) {
+      router.refresh();
+      setTimeLeft(intervalMinutes * 60);
+    }
+  }, [timeLeft, router, intervalMinutes]);
+
+  useEffect(() => {
     // Reset timer when component mounts
     setTimeLeft(intervalMinutes * 60);
     
     const interval = setInterval(() => {
-      setTimeLeft((prev) => {
-        if (prev <= 1) {
-          router.refresh();
-          return intervalMinutes * 60;
-        }
-        return prev - 1;
-      });
+      setTimeLeft((prev) => (prev > 0 ? prev - 1 : 0));
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [intervalMinutes, router]);
+  }, [intervalMinutes]);
 
   const minutes = Math.floor(timeLeft / 60);
   const seconds = timeLeft % 60;
