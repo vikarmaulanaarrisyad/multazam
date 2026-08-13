@@ -106,3 +106,32 @@ export async function addPayment(data: {
     return { success: false, error: error.message || 'Gagal menambahkan pembayaran' };
   }
 }
+
+export async function updateTransactionDeliveryDate(data: {
+  transactionId: string;
+  deliveryDate: Date | null;
+}) {
+  try {
+    const session = await auth();
+    if (!session?.user?.id || !session?.user?.role) {
+      return { success: false, error: 'Unauthorized' };
+    }
+
+    if (session.user.role !== 'SUPER_ADMIN' && session.user.role !== 'ADMIN') {
+      return { success: false, error: 'Hanya Admin yang dapat mengubah tanggal pengiriman.' };
+    }
+
+    await TransactionService.updateDeliveryDate(data.transactionId, data.deliveryDate);
+    
+    const formattedDate = data.deliveryDate ? new Date(data.deliveryDate).toLocaleDateString('id-ID') : 'Belum ditentukan';
+    await logAudit('UPDATE', 'TRANSACTION', data.transactionId, `Mengubah tanggal pengiriman menjadi: ${formattedDate}`);
+
+    revalidatePath('/admin/transactions');
+    revalidatePath('/super-admin/transactions');
+    
+    return { success: true };
+  } catch (error: any) {
+    console.error('Failed to update delivery date:', error);
+    return { success: false, error: error.message || 'Gagal mengubah tanggal pengiriman' };
+  }
+}

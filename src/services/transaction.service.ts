@@ -97,4 +97,7 @@ export class TransactionService {
     return TransactionRepository.rejectPriceRequest(data.transactionId, data.adminNotes);
   }
 
+  static async updateDeliveryDate(transactionId: string, deliveryDate: Date | null) {
+    return TransactionRepository.updateDeliveryDate(transactionId, deliveryDate);
+  }
 }

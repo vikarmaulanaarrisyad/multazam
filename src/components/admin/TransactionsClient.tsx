@@ -3,7 +3,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Search, ChevronLeft, ChevronRight, CheckCircle, XCircle, Truck, Package, X, Plus, Printer, FileDown, AlertCircle } from 'lucide-react';
 import { ColumnDef, flexRender, getCoreRowModel, useReactTable, getPaginationRowModel } from '@tanstack/react-table';
-import { updateTransactionStatus, cancelTransaction, addPayment, removeItemFromTransaction } from '@/actions/transaction-actions';
+import { updateTransactionStatus, cancelTransaction, addPayment, removeItemFromTransaction, updateTransactionDeliveryDate } from '@/actions/transaction-actions';
 import { approvePriceRequest, rejectPriceRequest } from '@/actions/approval-actions';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -65,6 +65,9 @@ export function TransactionsClient({ transactions }: { transactions: Transaction
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [isRemovingItem, setIsRemovingItem] = useState<string | null>(null);
+  
+  const [isEditingDeliveryDate, setIsEditingDeliveryDate] = useState(false);
+  const [newDeliveryDate, setNewDeliveryDate] = useState('');
 
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
@@ -85,6 +88,14 @@ export function TransactionsClient({ transactions }: { transactions: Transaction
     setError(null);
     setShowPaymentForm(false);
     setPaymentAmount('');
+    setIsEditingDeliveryDate(false);
+    
+    if (tx.deliveryDate) {
+      const d = new Date(tx.deliveryDate);
+      setNewDeliveryDate(d.toISOString().slice(0, 10));
+    } else {
+      setNewDeliveryDate('');
+    }
     
     if (tx.status === 'PENDING_APPROVAL') {
       const initialPrices: Record<string, number> = {};
@@ -118,6 +129,25 @@ export function TransactionsClient({ transactions }: { transactions: Transaction
       setSelectedTx(null);
     } else {
       setError(res.error || 'Gagal mencatat pembayaran');
+    }
+    setIsSubmitting(false);
+  };
+
+  const handleUpdateDeliveryDate = async () => {
+    if (!selectedTx) return;
+    setIsSubmitting(true);
+    
+    const result = await updateTransactionDeliveryDate({
+      transactionId: selectedTx.id,
+      deliveryDate: newDeliveryDate ? new Date(newDeliveryDate) : null
+    });
+    
+    if (result.success) {
+      toast.success('Tanggal pengiriman berhasil diperbarui!');
+      setIsEditingDeliveryDate(false);
+      setSelectedTx(null);
+    } else {
+      setError(result.error || 'Gagal mengubah tanggal pengiriman');
     }
     setIsSubmitting(false);
   };
@@ -790,11 +820,43 @@ export function TransactionsClient({ transactions }: { transactions: Transaction
                     <div className="flex justify-between"><span className="text-slate-500">Telepon:</span> <span className="font-semibold text-slate-900">{selectedTx.customerPhone || '-'}</span></div>
                     <div className="flex justify-between"><span className="text-slate-500">Sales:</span> <span className="font-semibold text-slate-900">{selectedTx.user.name || '-'}</span></div>
                     <div className="flex justify-between"><span className="text-slate-500">Tgl Pesanan:</span> <span className="font-semibold text-slate-900">{new Date(selectedTx.createdAt).toLocaleDateString('id-ID')}</span></div>
-                    <div className="flex justify-between">
+                    <div className="flex justify-between items-center">
                       <span className="text-slate-500">Tgl Pengiriman:</span> 
-                      <span className="font-semibold text-slate-900">
-                        {selectedTx.deliveryDate ? new Date(selectedTx.deliveryDate).toLocaleDateString('id-ID') : 'Belum Ditentukan'}
-                      </span>
+                      {isEditingDeliveryDate ? (
+                        <div className="flex items-center gap-2">
+                           <input 
+                             type="date" 
+                             value={newDeliveryDate} 
+                             onChange={e => setNewDeliveryDate(e.target.value)} 
+                             className="text-xs px-2 py-1 border border-slate-300 rounded" 
+                           />
+                           <button 
+                             onClick={handleUpdateDeliveryDate}
+                             disabled={isSubmitting}
+                             className="text-xs bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-700 disabled:opacity-50"
+                           >
+                             Simpan
+                           </button>
+                           <button 
+                             onClick={() => setIsEditingDeliveryDate(false)}
+                             className="text-xs text-slate-500 px-2 py-1 hover:text-slate-700"
+                           >
+                             Batal
+                           </button>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2">
+                          <span className="font-semibold text-slate-900">
+                            {selectedTx.deliveryDate ? new Date(selectedTx.deliveryDate).toLocaleDateString('id-ID') : 'Belum Ditentukan'}
+                          </span>
+                          <button 
+                            onClick={() => setIsEditingDeliveryDate(true)}
+                            className="text-xs text-blue-600 hover:underline font-semibold"
+                          >
+                            (Ubah)
+                          </button>
+                        </div>
+                      )}
                     </div>
                     <div className="flex justify-between"><span className="text-slate-500">Jatuh Tempo:</span> <span className="font-semibold text-red-600">{selectedTx.dueDate ? new Date(selectedTx.dueDate).toLocaleDateString('id-ID') : '-'}</span></div>
                     

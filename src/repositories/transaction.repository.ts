@@ -419,4 +419,10 @@ export class TransactionRepository {
     });
   }
 
+  static async updateDeliveryDate(transactionId: string, deliveryDate: Date | null) {
+    return prisma.transaction.update({
+      where: { id: transactionId },
+      data: { deliveryDate }
+    });
+  }
 }

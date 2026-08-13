@@ -5,6 +5,7 @@ import { auth } from '@/auth';
 import { ApiResponse } from '../types/api-response';
 import { PreOrderData } from '@/types/transaction.type';
 import { TransactionService } from '@/services/transaction.service';
+import { logAudit } from '@/actions/audit-actions';
 
 export async function createPreOrder(data: PreOrderData): Promise<ApiResponse<{ id: string }>> {
   try {
@@ -14,6 +15,9 @@ export async function createPreOrder(data: PreOrderData): Promise<ApiResponse<{ 
     }
 
     const transaction = await TransactionService.createPreOrder(data, session.user.id);
+    
+    // Log creation
+    await logAudit('CREATE', 'TRANSACTION', transaction.id, `Pesanan baru dibuat: ${transaction.invoiceNumber}`);
 
     revalidatePath('/sales');
     revalidatePath('/sales/requests');
