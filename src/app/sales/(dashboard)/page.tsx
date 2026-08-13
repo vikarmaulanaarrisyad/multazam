@@ -15,7 +15,7 @@ export default async function SalesDashboardPage() {
   const monthlySalesResult = await prisma.transaction.aggregate({
     where: {
       userId: session.user.id,
-      status: 'APPROVED',
+      status: { in: ['COMPLETED', 'SHIPPED', 'APPROVED', 'PENDING', 'PENDING_APPROVAL'] },
       createdAt: { gte: startOfMonth }
     },
     _sum: { totalAmount: true }
