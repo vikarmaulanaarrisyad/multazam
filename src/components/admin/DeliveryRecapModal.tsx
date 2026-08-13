@@ -79,17 +79,41 @@ export function DeliveryRecapModal({ isOpen, onClose }: DeliveryRecapModalProps)
       const workbook = new ExcelJS.Workbook();
       const sheet = workbook.addWorksheet('Rekap Gudang');
 
-      // Header Laporan
-      const displayDate = new Date(dateStr).toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-      sheet.addRow(['REKAP PENGIRIMAN GUDANG - DIA MAKMUR ABADI']);
-      sheet.addRow([`Tanggal Kirim: ${displayDate}`]);
-      sheet.addRow([]);
+      // Waktu Cetak
+      const printTime = new Date().toLocaleString('id-ID', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
 
-      sheet.getCell('A1').font = { bold: true, size: 14 };
-      sheet.getCell('A2').font = { bold: true };
+      // Header Laporan (Kop Surat)
+      const displayDate = new Date(dateStr).toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+      
+      sheet.mergeCells('A1:G1');
+      const titleCell = sheet.getCell('A1');
+      titleCell.value = 'DIA MAKMUR ABADI';
+      titleCell.font = { bold: true, size: 16, color: { argb: 'FF0F172A' } };
+      titleCell.alignment = { horizontal: 'center' };
+
+      sheet.mergeCells('A2:G2');
+      const subTitleCell = sheet.getCell('A2');
+      subTitleCell.value = 'REKAP PENGIRIMAN GUDANG';
+      subTitleCell.font = { bold: true, size: 12, color: { argb: 'FF1D4ED8' } };
+      subTitleCell.alignment = { horizontal: 'center' };
+
+      sheet.mergeCells('A3:G3');
+      const infoCell = sheet.getCell('A3');
+      infoCell.value = `Tanggal Pengiriman: ${displayDate} | Waktu Cetak: ${printTime}`;
+      infoCell.font = { italic: true, size: 10, color: { argb: 'FF475569' } };
+      infoCell.alignment = { horizontal: 'center' };
+
+      sheet.addRow([]); // Baris kosong untuk jarak
 
       // Header Tabel
-      const tableHeader = sheet.addRow(['NO', 'KODE', 'NAMA BARANG', 'ISI (KEMASAN)', 'QTY DISIAPKAN', 'CEK GUDANG']);
+      const tableHeader = sheet.addRow(['NO', 'KODE', 'NAMA BARANG', 'ISI (KEMASAN)', 'QTY DISIAPKAN', 'STOK GUDANG', 'CEK']);
       tableHeader.eachCell((cell) => {
         cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
         cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1E293B' } };
@@ -102,24 +126,39 @@ export function DeliveryRecapModal({ isOpen, onClose }: DeliveryRecapModalProps)
 
       // Data
       items.forEach((item, idx) => {
+        const isInsufficient = item.currentStock < item.totalQuantity;
         const row = sheet.addRow([
           idx + 1,
           item.code,
           item.name,
           item.contents || '-',
           item.totalQuantity,
+          item.currentStock,
           ''
         ]);
+
         row.eachCell((cell, colNumber) => {
           cell.border = {
             top: { style: 'thin' }, left: { style: 'thin' },
             bottom: { style: 'thin' }, right: { style: 'thin' }
           };
-          if (colNumber === 1 || colNumber === 4 || colNumber === 5) {
+          
+          if (colNumber === 1 || colNumber === 4 || colNumber === 5 || colNumber === 6) {
             cell.alignment = { horizontal: 'center' };
           }
+          
+          // Style untuk Qty Disiapkan
           if (colNumber === 5) {
             cell.font = { bold: true, color: { argb: 'FF1D4ED8' } };
+            cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFEFF6FF' } }; // light blue bg
+          }
+          
+          // Style untuk Stok Gudang
+          if (colNumber === 6) {
+            cell.font = { bold: true, color: { argb: isInsufficient ? 'FFDC2626' : 'FF059669' } }; // red if insufficient, else green
+            if (isInsufficient) {
+              cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFEF2F2' } }; // light red bg
+            }
           }
         });
       });
@@ -127,10 +166,11 @@ export function DeliveryRecapModal({ isOpen, onClose }: DeliveryRecapModalProps)
       // Column widths
       sheet.getColumn(1).width = 5;
       sheet.getColumn(2).width = 15;
-      sheet.getColumn(3).width = 40;
+      sheet.getColumn(3).width = 45;
       sheet.getColumn(4).width = 20;
       sheet.getColumn(5).width = 20;
-      sheet.getColumn(6).width = 15;
+      sheet.getColumn(6).width = 20;
+      sheet.getColumn(7).width = 15;
 
       const buffer = await workbook.xlsx.writeBuffer();
       saveAs(new Blob([buffer]), `Rekap_Gudang_${dateStr}.xlsx`);
