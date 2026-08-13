@@ -83,7 +83,7 @@ function SuratJalanCopy({ transaction, setting, isDivider = false }: any) {
               fontFamily: 'Calibri, sans-serif',
               pageBreakBefore: chunkIndex > 0 ? 'always' : 'auto'
             }}
-            className={`w-full min-h-[14cm] print:min-h-0 bg-white p-4 print:px-[1.2cm] print:pt-[0.7cm] print:pb-[0.5cm] relative flex flex-col text-xs leading-tight text-slate-900 ${isDivider ? 'border-b-2 border-dashed border-slate-300 print:border-slate-400 pb-12 mb-12 print:pb-12 print:mb-12' : ''}`}
+            className={`w-full min-h-[14cm] print:min-h-0 bg-white p-4 print:px-[1.1cm] print:pt-[0.7cm] print:pb-[0.5cm] relative flex flex-col text-xs leading-tight text-slate-900 ${isDivider ? 'border-b-2 border-dashed border-slate-300 print:border-slate-400 pb-12 mb-12 print:pb-12 print:mb-12' : ''}`}
           >
 
             <div className="w-full">
@@ -98,7 +98,7 @@ function SuratJalanCopy({ transaction, setting, isDivider = false }: any) {
                       : 'FAKTUR PENJUALAN'}
                   </span>
 
-                  <div className="flex mt-auto pt-2">
+                  <div className="flex mt-auto pt-1">
                     <span className="w-24">TANGGAL</span>
                     <span className="mr-6">:</span>
                     <span>{date}</span>
