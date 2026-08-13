@@ -50,7 +50,6 @@ export function DeliveryRecapModal({ isOpen, onClose }: DeliveryRecapModalProps)
           console.error('Print failed', e);
         }
         setIsPrinting(false);
-        onClose(); // Close modal after print dialog appears/closes
         
         // Cleanup after print dialog is closed (with a generous delay)
         setTimeout(() => {
@@ -136,7 +135,6 @@ export function DeliveryRecapModal({ isOpen, onClose }: DeliveryRecapModalProps)
       const buffer = await workbook.xlsx.writeBuffer();
       saveAs(new Blob([buffer]), `Rekap_Gudang_${dateStr}.xlsx`);
       
-      onClose();
     } catch (err) {
       console.error(err);
       alert('Terjadi kesalahan saat membuat Excel.');
