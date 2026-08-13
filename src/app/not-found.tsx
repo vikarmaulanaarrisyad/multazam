@@ -1,11 +1,18 @@
 import Link from 'next/link';
-import { Home, SearchX } from 'lucide-react';
+import Image from 'next/image';
+import { Home } from 'lucide-react';
 
 export default function NotFound() {
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4 font-sans text-center">
-      <div className="w-24 h-24 bg-blue-100 rounded-full flex items-center justify-center mb-6 shadow-sm border border-blue-200">
-        <SearchX className="w-12 h-12 text-blue-600" />
+    <div className="min-h-screen bg-white flex flex-col items-center justify-center p-4 font-sans text-center">
+      <div className="relative w-72 h-72 mb-6">
+        <Image 
+          src="/images/404.jpg" 
+          alt="404 Not Found Illustration" 
+          fill
+          className="object-contain"
+          priority
+        />
       </div>
       <h1 className="text-4xl font-extrabold text-slate-900 tracking-tight mb-2">404</h1>
       <h2 className="text-xl font-bold text-slate-800 mb-3">Halaman Tidak Ditemukan</h2>
