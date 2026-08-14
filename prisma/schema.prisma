@@ -176,6 +176,9 @@ model Product {
   stockMovements   StockMovement[]
   purchaseItems    PurchaseItem[]
   returnItems      ReturnItem[]
+
+  @@index([categoryId])
+  @@index([unitId])
 }
 
 model Transaction {
@@ -283,6 +286,8 @@ model Purchase {
   updatedAt     DateTime @updatedAt
 
   items PurchaseItem[]
+
+  @@index([supplierId])
 }
 
 model PurchaseItem {
@@ -356,6 +361,7 @@ model Visit {
   updatedAt DateTime @updatedAt
 
   @@index([userId, scheduledAt])
+  @@index([storeId])
 }
 
 model InvoiceCounter {
