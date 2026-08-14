@@ -3,8 +3,10 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Search, ChevronLeft, ChevronRight, CheckCircle, XCircle, Truck, Package, X, Plus, Printer, FileDown, AlertCircle } from 'lucide-react';
 import { ColumnDef, flexRender, getCoreRowModel, useReactTable, getPaginationRowModel } from '@tanstack/react-table';
+import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import { updateTransactionStatus, cancelTransaction, addPayment, removeItemFromTransaction, updateTransactionDeliveryDate } from '@/actions/transaction-actions';
 import { approvePriceRequest, rejectPriceRequest } from '@/actions/approval-actions';
+import { getTransactionsForExport } from '@/actions/transaction-export-action';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import ExcelJS from 'exceljs';
@@ -49,9 +51,48 @@ export type TransactionDetail = {
   }[];
 };
 
-export function TransactionsClient({ transactions }: { transactions: TransactionDetail[] }) {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [activeTab, setActiveTab] = useState('PENDING_APPROVAL');
+export function TransactionsClient({ 
+  transactions,
+  totalCount,
+  statusCounts,
+  initialPageSize
+}: { 
+  transactions: TransactionDetail[],
+  totalCount: number,
+  statusCounts: Record<string, number>,
+  initialPageSize: number
+}) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const pathname = usePathname();
+
+  const [searchTerm, setSearchTerm] = useState(searchParams.get('q') || '');
+  const activeTab = searchParams.get('tab') || 'PENDING_APPROVAL';
+  const startDate = searchParams.get('startDate') || '';
+  const endDate = searchParams.get('endDate') || '';
+  const pageIndex = parseInt(searchParams.get('page') || '1') - 1;
+  const pageSize = parseInt(searchParams.get('pageSize') || String(initialPageSize));
+
+  const updateURL = (key: string, value: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (value) {
+      params.set(key, value);
+    } else {
+      params.delete(key);
+    }
+    if (key !== 'page') {
+      params.delete('page');
+    }
+    router.push(`${pathname}?${params.toString()}`);
+  };
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      updateURL('q', searchTerm);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
   const [showPrintModalFor, setShowPrintModalFor] = useState<string | null>(null);
   const [activeIframe, setActiveIframe] = useState<{ id: string, action: string, key: number } | null>(null);
   const [selectedTx, setSelectedTx] = useState<TransactionDetail | null>(null);
@@ -62,8 +103,6 @@ export function TransactionsClient({ transactions }: { transactions: Transaction
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [adminNotes, setAdminNotes] = useState('');
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
   const [isRemovingItem, setIsRemovingItem] = useState<string | null>(null);
   
   const [isEditingDeliveryDate, setIsEditingDeliveryDate] = useState(false);
@@ -299,44 +338,26 @@ export function TransactionsClient({ transactions }: { transactions: Transaction
     { id: 'CANCELLED', label: 'Dibatalkan', statuses: ['CANCELLED', 'REJECTED'] },
   ];
 
-  const filteredTransactions = useMemo(() => {
-    return transactions.filter(tx => {
-      const matchSearch = 
-        tx.invoiceNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (tx.customerName && tx.customerName.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        (tx.user.name && tx.user.name.toLowerCase().includes(searchTerm.toLowerCase()));
-      
-      const activeTabObj = tabs.find(t => t.id === activeTab);
-      const matchTab = activeTabObj ? activeTabObj.statuses.includes(tx.status) : false;
-      
-      let matchDate = true;
-      if (startDate || endDate) {
-        const txDate = new Date(tx.createdAt);
-        txDate.setHours(0, 0, 0, 0);
-        
-        if (startDate) {
-          const start = new Date(startDate);
-          start.setHours(0, 0, 0, 0);
-          if (txDate < start) matchDate = false;
-        }
-        if (endDate) {
-          const end = new Date(endDate);
-          end.setHours(23, 59, 59, 999);
-          if (txDate > end) matchDate = false;
-        }
-      }
-
-      return matchSearch && matchTab && matchDate;
-    });
-  }, [transactions, searchTerm, activeTab, tabs, startDate, endDate]);
-
   const handleExportExcel = async () => {
-    if (filteredTransactions.length === 0) {
+    if (totalCount === 0) {
       toast.error('Tidak ada data untuk diekspor');
       return;
     }
 
     try {
+      toast.loading('Mengambil data untuk diekspor...', { id: 'export-excel' });
+      const res = await getTransactionsForExport({
+        search: searchParams.get('q') || '',
+        tab: searchParams.get('tab') || '',
+        startDate: searchParams.get('startDate') || '',
+        endDate: searchParams.get('endDate') || ''
+      });
+      
+      if (!res.success) throw new Error('Gagal mengambil data');
+      
+      const fullData = res.data;
+      toast.loading('Memproses file Excel...', { id: 'export-excel' });
+
       const workbook = new ExcelJS.Workbook();
       workbook.creator = 'DIA MAKMUR ABADI';
       workbook.created = new Date();
@@ -388,7 +409,7 @@ export function TransactionsClient({ transactions }: { transactions: Transaction
       let totalAmountAll = 0;
       let currentRowIdx = 5;
 
-      filteredTransactions.forEach(tx => {
+      fullData.forEach(tx => {
         let isFirstRowForTx = true;
         
         tx.items.forEach((item) => {
@@ -535,14 +556,12 @@ export function TransactionsClient({ transactions }: { transactions: Transaction
       const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
       saveAs(blob, `Laporan_Transaksi_${new Date().toISOString().slice(0, 10)}.xlsx`);
       
-      toast.success('Laporan berhasil diekspor dengan format rapi!');
+      toast.success('Laporan berhasil diekspor dengan format rapi!', { id: 'export-excel' });
     } catch (error) {
       console.error(error);
-      toast.error('Terjadi kesalahan saat memproses Excel');
+      toast.error('Terjadi kesalahan saat memproses Excel', { id: 'export-excel' });
     }
   };
-
-  const [{ pageIndex, pageSize }, setPagination] = useState({ pageIndex: 0, pageSize: 10 });
 
   const columns: ColumnDef<TransactionDetail>[] = [
     {
@@ -622,16 +641,14 @@ export function TransactionsClient({ transactions }: { transactions: Transaction
   ];
 
   const table = useReactTable({
-    data: filteredTransactions,
+    data: transactions,
     columns,
-    pageCount: Math.ceil(filteredTransactions.length / pageSize),
+    pageCount: Math.ceil(totalCount / pageSize),
     state: {
       pagination: { pageIndex, pageSize },
     },
-    onPaginationChange: setPagination,
-    getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
     manualPagination: true,
+    getCoreRowModel: getCoreRowModel(),
   });
 
   return (
@@ -652,7 +669,7 @@ export function TransactionsClient({ transactions }: { transactions: Transaction
             <input 
               type="date"
               value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
+              onChange={(e) => updateURL('startDate', e.target.value)}
               className="px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               title="Dari Tanggal"
             />
@@ -660,7 +677,7 @@ export function TransactionsClient({ transactions }: { transactions: Transaction
             <input 
               type="date"
               value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
+              onChange={(e) => updateURL('endDate', e.target.value)}
               className="px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               title="Sampai Tanggal"
             />
@@ -677,7 +694,7 @@ export function TransactionsClient({ transactions }: { transactions: Transaction
           {tabs.map(tab => (
             <button
               key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
+              onClick={() => updateURL('tab', tab.id)}
               className={cn(
                 "px-4 py-2 rounded-xl text-sm font-bold whitespace-nowrap transition-all",
                 activeTab === tab.id 
@@ -687,7 +704,7 @@ export function TransactionsClient({ transactions }: { transactions: Transaction
             >
               {tab.label}
               <span className="ml-2 px-2 py-0.5 rounded-full text-[10px] bg-white/20">
-                {transactions.filter(t => tab.statuses.includes(t.status)).length}
+                {statusCounts[tab.id] || 0}
               </span>
             </button>
           ))}
@@ -737,20 +754,35 @@ export function TransactionsClient({ transactions }: { transactions: Transaction
         </div>
 
         {/* Pagination */}
-        <div className="p-4 border-t border-slate-100 flex items-center justify-between bg-slate-50/50">
+        <div className="p-4 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between bg-slate-50/50 gap-4">
+          <div className="flex items-center gap-3">
+            <span className="text-sm text-slate-500 font-medium hidden sm:inline">Tampilkan</span>
+            <select
+              value={pageSize}
+              onChange={(e) => updateURL('pageSize', e.target.value)}
+              className="bg-white border border-slate-200 text-slate-700 text-sm rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none block p-2"
+            >
+              <option value="10">10</option>
+              <option value="25">25</option>
+              <option value="50">50</option>
+              <option value="100">100</option>
+            </select>
+            <span className="text-sm text-slate-500 font-medium hidden sm:inline">baris per halaman</span>
+          </div>
+
           <div className="text-sm text-slate-500 font-medium">
             Halaman {pageIndex + 1} dari {table.getPageCount() || 1}
           </div>
           <div className="flex gap-2">
             <button
-              onClick={() => table.previousPage()}
+              onClick={() => updateURL('page', String(pageIndex))}
               disabled={!table.getCanPreviousPage()}
               className="p-2 rounded-lg border border-slate-200 bg-white text-slate-600 disabled:opacity-50 hover:bg-slate-50 transition-colors"
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
             <button
-              onClick={() => table.nextPage()}
+              onClick={() => updateURL('page', String(pageIndex + 2))}
               disabled={!table.getCanNextPage()}
               className="p-2 rounded-lg border border-slate-200 bg-white text-slate-600 disabled:opacity-50 hover:bg-slate-50 transition-colors"
             >
