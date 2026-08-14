@@ -936,6 +936,7 @@ export function TransactionsClient({
                 <table className="w-full text-left">
                   <thead className="bg-slate-50 border-b border-slate-200">
                     <tr>
+                      <th className="p-3 text-xs font-bold text-slate-500 w-12 text-center">No</th>
                       <th className="p-3 text-xs font-bold text-slate-500">Produk</th>
                       <th className="p-3 text-xs font-bold text-slate-500 text-right">Qty</th>
                       <th className="p-3 text-xs font-bold text-slate-500 text-right">Harga Satuan</th>
@@ -946,8 +947,9 @@ export function TransactionsClient({
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
-                    {selectedTx.items.map(item => (
+                    {selectedTx.items.map((item, index) => (
                       <tr key={item.id} className="bg-white">
+                        <td className="p-3 text-sm text-slate-600 text-center">{index + 1}</td>
                         <td className="p-3 text-sm font-medium text-slate-900">{item.productName}</td>
                         <td className="p-3 text-sm text-slate-600 text-right">
                           {item.quantity} <span className="text-[10px] text-slate-400 font-semibold ml-1">{item.unitNote || 'Karton'}</span>
