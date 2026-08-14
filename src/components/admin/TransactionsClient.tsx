@@ -70,7 +70,7 @@ export function TransactionsClient({
   const activeTab = searchParams.get('tab') || 'PENDING_APPROVAL';
   const startDate = searchParams.get('startDate') || '';
   const endDate = searchParams.get('endDate') || '';
-  const pageIndex = parseInt(searchParams.get('page') || '1') - 1;
+  const pageIndex = Math.max(0, parseInt(searchParams.get('page') || '1') - 1);
   const pageSize = parseInt(searchParams.get('pageSize') || String(initialPageSize));
 
   const updateURL = (key: string, value: string) => {
@@ -87,11 +87,14 @@ export function TransactionsClient({
   };
 
   useEffect(() => {
+    const currentQ = searchParams.get('q') || '';
+    if (searchTerm === currentQ) return;
+
     const timer = setTimeout(() => {
       updateURL('q', searchTerm);
     }, 500);
     return () => clearTimeout(timer);
-  }, [searchTerm]);
+  }, [searchTerm, searchParams]);
 
   const [showPrintModalFor, setShowPrintModalFor] = useState<string | null>(null);
   const [activeIframe, setActiveIframe] = useState<{ id: string, action: string, key: number } | null>(null);
