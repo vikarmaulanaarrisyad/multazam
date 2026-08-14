@@ -60,21 +60,40 @@ function SuratJalanCopy({ transaction, setting, isDivider = false }: any) {
   const shippingCost = Number(transaction.shippingCost) || 0;
   const totalKeseluruhan = totalItemAmount + shippingCost;
 
-  const MAX_ITEMS = 15;
+  const MAX_ITEMS_PER_PAGE = 13;
+  const MAX_ITEMS_LAST_PAGE = 9;
+
   const allRows = [...transaction.items];
   if (shippingCost > 0) {
     allRows.push({ isShipping: true, id: 'shipping' });
   }
 
-  const chunks = [];
-  for (let i = 0; i < allRows.length; i += MAX_ITEMS) {
-    chunks.push(allRows.slice(i, i + MAX_ITEMS));
+  const chunks: any[][] = [];
+  if (allRows.length === 0) {
+    chunks.push([]);
+  } else {
+    let i = 0;
+    while (i < allRows.length) {
+      const remaining = allRows.length - i;
+      if (remaining <= MAX_ITEMS_LAST_PAGE) {
+        chunks.push(allRows.slice(i, i + remaining));
+        i += remaining;
+      } else if (remaining <= MAX_ITEMS_PER_PAGE) {
+        const take = Math.ceil(remaining / 2);
+        chunks.push(allRows.slice(i, i + take));
+        i += take;
+      } else {
+        chunks.push(allRows.slice(i, i + MAX_ITEMS_PER_PAGE));
+        i += MAX_ITEMS_PER_PAGE;
+      }
+    }
   }
 
   return (
     <>
       {chunks.map((chunk, chunkIndex) => {
         const isLastPage = chunkIndex === chunks.length - 1;
+        const startIndex = chunks.slice(0, chunkIndex).reduce((sum, c) => sum + c.length, 0);
 
         return (
           <div
@@ -135,7 +154,7 @@ function SuratJalanCopy({ transaction, setting, isDivider = false }: any) {
                 </thead>
                 <tbody className={isLastPage ? "border-b border-slate-900" : ""}>
                   {chunk.map((item: any, idx: number) => {
-                    const actualIndex = chunkIndex * MAX_ITEMS + idx + 1;
+                    const actualIndex = startIndex + idx + 1;
 
                     if (item.isShipping) {
                       return (
