@@ -287,7 +287,7 @@ export function PreOrderClient({ stores }: PreOrderClientProps) {
   }
 
   return (
-    <div className="flex flex-col w-full pb-24">
+    <div className="flex flex-col w-full pb-8">
       {/* Header */}
       <div className="flex items-center gap-3 px-4 py-4 bg-white sticky top-0 z-40 border-b border-slate-100 shadow-sm">
         <button 
@@ -646,8 +646,8 @@ export function PreOrderClient({ stores }: PreOrderClientProps) {
                 </div>
               </div>
 
-              {/* Submit Footer (Sticky on Mobile) */}
-              <div className="fixed bottom-0 left-0 right-0 z-50 p-4 bg-white/80 backdrop-blur-md border-t border-slate-200 shadow-[0_-10px_30px_-15px_rgba(0,0,0,0.1)] lg:relative lg:bg-transparent lg:backdrop-blur-none lg:border-t-0 lg:shadow-none lg:p-0 lg:mt-4 lg:pb-4 lg:z-auto">
+              {/* Submit Footer */}
+              <div className="mt-4 w-full">
                 <div className={cn(
                   "rounded-2xl shadow-lg p-4 flex flex-col gap-3 text-white border transition-all duration-300",
                   isPriceProposal ? "bg-linear-to-r from-amber-600 to-amber-500 border-amber-700 shadow-amber-500/20" : "bg-linear-to-r from-slate-900 to-slate-800 border-slate-700 shadow-slate-900/20"
