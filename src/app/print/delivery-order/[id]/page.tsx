@@ -130,8 +130,8 @@ function SuratJalanCopy({ transaction, setting, isDivider = false }: any) {
                 </div>
 
                 {/* Kanan */}
-                <div className="flex flex-col w-[45%]">
-                  <div className="flex"><span className="w-24">NO</span><span className="mr-2">:</span><span>{invoiceNumber} {chunks.length > 1 ? `(Hal ${chunkIndex + 1}/${chunks.length})` : ''}</span></div>
+                <div className="flex flex-col w-[40%] text-[13px] gap-0.5">
+                  <div className="flex"><span className="w-24">NO</span><span className="mr-2">:</span><span>{invoiceNumber} {chunks.length > 1 ? "(Hal " + (chunkIndex + 1) + "/" + chunks.length + ")" : ""}</span></div>
                   <div className="flex"><span className="w-24">Nama Toko</span><span className="mr-2">:</span><span>{transaction.customerName || '-'}</span></div>
                   <div className="flex"><span className="w-24">Alamat</span><span className="mr-2">:</span><span className="truncate">{transaction.shippingAddress || '-'}</span></div>
                   <div className="flex"><span className="w-24">Sales</span><span className="mr-2">:</span><span>{transaction.user?.name || '-'}</span></div>
@@ -153,8 +153,8 @@ function SuratJalanCopy({ transaction, setting, isDivider = false }: any) {
                     <th className="py-1 px-1 font-semibold w-24">KODE</th>
                     <th className="py-1 px-1 font-semibold">NAMA PRODUK</th>
                     <th className="py-1 px-1 font-semibold text-center w-24">QTY</th>
-                    <th className="py-1 px-1 font-semibold text-right w-28">HARGA</th>
-                    <th className="py-1 px-1 font-semibold text-right w-32">TOTAL</th>
+                    <th className="py-1 px-1 font-semibold text-right w-32">HARGA</th>
+                    <th className="py-1 px-1 font-semibold text-right w-36">TOTAL</th>
                   </tr>
                 </thead>
                 <tbody className={isLastPage ? "border-b border-slate-900" : ""}>
@@ -169,13 +169,13 @@ function SuratJalanCopy({ transaction, setting, isDivider = false }: any) {
                           <td className="py-1 px-1 align-top">BIAYA ONGKIR PENGIRIMAN</td>
                           <td className="py-1 px-1 text-center align-top">1</td>
                           <td className="py-1 px-1 text-right align-top whitespace-nowrap">
-                            <div className="flex justify-between w-full">
+                            <div className="w-24 flex justify-between ml-auto">
                               <span>Rp</span>
                               <span>{shippingCost.toLocaleString('id-ID')},00</span>
                             </div>
                           </td>
                           <td className="py-1 px-1 text-right align-top whitespace-nowrap">
-                            <div className="flex justify-between w-full pl-1">
+                            <div className="w-26 flex justify-between ml-auto pl-1">
                               <span>Rp</span>
                               <span>{shippingCost.toLocaleString('id-ID')},00</span>
                             </div>
@@ -213,13 +213,13 @@ function SuratJalanCopy({ transaction, setting, isDivider = false }: any) {
                         <td className="py-1 px-1 align-top">{item.product.name}</td>
                         <td className="py-1 px-1 text-center align-top whitespace-nowrap">{item.quantity} {unitString}</td>
                         <td className="py-1 px-1 text-right align-top whitespace-nowrap">
-                          <div className="flex justify-between w-full">
+                          <div className="w-24 flex justify-between ml-auto">
                             <span>Rp</span>
                             <span>{Number(item.price).toLocaleString('id-ID')},00</span>
                           </div>
                         </td>
                         <td className="py-1 px-1 text-right align-top whitespace-nowrap">
-                          <div className="flex justify-between w-full pl-1">
+                          <div className="w-26 flex justify-between ml-auto pl-1">
                             <span>Rp</span>
                             <span>{(Number(item.price) * item.quantity).toLocaleString('id-ID')},00</span>
                           </div>
@@ -243,7 +243,7 @@ function SuratJalanCopy({ transaction, setting, isDivider = false }: any) {
                     <div className="text-right pr-4 tracking-widest whitespace-nowrap">
                       TOTAL :
                     </div>
-                    <div className="w-28 flex justify-between font-bold text-[15px]">
+                    <div className="w-32 flex justify-between font-bold text-[15px]">
                       <span>Rp</span>
                       <span>{totalKeseluruhan.toLocaleString('id-ID')},00</span>
                     </div>
