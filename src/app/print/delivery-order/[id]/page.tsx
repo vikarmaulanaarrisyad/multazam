@@ -60,8 +60,8 @@ function SuratJalanCopy({ transaction, setting, isDivider = false }: any) {
   const shippingCost = Number(transaction.shippingCost) || 0;
   const totalKeseluruhan = totalItemAmount + shippingCost;
 
-  const MAX_ITEMS_PER_PAGE = 13;
-  const MAX_ITEMS_LAST_PAGE = 9;
+  const MAX_ITEMS_PER_PAGE = 14;
+  const MAX_ITEMS_LAST_PAGE = 10;
 
   const allRows = [...transaction.items];
   if (shippingCost > 0) {
@@ -75,14 +75,19 @@ function SuratJalanCopy({ transaction, setting, isDivider = false }: any) {
     let i = 0;
     while (i < allRows.length) {
       const remaining = allRows.length - i;
+      
       if (remaining <= MAX_ITEMS_LAST_PAGE) {
+        // Fits perfectly with footer
         chunks.push(allRows.slice(i, i + remaining));
         i += remaining;
       } else if (remaining <= MAX_ITEMS_PER_PAGE) {
-        const take = Math.ceil(remaining / 2);
-        chunks.push(allRows.slice(i, i + take));
-        i += take;
+        // Fits on page without footer, but footer would overflow
+        // Maximize this page, then add empty page for footer
+        chunks.push(allRows.slice(i, i + remaining));
+        i += remaining;
+        chunks.push([]);
       } else {
+        // More than a page can hold, take full capacity
         chunks.push(allRows.slice(i, i + MAX_ITEMS_PER_PAGE));
         i += MAX_ITEMS_PER_PAGE;
       }
@@ -229,12 +234,12 @@ function SuratJalanCopy({ transaction, setting, isDivider = false }: any) {
             {isLastPage && (
               <div className="mt-2">
                 {/* FOOTER TOTAL */}
-                <div className="flex justify-between items-center py-1 border-b-2 border-slate-900 border-dashed">
-                  <div className="flex flex-1 items-center uppercase text-[15px] font-semibold text-slate-900 pr-4">
-                    <span className="mr-2">TERBILANG :</span>
-                    <span className="truncate flex-1 italic">{toTerbilang(totalKeseluruhan)}</span>
+                <div className="flex justify-between items-start py-1 border-b-2 border-slate-900 border-dashed">
+                  <div className="flex flex-1 items-start uppercase text-[13px] font-semibold text-slate-900 pr-4 pt-0.5">
+                    <span className="mr-2 whitespace-nowrap">TERBILANG :</span>
+                    <span className="flex-1 italic leading-tight">{toTerbilang(totalKeseluruhan)}</span>
                   </div>
-                  <div className="flex items-center uppercase text-sm font-bold text-slate-900">
+                  <div className="flex items-start uppercase text-sm font-bold text-slate-900 pt-0.5">
                     <div className="text-right pr-4 tracking-widest whitespace-nowrap">
                       TOTAL :
                     </div>
