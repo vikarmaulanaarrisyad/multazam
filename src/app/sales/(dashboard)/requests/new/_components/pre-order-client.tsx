@@ -647,7 +647,7 @@ export function PreOrderClient({ stores }: PreOrderClientProps) {
               </div>
 
               {/* Submit Footer */}
-              <div className="mt-4 w-full">
+              <div className="mt-4 mb-12 w-full">
                 <div className={cn(
                   "rounded-2xl shadow-lg p-4 flex flex-col gap-3 text-white border transition-all duration-300",
                   isPriceProposal ? "bg-linear-to-r from-amber-600 to-amber-500 border-amber-700 shadow-amber-500/20" : "bg-linear-to-r from-slate-900 to-slate-800 border-slate-700 shadow-slate-900/20"
