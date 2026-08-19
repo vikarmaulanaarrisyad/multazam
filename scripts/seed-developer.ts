@@ -1,3 +1,5 @@
+import { config } from 'dotenv';
+config({ path: '.env' });
 import prisma from '../src/lib/prisma';
 import bcrypt from 'bcrypt';
 
