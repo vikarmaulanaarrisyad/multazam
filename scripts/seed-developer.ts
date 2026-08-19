@@ -1,9 +1,10 @@
 import { config } from 'dotenv';
+config({ path: '.env.development' });
 config({ path: '.env' });
-import prisma from '../src/lib/prisma';
 import bcrypt from 'bcrypt';
 
 async function main() {
+  const { default: prisma } = await import('../src/lib/prisma');
   console.log('Seeding developer account...');
 
   const devEmail = 'developer@diamakmur.com';
@@ -37,7 +38,4 @@ main()
   .catch((e) => {
     console.error(e);
     process.exit(1);
-  })
-  .finally(async () => {
-    await prisma.$disconnect();
   });
