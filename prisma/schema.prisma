@@ -11,6 +11,7 @@ enum Role {
   SUPER_ADMIN
   ADMIN
   SALES
+  DEVELOPER
 }
 
 enum VisitStatus {
@@ -311,6 +312,14 @@ model Setting {
   logoPublicId   String?
   officeLat      Float?
   officeLng      Float?
+  
+  // Developer & Trial Settings
+  trialActive           Boolean   @default(false)
+  trialExpiresAt        DateTime?
+  showDeveloperModal    Boolean   @default(false)
+  developerModalTitle   String?
+  developerModalContent String?   @db.Text
+
   updatedAt      DateTime @updatedAt
 }
 

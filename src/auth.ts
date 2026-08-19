@@ -28,7 +28,19 @@ export const { auth, signIn, signOut, handlers: { GET, POST } } = NextAuth({
 
           const passwordsMatch = await bcrypt.compare(password, user.password);
 
-          if (passwordsMatch) return user;
+          if (passwordsMatch) {
+            // Cek masa trial untuk selain DEVELOPER
+            if (user.role !== 'DEVELOPER') {
+              const setting = await prisma.setting.findFirst();
+              if (setting?.trialActive && setting.trialExpiresAt) {
+                const now = new Date();
+                if (now > setting.trialExpiresAt) {
+                  throw new Error("TRIAL_EXPIRED");
+                }
+              }
+            }
+            return user;
+          }
         }
 
         return null;

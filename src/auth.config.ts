@@ -19,6 +19,7 @@ export const authConfig = {
           if (role === 'SUPER_ADMIN') return Response.redirect(new URL('/super-admin', nextUrl));
           if (role === 'ADMIN') return Response.redirect(new URL('/admin', nextUrl));
           if (role === 'SALES') return Response.redirect(new URL('/sales', nextUrl));
+          if (role === 'DEVELOPER') return Response.redirect(new URL('/developer', nextUrl));
           return Response.redirect(new URL('/', nextUrl));
         }
         return true;
@@ -36,6 +37,7 @@ export const authConfig = {
         if (role === 'SUPER_ADMIN') return Response.redirect(new URL('/super-admin', nextUrl));
         if (role === 'ADMIN') return Response.redirect(new URL('/admin', nextUrl));
         if (role === 'SALES') return Response.redirect(new URL('/sales', nextUrl));
+        if (role === 'DEVELOPER') return Response.redirect(new URL('/developer', nextUrl));
       }
 
       // Role based routing protection
@@ -47,6 +49,9 @@ export const authConfig = {
         return false;
       }
       if (nextUrl.pathname.startsWith('/sales') && !isAuthRoute && role !== 'SALES' && role !== 'SUPER_ADMIN' && role !== 'ADMIN') {
+        return false;
+      }
+      if (nextUrl.pathname.startsWith('/developer') && role !== 'DEVELOPER') {
         return false;
       }
 

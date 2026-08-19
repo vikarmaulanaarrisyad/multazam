@@ -4,6 +4,8 @@ import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import { PwaInstallPrompt } from "@/components/pwa-install-prompt";
 import { PwaUpdatePrompt } from "@/components/pwa-update-prompt";
+import { GlobalDeveloperModalClient } from "@/components/GlobalDeveloperModalClient";
+import prisma from "@/lib/prisma";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -33,7 +35,14 @@ export const viewport: Viewport = {
   themeColor: "#ffffff",
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  let setting = null;
+  try {
+    setting = await prisma.setting.findFirst();
+  } catch (error) {
+    console.error("Failed to fetch settings for GlobalModal", error);
+  }
+
   return (
     <html
       lang="en"
@@ -44,6 +53,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <Toaster position="top-center" richColors />
         <PwaInstallPrompt />
         <PwaUpdatePrompt />
+        {setting?.showDeveloperModal && (
+          <GlobalDeveloperModalClient 
+            show={true}
+            title={setting.developerModalTitle}
+            content={setting.developerModalContent}
+          />
+        )}
       </body>
     </html>
   );
