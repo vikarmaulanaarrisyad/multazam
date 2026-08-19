@@ -9,7 +9,7 @@ import { DataTable } from '@/components/datatable/DataTable';
 import { ColumnDef } from '@tanstack/react-table';
 import { Button } from '@/components/ui/button';
 
-type UserRole = 'SUPER_ADMIN' | 'ADMIN' | 'SALES';
+type UserRole = 'SUPER_ADMIN' | 'ADMIN' | 'SALES' | 'DEVELOPER';
 
 interface UserItem {
   id: string;
