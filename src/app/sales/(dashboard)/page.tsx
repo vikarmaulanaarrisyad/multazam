@@ -13,11 +13,15 @@ export default async function SalesDashboardPage() {
   
   const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const endOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+  const startOfYear = new Date(now.getFullYear(), 0, 1);
 
   // Jalankan semua kueri secara paralel untuk performa yang lebih baik (Mencegah N+1 Sequential)
   const [
     salesTarget,
     monthlySalesResult,
+    dailySalesResult,
+    yearlySalesResult,
+    accumulatedSalesResult,
     totalOrders,
     pendingApprovals,
     recentTransactions,
@@ -39,6 +43,35 @@ export default async function SalesDashboardPage() {
         userId: session.user.id,
         status: { not: 'CANCELLED' }, // Sesuai kesepakatan: total nilai pesanan (Invoice)
         createdAt: { gte: startOfMonth }
+      },
+      _sum: { totalAmount: true, shippingCost: true }
+    }),
+
+    // 2.1 Daily Sales Result
+    prisma.transaction.aggregate({
+      where: {
+        userId: session.user.id,
+        status: { not: 'CANCELLED' },
+        createdAt: { gte: startOfToday, lte: endOfToday }
+      },
+      _sum: { totalAmount: true, shippingCost: true }
+    }),
+
+    // 2.2 Yearly Sales Result
+    prisma.transaction.aggregate({
+      where: {
+        userId: session.user.id,
+        status: { not: 'CANCELLED' },
+        createdAt: { gte: startOfYear }
+      },
+      _sum: { totalAmount: true, shippingCost: true }
+    }),
+
+    // 2.3 Accumulated Sales Result
+    prisma.transaction.aggregate({
+      where: {
+        userId: session.user.id,
+        status: { not: 'CANCELLED' }
       },
       _sum: { totalAmount: true, shippingCost: true }
     }),
@@ -85,7 +118,13 @@ export default async function SalesDashboardPage() {
   ]);
 
   const targetSales = salesTarget ? Number(salesTarget.targetAmount) : 0;
-  const totalSales = Number(monthlySalesResult._sum.totalAmount || 0) + Number(monthlySalesResult._sum.shippingCost || 0);
+  
+  const dailySales = Number(dailySalesResult._sum.totalAmount || 0) + Number(dailySalesResult._sum.shippingCost || 0);
+  const monthlySales = Number(monthlySalesResult._sum.totalAmount || 0) + Number(monthlySalesResult._sum.shippingCost || 0);
+  const yearlySales = Number(yearlySalesResult._sum.totalAmount || 0) + Number(yearlySalesResult._sum.shippingCost || 0);
+  const accumulatedSales = Number(accumulatedSalesResult._sum.totalAmount || 0) + Number(accumulatedSalesResult._sum.shippingCost || 0);
+  
+  const totalSales = monthlySales; // Keep totalSales for progress target computation
   const progressPercent = targetSales > 0 ? Math.min(Math.round((totalSales / targetSales) * 100), 100) : 0;
 
   return (
@@ -121,6 +160,29 @@ export default async function SalesDashboardPage() {
             <span className="text-slate-500">
               Sisa: {targetSales > 0 ? `Rp ${Math.max((targetSales - totalSales) / 1000000, 0).toFixed(1)}Jt` : '-'}
             </span>
+          </div>
+        </div>
+      </section>
+
+      {/* Ringkasan Pendapatan Grid */}
+      <section>
+        <h2 className="text-sm font-semibold text-slate-900 mb-3">Ringkasan Pendapatan</h2>
+        <div className="grid grid-cols-2 gap-3">
+          <div className="bg-white rounded-xl p-3 border border-slate-200 shadow-sm flex flex-col gap-1">
+            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Harian</span>
+            <span className="text-sm font-bold text-slate-900">Rp {(dailySales / 1000000).toFixed(1)}Jt</span>
+          </div>
+          <div className="bg-white rounded-xl p-3 border border-slate-200 shadow-sm flex flex-col gap-1">
+            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Bulanan</span>
+            <span className="text-sm font-bold text-slate-900">Rp {(monthlySales / 1000000).toFixed(1)}Jt</span>
+          </div>
+          <div className="bg-white rounded-xl p-3 border border-slate-200 shadow-sm flex flex-col gap-1">
+            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Tahunan</span>
+            <span className="text-sm font-bold text-slate-900">Rp {(yearlySales / 1000000).toFixed(1)}Jt</span>
+          </div>
+          <div className="bg-white rounded-xl p-3 border border-slate-200 shadow-sm flex flex-col gap-1 bg-primary/5 border-primary/20">
+            <span className="text-[10px] font-bold text-primary uppercase tracking-wider">Total Keseluruhan</span>
+            <span className="text-sm font-bold text-primary">Rp {(accumulatedSales / 1000000).toFixed(1)}Jt</span>
           </div>
         </div>
       </section>
@@ -209,7 +271,7 @@ export default async function SalesDashboardPage() {
         
         <div className="flex flex-col gap-2">
           {todaysVisits.length > 0 ? (
-            todaysVisits.map((visit) => (
+            todaysVisits.map((visit: any) => (
               <div key={visit.id} className="bg-white rounded-xl p-4 shadow-sm flex items-start gap-4 border border-slate-200">
                 <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center shrink-0">
                   <MapPin className="text-blue-600 w-5 h-5" />
@@ -245,7 +307,7 @@ export default async function SalesDashboardPage() {
         
         <div className="flex flex-col gap-2">
           {recentTransactions.length > 0 ? (
-            recentTransactions.map((tx) => (
+            recentTransactions.map((tx: any) => (
               <div key={tx.id} className="bg-white rounded-xl p-4 shadow-sm flex items-center gap-4 border border-slate-200 hover:border-primary/50 transition-colors cursor-pointer">
                 <div className={`w-12 h-12 rounded-full flex items-center justify-center shrink-0 font-bold text-sm ${
                   tx.status === 'APPROVED' ? 'bg-emerald-100 text-emerald-700' :
