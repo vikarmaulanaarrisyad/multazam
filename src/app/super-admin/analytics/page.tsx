@@ -3,7 +3,7 @@ import AnalyticsClient from './_components/AnalyticsClient';
 import { getDashboardAnalytics } from '@/actions/analytics-actions';
 
 export const metadata: Metadata = {
-  title: 'Analisis & Laba Rugi - Multazam App',
+  title: 'Analisis & Laba Rugi - Edia App',
 };
 
 export const dynamic = 'force-dynamic';

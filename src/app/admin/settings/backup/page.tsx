@@ -26,7 +26,7 @@ export default function BackupRestorePage() {
       const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
       const dateStr = new Date().toISOString().replace(/T/, '_').replace(/:/g, '-').split('.')[0];
       
-      saveAs(blob, `Multazam_Backup_${dateStr}.json`);
+      saveAs(blob, `Edia_Backup_${dateStr}.json`);
       
       MySwal.fire({
         icon: 'success',

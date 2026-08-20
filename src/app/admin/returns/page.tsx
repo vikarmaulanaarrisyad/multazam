@@ -3,7 +3,7 @@ import { getReturns } from '@/actions/return-actions';
 import AdminReturnsClient from './_components/AdminReturnsClient';
 
 export const metadata: Metadata = {
-  title: 'Persetujuan Retur - Multazam App',
+  title: 'Persetujuan Retur - Edia App',
 };
 
 export const dynamic = 'force-dynamic';

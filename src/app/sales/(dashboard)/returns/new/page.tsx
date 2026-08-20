@@ -3,7 +3,7 @@ import NewReturnClient from './_components/NewReturnClient';
 import { productService } from '@/services/product.service';
 
 export const metadata: Metadata = {
-  title: 'Buat Retur - Multazam App',
+  title: 'Buat Retur - Edia App',
 };
 
 export const dynamic = 'force-dynamic';

@@ -4,7 +4,7 @@ import { getReturns } from '@/actions/return-actions';
 import ReturnsClient from './_components/ReturnsClient';
 
 export const metadata: Metadata = {
-  title: 'Retur Produk - Multazam App',
+  title: 'Retur Produk - Edia App',
 };
 
 export const dynamic = 'force-dynamic';

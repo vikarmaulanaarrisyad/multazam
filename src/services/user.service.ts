@@ -72,7 +72,7 @@ export class UserService {
   }
 
   static async resetPassword(id: string) {
-    const defaultPassword = 'multazam' + Math.floor(1000 + Math.random() * 9000);
+    const defaultPassword = 'edia' + Math.floor(1000 + Math.random() * 9000);
     const hashedPassword = await bcrypt.hash(defaultPassword, 10);
 
     await UserRepository.update(id, { password: hashedPassword });

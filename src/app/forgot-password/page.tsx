@@ -122,7 +122,7 @@ export default function ForgotPasswordPage() {
                         className="block w-full pl-10 pr-3 py-2 h-10 border border-slate-300 rounded-md leading-5 bg-slate-50 text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary sm:text-sm transition-shadow" 
                         id="email" 
                         name="email" 
-                        placeholder="admin@multazam.com" 
+                        placeholder="admin@edia.com" 
                         required 
                         type="email"
                         disabled={isLoading}

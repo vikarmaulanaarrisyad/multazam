@@ -141,7 +141,7 @@ export default function LoginPage() {
                   className="block w-full pl-11 pr-4 py-3 h-12 border border-slate-200 rounded-lg leading-5 bg-slate-50 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all sm:text-sm" 
                   id="email" 
                   name="email" 
-                  placeholder="admin@multazam.com" 
+                  placeholder="admin@edia.com" 
                   required 
                   type="email"
                   disabled={isLoading}

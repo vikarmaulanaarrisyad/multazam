@@ -15,11 +15,11 @@ async function main() {
 
   // 1. Super Admin
   const superAdmin = await prisma.user.upsert({
-    where: { email: 'superadmin@multazam.com' },
+    where: { email: 'superadmin@edia.com' },
     update: {},
     create: {
       name: 'Super Admin',
-      email: 'superadmin@multazam.com',
+      email: 'superadmin@edia.com',
       password: passwordHash,
       role: Role.SUPER_ADMIN,
     },
@@ -28,11 +28,11 @@ async function main() {
 
   // 2. Admin
   const admin = await prisma.user.upsert({
-    where: { email: 'admin@multazam.com' },
+    where: { email: 'admin@edia.com' },
     update: {},
     create: {
       name: 'Administrator',
-      email: 'admin@multazam.com',
+      email: 'admin@edia.com',
       password: passwordHash,
       role: Role.ADMIN,
     },
@@ -41,11 +41,11 @@ async function main() {
 
   // 3. Sales
   const sales = await prisma.user.upsert({
-    where: { email: 'sales@multazam.com' },
+    where: { email: 'sales@edia.com' },
     update: {},
     create: {
       name: 'Alex Sales',
-      email: 'sales@multazam.com',
+      email: 'sales@edia.com',
       password: passwordHash,
       role: Role.SALES,
     },

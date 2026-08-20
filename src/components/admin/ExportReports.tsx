@@ -31,7 +31,7 @@ export function ExportReports() {
       if (!res.success || !res.data) throw new Error(res.error || 'Gagal memuat data');
 
       const workbook = new ExcelJS.Workbook();
-      workbook.creator = 'Sistem Multazam';
+      workbook.creator = 'Sistem Edia';
       const sheet = workbook.addWorksheet('Laporan Penjualan');
 
       // Title

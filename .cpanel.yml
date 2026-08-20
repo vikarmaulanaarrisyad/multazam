@@ -1,0 +1,15 @@
+---
+deployment:
+  tasks:
+    # Mengatur path Node.js (sesuaikan jika di DomaiNesia menggunakan path berbeda, biasanya ea-nodejs20)
+    - export PATH=/opt/cpanel/ea-nodejs20/bin:$PATH
+    # Install dependencies
+    - npm install
+    # Generate Prisma Client (untuk PostgreSQL)
+    - npx prisma generate
+    # Build Next.js (menggunakan output standalone)
+    - npm run build
+    # Memindahkan public & static assets agar bisa dibaca di mode standalone
+    - cp -r public .next/standalone/
+    - cp -r .next/static .next/standalone/.next/
+    - mkdir -p tmp && touch tmp/restart.txt

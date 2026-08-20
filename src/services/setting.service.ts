@@ -32,7 +32,7 @@ export class SettingService {
       const buffer = Buffer.from(arrayBuffer);
 
       const uploadResult = await new Promise((resolve, reject) => {
-        cloudinary.uploader.upload_stream({ folder: 'multazam/settings' }, (error, result) => {
+        cloudinary.uploader.upload_stream({ folder: 'edia/settings' }, (error, result) => {
           if (error) reject(error);
           else resolve(result);
         }).end(buffer);

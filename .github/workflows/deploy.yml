@@ -1,0 +1,60 @@
+name: Deploy to DomaiNesia
+
+on:
+  push:
+    branches:
+      - main # Ganti jika branch utama Anda master atau dev
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 1. Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: 2. Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: 3. Install Dependencies
+        run: npm ci
+
+      - name: 4. Generate Prisma Client
+        run: npx prisma generate
+
+      - name: 5. Build Next.js App (Standalone Mode)
+        run: npm run build
+        env:
+          NEXT_TELEMETRY_DISABLED: 1
+
+      - name: 6. Prepare Standalone Output Assets
+        run: |
+          cp -r public .next/standalone/public
+          mkdir -p .next/standalone/.next
+          cp -r .next/static .next/standalone/.next/static
+
+      - name: 7. Sync Files to DomaiNesia via SSH (rsync)
+        uses: easingthemes/ssh-deploy@main
+        with:
+          SSH_PRIVATE_KEY: ${{ secrets.DOMAINESIA_SSH_KEY }}
+          REMOTE_HOST: ${{ secrets.DOMAINESIA_HOST }}
+          REMOTE_USER: ${{ secrets.DOMAINESIA_USERNAME }}
+          REMOTE_PORT: ${{ secrets.DOMAINESIA_SSH_PORT || '22' }}
+          TARGET: ${{ secrets.DOMAINESIA_TARGET_DIR }}
+          SOURCE: ".next/standalone/"
+          ARGS: "-rlgoDzc --delete"
+
+      - name: 8. Restart Application on DomaiNesia
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.DOMAINESIA_HOST }}
+          username: ${{ secrets.DOMAINESIA_USERNAME }}
+          key: ${{ secrets.DOMAINESIA_SSH_KEY }}
+          port: ${{ secrets.DOMAINESIA_SSH_PORT || 22 }}
+          script: |
+            cd ${{ secrets.DOMAINESIA_TARGET_DIR }}
+            mkdir -p tmp
+            touch tmp/restart.txt

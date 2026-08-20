@@ -5,10 +5,10 @@ import mariadb from 'mariadb';
 
 let dbUrl: URL;
 try {
-  dbUrl = new URL(process.env.MYSQL_DATABASE_URL || 'mysql://root:password@localhost:3306/multazam_sync');
+  dbUrl = new URL(process.env.MYSQL_DATABASE_URL || 'mysql://root:password@localhost:3306/edia_sync');
 } catch (error) {
   console.warn("WARNING: MYSQL_DATABASE_URL is invalid. Falling back to default.");
-  dbUrl = new URL('mysql://root:password@localhost:3306/multazam_sync');
+  dbUrl = new URL('mysql://root:password@localhost:3306/edia_sync');
 }
 const pool = mariadb.createPool({
   host: dbUrl.hostname,
