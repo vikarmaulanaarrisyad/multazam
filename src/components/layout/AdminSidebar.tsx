@@ -139,12 +139,6 @@ export function AdminSidebar({ role, className, onNavigate, logoUrl, companyName
       visible: true,
     },
     {
-      title: 'Persetujuan Harga',
-      href: `${basePath}/approvals`,
-      icon: ClipboardCheck,
-      visible: true,
-    },
-    {
       title: 'Pengaturan',
       href: `${basePath}/settings`,
       icon: Settings,
