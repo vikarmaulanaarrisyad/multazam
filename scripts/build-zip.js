@@ -2,8 +2,11 @@ const { execSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 
-console.log('🚀 1. Building Next.js application...');
-execSync('npm run build', { stdio: 'inherit' });
+console.log('🚀 1. Building Next.js application in PRODUCTION mode using .env.production...');
+execSync('npm run build', { 
+  stdio: 'inherit',
+  env: Object.assign({}, process.env, { NODE_ENV: 'production' })
+});
 
 console.log('📦 2. Copying static assets to standalone folder...');
 const standalonePath = path.join(__dirname, '..', '.next', 'standalone');
@@ -34,7 +37,7 @@ if (fs.existsSync(zipOutput)) {
 try {
   // Try PowerShell Compress-Archive on Windows
   execSync(`powershell -Command "Compress-Archive -Path '${standalonePath}\\*' -DestinationPath '${zipOutput}' -Force"`, { stdio: 'inherit' });
-  console.log('\n✅ SUCCESS: deploy.zip created successfully in project root!');
+  console.log('\n✅ SUCCESS: deploy.zip created successfully in project root with .env.production!');
   console.log('👉 Upload deploy.zip to DomaiNesia File Manager and extract it.');
 } catch (err) {
   console.error('Error compressing with PowerShell:', err.message);

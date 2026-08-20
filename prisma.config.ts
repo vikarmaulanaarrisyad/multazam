@@ -1,5 +1,12 @@
 import { config } from 'dotenv';
-config({ path: ['.env.production', '.env.development', '.env'] });
+
+// Prioritize .env.production when building for production
+if (process.env.NODE_ENV === 'production') {
+  config({ path: '.env.production', override: true });
+} else {
+  config({ path: ['.env.production', '.env.development', '.env'] });
+}
+
 import { defineConfig } from 'prisma/config'
 
 export default defineConfig({
