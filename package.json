@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev --webpack",
     "build": "prisma generate && next build --webpack",
+    "build:zip": "node scripts/build-zip.js",
     "start": "next start",
     "lint": "next lint",
     "postinstall": "prisma generate"
