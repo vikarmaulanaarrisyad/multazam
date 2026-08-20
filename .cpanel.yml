@@ -1,24 +1,13 @@
 ---
 deployment:
   tasks:
-    # 1. Atur path Node.js (Pastikan versi 20 sesuai dengan yang Anda gunakan di cPanel)
     - export PATH=/opt/cpanel/ea-nodejs20/bin:$PATH
-    
-    # 2. Salin semua file dari Git ke folder tujuan di luar public_html
-    - /bin/cp -R * ~/aplikasi-nextjs
-    
-    # 3. Masuk ke folder aplikasi-nextjs, lalu jalankan install dependencies
-    - cd ~/aplikasi-nextjs && npm install
-    
-    # 4. Generate Prisma
-    - cd ~/aplikasi-nextjs && npx prisma generate
-    
-    # 5. Build Next.js ke mode standalone
-    - cd ~/aplikasi-nextjs && npm run build
-    
-    # 6. Pindahkan folder public dan static ke dalam folder standalone
-    - cd ~/aplikasi-nextjs && cp -r public .next/standalone/
-    - cd ~/aplikasi-nextjs && cp -r .next/static .next/standalone/.next/
-    
-    # 7. Trigger restart Phusion Passenger (cPanel Node.js App)
-    - cd ~/aplikasi-nextjs && mkdir -p tmp && touch tmp/restart.txt
+    - export DEPLOYPATH=/home/ediamyid/aplikasi-nextjs
+    - /bin/mkdir -p $DEPLOYPATH
+    - /bin/cp -R * $DEPLOYPATH
+    - cd $DEPLOYPATH && export PATH=/opt/cpanel/ea-nodejs20/bin:$PATH && npm install
+    - cd $DEPLOYPATH && export PATH=/opt/cpanel/ea-nodejs20/bin:$PATH && npx prisma generate
+    - cd $DEPLOYPATH && export PATH=/opt/cpanel/ea-nodejs20/bin:$PATH && npm run build
+    - cd $DEPLOYPATH && cp -r public .next/standalone/
+    - cd $DEPLOYPATH && cp -r .next/static .next/standalone/.next/
+    - cd $DEPLOYPATH && mkdir -p tmp && touch tmp/restart.txt
