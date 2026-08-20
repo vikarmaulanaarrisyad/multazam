@@ -5,7 +5,7 @@ deployment:
     - export PATH=$DEPLOYPATH/node_modules/.bin:/opt/cpanel/ea-nodejs20/bin:/opt/cpanel/ea-nodejs22/bin:$PATH
     - /bin/mkdir -p $DEPLOYPATH
     - /bin/cp -R * $DEPLOYPATH
-    - cd $DEPLOYPATH && npm install --no-save --no-engine
+    - cd $DEPLOYPATH && npm install --no-save --no-engine --loglevel=error
     - cd $DEPLOYPATH && npx prisma generate
     - cd $DEPLOYPATH && npm run build
     - cd $DEPLOYPATH && cp -r public .next/standalone/
