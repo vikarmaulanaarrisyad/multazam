@@ -27,6 +27,13 @@ if (fs.existsSync(staticSource)) {
   fs.cpSync(staticSource, staticTarget, { recursive: true });
 }
 
+// Duplicate server.js as app.js to overwrite cPanel default sample file
+const serverJsPath = path.join(standalonePath, 'server.js');
+const appJsPath = path.join(standalonePath, 'app.js');
+if (fs.existsSync(serverJsPath)) {
+  fs.copyFileSync(serverJsPath, appJsPath);
+}
+
 console.log('🤐 3. Creating deploy.zip archive...');
 const zipOutput = path.join(__dirname, '..', 'deploy.zip');
 
@@ -37,7 +44,7 @@ if (fs.existsSync(zipOutput)) {
 try {
   // Try PowerShell Compress-Archive on Windows
   execSync(`powershell -Command "Compress-Archive -Path '${standalonePath}\\*' -DestinationPath '${zipOutput}' -Force"`, { stdio: 'inherit' });
-  console.log('\n✅ SUCCESS: deploy.zip created successfully in project root with .env.production!');
+  console.log('\n✅ SUCCESS: deploy.zip created successfully in project root with .env.production and app.js override!');
   console.log('👉 Upload deploy.zip to DomaiNesia File Manager and extract it.');
 } catch (err) {
   console.error('Error compressing with PowerShell:', err.message);
