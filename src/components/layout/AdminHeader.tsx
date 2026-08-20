@@ -1,13 +1,13 @@
 'use client';
 
-// Force recompile
-
+import Link from 'next/link';
 import { Menu, LogOut, User as UserIcon, Settings, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -30,6 +30,7 @@ interface AdminHeaderProps {
 
 export function AdminHeader({ role, userName = 'Admin', userEmail, userImage }: AdminHeaderProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const basePath = role === 'SUPER_ADMIN' ? '/super-admin' : '/admin';
 
   // Generate initials for avatar fallback
   const initials = userName
@@ -100,20 +101,22 @@ export function AdminHeader({ role, userName = 'Admin', userEmail, userImage }: 
               </span>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuLabel className="font-normal">
-                <div className="flex flex-col space-y-1">
-                  <p className="text-sm font-medium leading-none">{userName}</p>
-                  <p className="text-xs leading-none text-slate-500">
-                    {userEmail}
-                  </p>
-                </div>
-              </DropdownMenuLabel>
+              <DropdownMenuGroup>
+                <DropdownMenuLabel className="font-normal">
+                  <div className="flex flex-col space-y-1">
+                    <p className="text-sm font-medium leading-none">{userName}</p>
+                    <p className="text-xs leading-none text-slate-500">
+                      {userEmail}
+                    </p>
+                  </div>
+                </DropdownMenuLabel>
+              </DropdownMenuGroup>
               <DropdownMenuSeparator />
-              <DropdownMenuItem className="cursor-pointer">
+              <DropdownMenuItem render={<Link href={`${basePath}/settings`} className="cursor-pointer flex items-center w-full" />}>
                 <UserIcon className="mr-2 h-4 w-4" />
                 <span>Profil</span>
               </DropdownMenuItem>
-              <DropdownMenuItem className="cursor-pointer">
+              <DropdownMenuItem render={<Link href={`${basePath}/settings`} className="cursor-pointer flex items-center w-full" />}>
                 <Settings className="mr-2 h-4 w-4" />
                 <span>Pengaturan</span>
               </DropdownMenuItem>
