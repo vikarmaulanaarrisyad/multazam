@@ -9,7 +9,7 @@ deployment:
     - /bin/mkdir -p $DEPLOYPATH
     - /bin/cp -R * $DEPLOYPATH
     - cd $DEPLOYPATH && npm install --include=dev --no-save --no-engine --loglevel=error
-    - cd $DEPLOYPATH && npx prisma generate
+    - cd $DEPLOYPATH && ([ -f prisma/schema.prisma ] && npx prisma generate || echo "Prisma schema missing, skipping")
     - cd $DEPLOYPATH && npm run build
     - cd $DEPLOYPATH && mkdir -p .next/standalone/.next .next/standalone/public
     - cd $DEPLOYPATH && cp -rf public .next/standalone/

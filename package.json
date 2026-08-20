@@ -8,7 +8,7 @@
     "build:zip": "node scripts/build-zip.js",
     "start": "next start",
     "lint": "next lint",
-    "postinstall": "prisma generate"
+    "postinstall": "node -e \"if (require('fs').existsSync('./prisma/schema.prisma')) { require('child_process').execSync('prisma generate', {stdio:'inherit'}); } else { console.log('Prisma schema missing, skipping prisma generate'); }\""
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.3",

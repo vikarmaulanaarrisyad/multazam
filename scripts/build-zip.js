@@ -27,6 +27,19 @@ if (fs.existsSync(staticSource)) {
   fs.cpSync(staticSource, staticTarget, { recursive: true });
 }
 
+// Copy prisma folder and config for server prisma support
+const prismaSource = path.join(__dirname, '..', 'prisma');
+const prismaTarget = path.join(standalonePath, 'prisma');
+if (fs.existsSync(prismaSource)) {
+  fs.cpSync(prismaSource, prismaTarget, { recursive: true });
+}
+
+const prismaConfigSource = path.join(__dirname, '..', 'prisma.config.ts');
+const prismaConfigTarget = path.join(standalonePath, 'prisma.config.ts');
+if (fs.existsSync(prismaConfigSource)) {
+  fs.copyFileSync(prismaConfigSource, prismaConfigTarget);
+}
+
 // Duplicate server.js as app.js to overwrite cPanel default sample file
 const serverJsPath = path.join(standalonePath, 'server.js');
 const appJsPath = path.join(standalonePath, 'app.js');
