@@ -4,15 +4,16 @@ deployment:
     - export DEPLOYPATH=/home/ediamyid/aplikasi-nextjs
     - export NODE_ENV=development
     - export PATH=$DEPLOYPATH/node_modules/.bin:/opt/cpanel/ea-nodejs22/bin:/opt/cpanel/ea-nodejs20/bin:$PATH
+    - export DATABASE_URL="${DATABASE_URL:-postgresql://dummy:dummy@localhost:5432/dummy}"
     - export DIRECT_URL="${DIRECT_URL:-$DATABASE_URL}"
     - /bin/mkdir -p $DEPLOYPATH
     - /bin/cp -R * $DEPLOYPATH
     - cd $DEPLOYPATH && npm install --include=dev --no-save --no-engine --loglevel=error
     - cd $DEPLOYPATH && npx prisma generate
-    - cd $DEPLOYPATH && rm -rf .next
     - cd $DEPLOYPATH && npm run build
-    - cd $DEPLOYPATH && cp -rf public .next/standalone/public
-    - cd $DEPLOYPATH && cp -rf .next/static .next/standalone/.next/static
+    - cd $DEPLOYPATH && mkdir -p .next/standalone/.next .next/standalone/public
+    - cd $DEPLOYPATH && cp -rf public .next/standalone/
+    - cd $DEPLOYPATH && cp -rf .next/static .next/standalone/.next/
     - cd $DEPLOYPATH && cp -rf .next/standalone/* .
     - cd $DEPLOYPATH && cp server.js app.js
     - cd $DEPLOYPATH && mkdir -p tmp && touch tmp/restart.txt
