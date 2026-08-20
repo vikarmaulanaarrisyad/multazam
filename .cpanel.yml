@@ -1,7 +1,6 @@
 ---
 deployment:
   tasks:
-    - export PATH=/home/ediamyid/nodevenv/aplikasi-nextjs/20/bin:/opt/cpanel/ea-nodejs20/bin:$PATH
     - export DEPLOYPATH=/home/ediamyid/aplikasi-nextjs
     - /bin/mkdir -p $DEPLOYPATH
     - /bin/cp -R * $DEPLOYPATH
