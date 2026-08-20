@@ -1,16 +1,27 @@
 "use client"
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { TrendingUp, Mail, Lock, Eye, EyeOff, ArrowRight, Fingerprint, PackageSearch } from 'lucide-react';
 import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { getPublicSettings } from '@/actions/settings-actions';
 
 export default function SalesLoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [settings, setSettings] = useState<{ companyName: string; logoUrl: string | null }>({
+    companyName: 'DIA MAKMUR ABADI',
+    logoUrl: null,
+  });
   const router = useRouter();
+
+  useEffect(() => {
+    getPublicSettings().then((data) => {
+      if (data) setSettings(data);
+    });
+  }, []);
 
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -46,11 +57,15 @@ export default function SalesLoginPage() {
       <header className="fixed top-0 w-full z-50 bg-slate-50/80 backdrop-blur-xl pt-safe border-b border-slate-200">
         <div className="h-16 px-4 flex items-center justify-center">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-primary rounded flex items-center justify-center">
-              <TrendingUp className="text-primary-foreground w-5 h-5" />
-            </div>
+            {settings.logoUrl ? (
+              <img src={settings.logoUrl} alt="Logo" className="w-8 h-8 object-contain rounded" />
+            ) : (
+              <div className="w-8 h-8 bg-primary rounded flex items-center justify-center">
+                <TrendingUp className="text-primary-foreground w-5 h-5" />
+              </div>
+            )}
             <span className="font-bold text-lg tracking-tight text-slate-900">
-              MULTA<span className="text-primary">ZAM</span>
+              {settings.companyName}
             </span>
           </div>
         </div>

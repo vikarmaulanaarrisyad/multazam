@@ -66,13 +66,15 @@ export function DeliveryRecapModal({ isOpen, onClose }: DeliveryRecapModalProps)
 
       const { default: jsPDF } = await import('jspdf');
       const { default: autoTable } = await import('jspdf-autotable');
+      const { getPublicSettings } = await import('@/actions/settings-actions');
+      const publicSettings = await getPublicSettings();
 
       const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
 
       // Title
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(16);
-      doc.text('DIA MAKMUR ABADI', 105, 15, { align: 'center' });
+      doc.text(publicSettings.companyName || 'DIA MAKMUR ABADI', 105, 15, { align: 'center' });
       
       doc.setFontSize(12);
       doc.setTextColor(29, 78, 216); // blue-700
@@ -252,9 +254,12 @@ export function DeliveryRecapModal({ isOpen, onClose }: DeliveryRecapModalProps)
       // Header Laporan (Kop Surat)
       const displayDate = new Date(dateStr).toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 
+      const { getPublicSettings } = await import('@/actions/settings-actions');
+      const publicSettings = await getPublicSettings();
+
       sheet.mergeCells('A1:G1');
       const titleCell = sheet.getCell('A1');
-      titleCell.value = 'DIA MAKMUR ABADI';
+      titleCell.value = publicSettings.companyName || 'DIA MAKMUR ABADI';
       titleCell.font = { bold: true, size: 16, color: { argb: 'FF0F172A' } };
       titleCell.alignment = { horizontal: 'center' };
 

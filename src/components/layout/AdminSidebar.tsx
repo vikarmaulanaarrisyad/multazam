@@ -33,9 +33,10 @@ interface SidebarProps {
   className?: string;
   onNavigate?: () => void; // Used to close sheet on mobile
   logoUrl?: string | null;
+  companyName?: string | null;
 }
 
-export function AdminSidebar({ role, className, onNavigate, logoUrl }: SidebarProps) {
+export function AdminSidebar({ role, className, onNavigate, logoUrl, companyName }: SidebarProps) {
   const pathname = usePathname();
   const basePath = role === 'SUPER_ADMIN' ? '/super-admin' : '/admin';
 
@@ -170,9 +171,11 @@ export function AdminSidebar({ role, className, onNavigate, logoUrl }: SidebarPr
           {logoUrl ? (
             <Image src={logoUrl} alt="Logo" width={32} height={32} className="h-8 w-auto rounded object-contain bg-white p-1" priority />
           ) : (
-            <span className="bg-primary text-primary-foreground p-1 rounded-md">M</span>
+            <span className="bg-primary text-primary-foreground p-1 rounded-md">
+              {(companyName || 'D').charAt(0).toUpperCase()}
+            </span>
           )}
-          <span className="truncate">DIA MAKMUR ABADI</span>
+          <span className="truncate">{companyName || 'DIA MAKMUR ABADI'}</span>
         </h2>
         <p className="text-xs text-slate-400 mt-1 uppercase tracking-wider font-semibold">
           {role.replace('_', ' ')}
@@ -217,7 +220,7 @@ export function AdminSidebar({ role, className, onNavigate, logoUrl }: SidebarPr
         <div className="rounded-lg bg-slate-800 p-4">
           <p className="text-sm font-medium text-white">Butuh bantuan?</p>
           <p className="mt-1 text-xs text-slate-400">
-            Hubungi dukungan teknis DIA MAKMUR ABADI.
+            Hubungi dukungan teknis {companyName || 'DIA MAKMUR ABADI'}.
           </p>
         </div>
       </div>

@@ -1,14 +1,25 @@
 "use client"
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { PackageSearch, ShieldCheck, Zap, User, ArrowRight, ArrowLeft } from 'lucide-react';
 import { forgotPassword } from '@/actions/auth';
 import Link from 'next/link';
+import { getPublicSettings } from '@/actions/settings-actions';
 
 export default function ForgotPasswordPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
+  const [settings, setSettings] = useState<{ companyName: string; logoUrl: string | null }>({
+    companyName: 'DIA MAKMUR ABADI',
+    logoUrl: null,
+  });
+
+  useEffect(() => {
+    getPublicSettings().then((data) => {
+      if (data) setSettings(data);
+    });
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -34,9 +45,13 @@ export default function ForgotPasswordPage() {
     <div className="bg-slate-50 text-slate-900 h-screen overflow-hidden flex flex-col font-sans">
       <header className="p-8 flex items-center justify-start pointer-events-none">
         <div className="flex items-center gap-2">
-          <PackageSearch className="text-primary w-8 h-8" />
+          {settings.logoUrl ? (
+            <img src={settings.logoUrl} alt="Logo" className="h-8 w-auto object-contain rounded" />
+          ) : (
+            <PackageSearch className="text-primary w-8 h-8" />
+          )}
           <span className="text-2xl font-bold tracking-tight">
-            MULTA<span className="text-primary">ZAM</span>
+            {settings.companyName}
           </span>
         </div>
       </header>
@@ -84,9 +99,13 @@ export default function ForgotPasswordPage() {
               <div className="w-full max-w-md mx-auto relative z-10">
                 <div className="md:hidden flex items-center gap-2 mb-8">
                   <div className="h-12 w-12 rounded-xl flex items-center justify-center bg-white shadow-sm border text-primary">
-                    <PackageSearch className="w-6 h-6" />
+                    {settings.logoUrl ? (
+                      <img src={settings.logoUrl} alt="Logo" className="w-6 h-6 object-contain rounded" />
+                    ) : (
+                      <PackageSearch className="w-6 h-6" />
+                    )}
                   </div>
-                  <h2 className="text-xl font-bold text-slate-900">DIA MAKMUR ABADI</h2>
+                  <h2 className="text-xl font-bold text-slate-900">{settings.companyName}</h2>
                 </div>
                 
                 <div className="mb-8">
@@ -145,7 +164,7 @@ export default function ForgotPasswordPage() {
               {/* Footer */}
               <div className="absolute bottom-6 left-0 right-0 text-center px-4">
                 <p className="text-xs text-slate-500">
-                  Sistem Inventori DIA MAKMUR ABADI © {new Date().getFullYear()}. Hak Cipta Dilindungi.
+                  Sistem Inventori {settings.companyName} © {new Date().getFullYear()}. Hak Cipta Dilindungi.
                 </p>
               </div>
             </div>

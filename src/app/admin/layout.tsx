@@ -25,6 +25,7 @@ export default async function Layout({ children }: { children: ReactNode }) {
       userEmail={session.user.email || undefined}
       userImage={session.user.image}
       logoUrl={setting?.logoUrl}
+      companyName={setting?.companyName}
     >
       {children}
     </AdminLayout>

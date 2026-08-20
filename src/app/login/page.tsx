@@ -1,16 +1,27 @@
 "use client"
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { PackageSearch, ShieldCheck, Zap, User, Lock, Eye, EyeOff, ArrowRight } from 'lucide-react';
 import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { getPublicSettings } from '@/actions/settings-actions';
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [settings, setSettings] = useState<{ companyName: string; logoUrl: string | null }>({
+    companyName: 'DIA MAKMUR ABADI',
+    logoUrl: null,
+  });
   const router = useRouter();
+
+  useEffect(() => {
+    getPublicSettings().then((data) => {
+      if (data) setSettings(data);
+    });
+  }, []);
 
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -53,9 +64,13 @@ export default function LoginPage() {
 
         {/* Logo */}
         <div className="relative z-10 flex items-center gap-2 pointer-events-none mb-12">
-          <PackageSearch className="text-primary w-8 h-8" />
+          {settings.logoUrl ? (
+            <img src={settings.logoUrl} alt="Logo" className="h-8 w-auto object-contain rounded" />
+          ) : (
+            <PackageSearch className="text-primary w-8 h-8" />
+          )}
           <span className="text-2xl font-bold tracking-tight text-slate-900">
-            MULTA<span className="text-primary">ZAM</span>
+            {settings.companyName}
           </span>
         </div>
 
@@ -100,7 +115,7 @@ export default function LoginPage() {
         {/* Footer info left */}
         <div className="relative z-10 mt-12">
           <p className="text-sm text-slate-500">
-            Sistem Inventori DIA MAKMUR ABADI © {new Date().getFullYear()}. Hak Cipta Dilindungi.
+            Sistem Inventori {settings.companyName} © {new Date().getFullYear()}. Hak Cipta Dilindungi.
           </p>
         </div>
       </div>
@@ -110,9 +125,13 @@ export default function LoginPage() {
         
         {/* Mobile Logo */}
         <div className="lg:hidden flex items-center gap-2 mb-10 absolute top-8 left-6 sm:left-12">
-          <PackageSearch className="text-primary w-8 h-8" />
+          {settings.logoUrl ? (
+            <img src={settings.logoUrl} alt="Logo" className="h-8 w-auto object-contain rounded" />
+          ) : (
+            <PackageSearch className="text-primary w-8 h-8" />
+          )}
           <span className="text-2xl font-bold tracking-tight text-slate-900">
-            MULTA<span className="text-primary">ZAM</span>
+            {settings.companyName}
           </span>
         </div>
         
@@ -213,7 +232,7 @@ export default function LoginPage() {
           {/* Mobile Footer */}
           <div className="lg:hidden mt-12 text-center">
             <p className="text-xs text-slate-400">
-              DIA MAKMUR ABADI © {new Date().getFullYear()}
+              {settings.companyName} © {new Date().getFullYear()}
             </p>
           </div>
         </div>

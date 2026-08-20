@@ -40,6 +40,13 @@ if (fs.existsSync(prismaConfigSource)) {
   fs.copyFileSync(prismaConfigSource, prismaConfigTarget);
 }
 
+// Copy .env.production
+const envProdSource = path.join(__dirname, '..', '.env.production');
+const envProdTarget = path.join(standalonePath, '.env.production');
+if (fs.existsSync(envProdSource)) {
+  fs.copyFileSync(envProdSource, envProdTarget);
+}
+
 // Duplicate server.js as app.js to overwrite cPanel default sample file
 const serverJsPath = path.join(standalonePath, 'server.js');
 const appJsPath = path.join(standalonePath, 'app.js');
@@ -55,9 +62,10 @@ if (fs.existsSync(zipOutput)) {
 }
 
 try {
-  // Try PowerShell Compress-Archive on Windows
-  execSync(`powershell -Command "Compress-Archive -Path '${standalonePath}\\*' -DestinationPath '${zipOutput}' -Force"`, { stdio: 'inherit' });
-  console.log('\n✅ SUCCESS: deploy.zip created successfully in project root with .env.production and app.js override!');
+  // Use Get-ChildItem -Force with PowerShell to include hidden dot-folders (.next) and dot-files (.env.production)
+  const psCmd = `powershell -Command "Get-ChildItem -Path '${standalonePath}' -Force | Compress-Archive -DestinationPath '${zipOutput}' -Force"`;
+  execSync(psCmd, { stdio: 'inherit' });
+  console.log('\n✅ SUCCESS: deploy.zip created successfully in project root with .next, .env.production, assets, and app.js override!');
   console.log('👉 Upload deploy.zip to DomaiNesia File Manager and extract it.');
 } catch (err) {
   console.error('Error compressing with PowerShell:', err.message);

@@ -15,6 +15,23 @@ export async function getSettings() {
   }
 }
 
+export async function getPublicSettings() {
+  try {
+    const setting = await SettingService.getSettings();
+    return {
+      companyName: setting?.companyName || 'DIA MAKMUR ABADI',
+      companyAddress: setting?.companyAddress || '',
+      logoUrl: setting?.logoUrl || null,
+    };
+  } catch (error) {
+    return {
+      companyName: 'DIA MAKMUR ABADI',
+      companyAddress: '',
+      logoUrl: null,
+    };
+  }
+}
+
 export async function updateSettings(formData: FormData) {
   try {
     const session = await auth();

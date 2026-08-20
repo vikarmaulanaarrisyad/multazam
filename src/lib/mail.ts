@@ -10,8 +10,20 @@ const transporter = nodemailer.createTransport({
   },
 });
 
+import prisma from '@/lib/prisma';
+
 export const sendPasswordResetEmail = async (email: string, token: string) => {
   const resetLink = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/reset-password?token=${token}`;
+
+  let companyName = 'DIA MAKMUR ABADI';
+  try {
+    const setting = await prisma.setting.findFirst();
+    if (setting?.companyName) {
+      companyName = setting.companyName;
+    }
+  } catch (e) {
+    console.error('Failed to fetch setting for email', e);
+  }
 
   // Log to terminal for debugging and dev environments without email set up
   console.log('====================================================');
@@ -26,14 +38,14 @@ export const sendPasswordResetEmail = async (email: string, token: string) => {
 
   try {
     const info = await transporter.sendMail({
-      from: `"Sistem Inventori DIA MAKMUR ABADI" <${process.env.EMAIL_FROM || process.env.EMAIL_SERVER_USER}>`,
+      from: `"${companyName}" <${process.env.EMAIL_FROM || process.env.EMAIL_SERVER_USER}>`,
       to: email,
-      subject: 'Reset Kata Sandi Anda - DIA MAKMUR ABADI',
+      subject: `Reset Kata Sandi Anda - ${companyName}`,
       html: `
-        <div style="font-family: sans-serif; max-w: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px;">
+        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px;">
           <h2 style="color: #0f172a; text-align: center;">Reset Kata Sandi</h2>
           <p style="color: #475569; line-height: 1.6;">
-            Anda menerima email ini karena ada permintaan untuk mengatur ulang kata sandi akun Anda di Sistem Inventori DIA MAKMUR ABADI.
+            Anda menerima email ini karena ada permintaan untuk mengatur ulang kata sandi akun Anda di ${companyName}.
           </p>
           <div style="text-align: center; margin: 30px 0;">
             <a href="${resetLink}" style="background-color: #2170e4; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">
@@ -45,7 +57,7 @@ export const sendPasswordResetEmail = async (email: string, token: string) => {
           </p>
           <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 30px 0;" />
           <p style="color: #94a3b8; font-size: 12px; text-align: center;">
-            Sistem Inventori DIA MAKMUR ABADI &copy; ${new Date().getFullYear()}
+            ${companyName} &copy; ${new Date().getFullYear()}
           </p>
         </div>
       `,

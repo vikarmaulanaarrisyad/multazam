@@ -1,11 +1,12 @@
 import React from 'react';
+import type { Metadata } from 'next';
 import { auth, signOut } from '@/auth';
 import prisma from '@/lib/prisma';
 import { LogOut, Activity, Wallet, TrendingUp, Shield, Smartphone, HelpCircle, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 
-export const metadata = {
-  title: 'Profil Saya - DIA MAKMUR ABADI',
+export const metadata: Metadata = {
+  title: 'Profil Saya',
 };
 
 export default async function SalesProfilePage() {
@@ -63,6 +64,8 @@ export default async function SalesProfilePage() {
   const performance = totalVisitsToday > 0 
     ? Math.round((completedVisitsToday / totalVisitsToday) * 100) 
     : 100; // default 100% jika belum ada jadwal
+
+  const setting = await prisma.setting.findFirst();
 
   return (
     <div className="flex flex-col w-full pb-20 font-sans">
@@ -154,7 +157,7 @@ export default async function SalesProfilePage() {
       </div>
 
       <div className="mt-8 pb-8 flex justify-center">
-        <span className="text-[11px] font-medium text-slate-400">v1.0.0 (Build 001) - DIA MAKMUR ABADI</span>
+        <span className="text-[11px] font-medium text-slate-400">v1.0.0 (Build 001) - {setting?.companyName || 'DIA MAKMUR ABADI'}</span>
       </div>
     </div>
   );
