@@ -11,4 +11,5 @@ deployment:
     - cd $DEPLOYPATH && cp -r public .next/standalone/
     - cd $DEPLOYPATH && cp -r .next/static .next/standalone/.next/
     - cd $DEPLOYPATH && cp -r .next/standalone/* .
+    - cd $DEPLOYPATH && cp server.js app.js
     - cd $DEPLOYPATH && mkdir -p tmp && touch tmp/restart.txt
