@@ -1,13 +1,12 @@
 ---
 deployment:
   tasks:
-    - export PATH=/opt/cpanel/ea-nodejs20/bin:$PATH
+    - export PATH=/opt/cpanel/ea-nodejs22/bin:/opt/cpanel/ea-nodejs20/bin:$PATH
     - export DEPLOYPATH=/home/ediamyid/aplikasi-nextjs
     - /bin/mkdir -p $DEPLOYPATH
     - /bin/cp -R * $DEPLOYPATH
-    - cd $DEPLOYPATH && export PATH=/opt/cpanel/ea-nodejs20/bin:$PATH && npm install
-    - cd $DEPLOYPATH && export PATH=/opt/cpanel/ea-nodejs20/bin:$PATH && npx prisma generate
-    - cd $DEPLOYPATH && export PATH=/opt/cpanel/ea-nodejs20/bin:$PATH && npm run build
+    - cd $DEPLOYPATH && npx prisma generate
+    - cd $DEPLOYPATH && npm run build
     - cd $DEPLOYPATH && cp -r public .next/standalone/
     - cd $DEPLOYPATH && cp -r .next/static .next/standalone/.next/
     - cd $DEPLOYPATH && mkdir -p tmp && touch tmp/restart.txt
