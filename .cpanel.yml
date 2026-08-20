@@ -10,5 +10,5 @@ deployment:
     - cd $DEPLOYPATH && npm run build
     - cd $DEPLOYPATH && cp -r public .next/standalone/
     - cd $DEPLOYPATH && cp -r .next/static .next/standalone/.next/
-    - rm -rf $DEPLOYPATH/node_modules
+    - cd $DEPLOYPATH && cp -r .next/standalone/* .
     - cd $DEPLOYPATH && mkdir -p tmp && touch tmp/restart.txt
