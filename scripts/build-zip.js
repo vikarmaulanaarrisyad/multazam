@@ -47,6 +47,32 @@ if (fs.existsSync(prismaConfigSource)) {
   fs.copyFileSync(prismaConfigSource, prismaConfigTarget);
 }
 
+// Copy generated prisma client folder (src/generated/prisma) so standalone build has client code
+const generatedPrismaSource = path.join(__dirname, '..', 'src', 'generated', 'prisma');
+const generatedPrismaTarget = path.join(standalonePath, 'src', 'generated', 'prisma');
+if (fs.existsSync(generatedPrismaSource)) {
+  fs.mkdirSync(path.dirname(generatedPrismaTarget), { recursive: true });
+  fs.cpSync(generatedPrismaSource, generatedPrismaTarget, { recursive: true });
+  console.log('✅ Copied src/generated/prisma to standalone build');
+}
+
+// Copy @prisma and .prisma modules to standalone node_modules
+const atPrismaSource = path.join(__dirname, '..', 'node_modules', '@prisma');
+const atPrismaTarget = path.join(standalonePath, 'node_modules', '@prisma');
+if (fs.existsSync(atPrismaSource)) {
+  fs.mkdirSync(path.dirname(atPrismaTarget), { recursive: true });
+  fs.cpSync(atPrismaSource, atPrismaTarget, { recursive: true });
+  console.log('✅ Copied node_modules/@prisma to standalone build');
+}
+
+const dotPrismaSource = path.join(__dirname, '..', 'node_modules', '.prisma');
+const dotPrismaTarget = path.join(standalonePath, 'node_modules', '.prisma');
+if (fs.existsSync(dotPrismaSource)) {
+  fs.mkdirSync(path.dirname(dotPrismaTarget), { recursive: true });
+  fs.cpSync(dotPrismaSource, dotPrismaTarget, { recursive: true });
+  console.log('✅ Copied node_modules/.prisma to standalone build');
+}
+
 // Clean up any .env files from standalone folder so env variables can be set manually on hosting
 const envFiles = ['.env', '.env.production', '.env.local', '.env.development'];
 envFiles.forEach((file) => {

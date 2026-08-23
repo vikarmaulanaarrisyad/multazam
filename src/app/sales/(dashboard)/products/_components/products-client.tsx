@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Search, ScanBarcode, Plus, Minus, ShoppingCart } from 'lucide-react';
 import { Product, Category, Unit } from '@/generated/prisma/client';
 import { cn } from '@/lib/utils';
+import { cacheProductsOffline, getCachedProductsOffline } from '@/lib/offline-sync';
 
 type ProductWithRelations = Omit<Product, 'price' | 'purchasePrice'> & {
   price: number;
@@ -24,6 +25,19 @@ export function SalesProductsClient({ initialProducts, categories }: SalesProduc
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [cart, setCart] = useState<Record<string, number>>({});
   const [displayCount, setDisplayCount] = useState(20);
+  const [productsList, setProductsList] = useState<ProductWithRelations[]>(initialProducts);
+
+  useEffect(() => {
+    if (Array.isArray(initialProducts) && initialProducts.length > 0) {
+      setProductsList(initialProducts);
+      cacheProductsOffline(initialProducts);
+    } else {
+      const cached = getCachedProductsOffline();
+      if (cached.length > 0) {
+        setProductsList(cached);
+      }
+    }
+  }, [initialProducts]);
 
   useEffect(() => {
     const stored = sessionStorage.getItem('preOrderCart');
@@ -74,7 +88,7 @@ export function SalesProductsClient({ initialProducts, categories }: SalesProduc
   };
 
   const cartTotal = Object.entries(cart).reduce((total, [id, qty]) => {
-    const product = initialProducts.find(p => p.id === id);
+    const product = productsList.find(p => p.id === id);
     return total + (product ? product.price * qty : 0);
   }, 0);
 
@@ -88,7 +102,7 @@ export function SalesProductsClient({ initialProducts, categories }: SalesProduc
     }
 
     const cartItems = Object.entries(cart).map(([id, quantity]) => {
-      const product = initialProducts.find(p => p.id === id);
+      const product = productsList.find(p => p.id === id);
       const existing = existingItems.find((item: any) => item.product && item.product.id === id);
       return { 
         product, 
@@ -102,7 +116,7 @@ export function SalesProductsClient({ initialProducts, categories }: SalesProduc
     router.push('/sales/requests/new');
   };
 
-  const filteredProducts = initialProducts.filter(product => {
+  const filteredProducts = productsList.filter(product => {
     const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
                           product.code.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = selectedCategory ? product.categoryId === selectedCategory : true;

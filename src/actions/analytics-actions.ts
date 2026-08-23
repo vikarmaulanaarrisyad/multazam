@@ -125,6 +125,16 @@ export async function getDashboardAnalytics(months = 6) {
       take: 10,
     });
 
+    const serializedDeadStock = deadStock.map(p => ({
+      ...p,
+      price: p.price ? Number(p.price) : 0,
+      minPrice: p.minPrice ? Number(p.minPrice) : null,
+      purchasePrice: p.purchasePrice ? Number(p.purchasePrice) : null,
+      createdAt: p.createdAt ? p.createdAt.toISOString() : new Date().toISOString(),
+      updatedAt: p.updatedAt ? p.updatedAt.toISOString() : new Date().toISOString(),
+      retailEndDate: p.retailEndDate ? p.retailEndDate.toISOString() : null,
+    }));
+
     // 5. Top 5 Customers
     const topCustomersRaw = await prisma.transaction.groupBy({
       by: ['customerName'],
@@ -154,7 +164,7 @@ export async function getDashboardAnalytics(months = 6) {
         currentGrossProfit,
         trendData,
         topProducts,
-        deadStock,
+        deadStock: serializedDeadStock,
         topCustomers
       }
     };

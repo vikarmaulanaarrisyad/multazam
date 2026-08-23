@@ -3,10 +3,12 @@
 import React, { useState } from 'react';
 import { Package, Tags, ShoppingCart, DollarSign, WalletCards, TrendingUp, TrendingDown, Clock, AlertTriangle, ArrowRight, FileSpreadsheet } from 'lucide-react';
 import { DeliveryRecapModal } from './DeliveryRecapModal';
+import { DeliveryManifestModal } from './DeliveryManifestModal';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { cn } from '@/lib/utils';
 import { ExportReports } from './ExportReports';
 import { AutoRefreshTimer } from '@/components/layout/AutoRefreshTimer';
+import { Truck } from 'lucide-react';
 
 interface Activity {
   id: string;
@@ -49,6 +51,7 @@ interface DashboardClientProps {
 
 export function DashboardClient({ data, role }: DashboardClientProps) {
   const [isRecapModalOpen, setIsRecapModalOpen] = useState(false);
+  const [isManifestModalOpen, setIsManifestModalOpen] = useState(false);
 
   const formatRupiah = (val: number) => {
     if (val >= 1000000000) return `Rp ${(val / 1000000000).toFixed(1)}M`; // Milyar
@@ -69,8 +72,12 @@ export function DashboardClient({ data, role }: DashboardClientProps) {
     }
   };
 
-  const getTimeAgo = (date: Date) => {
-    const diff = Math.floor((new Date().getTime() - new Date(date).getTime()) / 1000);
+  const getTimeAgo = (date: Date | string) => {
+    if (!date) return '-';
+    const parsed = new Date(date);
+    if (isNaN(parsed.getTime())) return '-';
+    const diff = Math.floor((new Date().getTime() - parsed.getTime()) / 1000);
+    if (diff < 0) return 'baru saja';
     if (diff < 60) return `${diff} dtk lalu`;
     if (diff < 3600) return `${Math.floor(diff / 60)} mnt lalu`;
     if (diff < 86400) return `${Math.floor(diff / 3600)} jam lalu`;
@@ -242,6 +249,12 @@ export function DashboardClient({ data, role }: DashboardClientProps) {
             </div>
             <div className="flex items-center gap-2">
               <button 
+                onClick={() => setIsManifestModalOpen(true)}
+                className="text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 shadow-sm"
+              >
+                <Truck className="w-4 h-4" /> Surat Jalan & Manifest Driver
+              </button>
+              <button 
                 onClick={() => setIsRecapModalOpen(true)}
                 className="text-sm font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 shadow-sm border border-slate-200"
               >
@@ -289,7 +302,7 @@ export function DashboardClient({ data, role }: DashboardClientProps) {
                         <span className="text-sm font-medium text-slate-700">{delivery.customerName || '-'}</span>
                       </td>
                       <td className="py-3">
-                        <span className="text-xs text-slate-500 bg-slate-100 px-2 py-1 rounded-md">{delivery.user.name || '-'}</span>
+                        <span className="text-xs text-slate-500 bg-slate-100 px-2 py-1 rounded-md">{delivery.user?.name || '-'}</span>
                       </td>
                       <td className="py-3 pr-2 text-right">
                         <span className="text-sm font-bold text-blue-700">{formatRupiah(delivery.totalAmount)}</span>
@@ -396,7 +409,7 @@ export function DashboardClient({ data, role }: DashboardClientProps) {
                     </div>
                     <div className="flex justify-between items-center mt-2">
                       <div className="text-xs text-slate-500">
-                        Oleh: <span className="font-medium text-slate-700">{act.user.name || 'Sales'}</span>
+                        Oleh: <span className="font-medium text-slate-700">{act.user?.name || 'Sales'}</span>
                       </div>
                       {getStatusBadge(act.status)}
                     </div>
@@ -457,6 +470,11 @@ export function DashboardClient({ data, role }: DashboardClientProps) {
       <DeliveryRecapModal 
         isOpen={isRecapModalOpen} 
         onClose={() => setIsRecapModalOpen(false)} 
+      />
+
+      <DeliveryManifestModal
+        isOpen={isManifestModalOpen}
+        onClose={() => setIsManifestModalOpen(false)}
       />
     </div>
   );

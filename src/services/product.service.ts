@@ -49,6 +49,7 @@ export const productService = {
     brand?: string | null;
     description?: string | null;
     price: number;
+    minPrice?: number | null;
     purchasePrice?: number | null;
     retailPriceNote?: string | null;
     stock: number;
@@ -224,6 +225,13 @@ export const productService = {
           if (!isNaN(parsed) && parsed >= 0) purchasePrice = parsed;
         }
 
+        const rawMinPrice = row['HARGA TERBAWAH'] || row['Harga Terbawah'] || row['MIN PRICE'] || row['Min Price'] || null;
+        let minPrice = null;
+        if (rawMinPrice !== null) {
+          const parsed = parseIndoNumber(rawMinPrice);
+          if (!isNaN(parsed) && parsed >= 0) minPrice = parsed;
+        }
+
         // New specific fields
         const brand = (row['BRAND'] || row['Brand'] || '')?.toString().trim() || null;
         const status = (row['STATUS'] || row['Status'] || 'ACTIVE')?.toString().trim();
@@ -289,6 +297,7 @@ export const productService = {
           legacyCode,
           description,
           price,
+          minPrice,
           purchasePrice,
           contents,
           retailPriceNote,
@@ -333,6 +342,7 @@ export const productService = {
     brand?: string | null;
     description?: string | null;
     price: number;
+    minPrice?: number | null;
     purchasePrice?: number | null;
     retailPriceNote?: string | null;
     stock: number;

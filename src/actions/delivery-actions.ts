@@ -200,3 +200,124 @@ export async function getDeliveryRecapAction(dateString: string): Promise<{ succ
     return { success: false, error: error.message || 'Terjadi kesalahan saat memuat rekap.' };
   }
 }
+
+export type DriverDeliveryItem = {
+  id: string;
+  invoiceNumber: string;
+  customerName: string;
+  customerPhone: string | null;
+  shippingAddress: string | null;
+  totalAmount: number;
+  paymentStatus: string;
+  paidAmount: number;
+  status: string;
+  deliveryStatus: string;
+  driverName: string | null;
+  proofOfDeliveryUrl: string | null;
+  driverNotes: string | null;
+  salesName: string;
+  items: {
+    id: string;
+    productId: string;
+    code: string;
+    name: string;
+    quantity: number;
+    price: number;
+    unit: string;
+  }[];
+};
+
+export async function getDriverDeliveryListAction(dateString: string): Promise<{ success: boolean; data?: DriverDeliveryItem[]; error?: string }> {
+  try {
+    const session = await auth();
+    if (!session?.user) {
+      return { success: false, error: 'Unauthorized' };
+    }
+
+    const [year, month, day] = dateString.split('-').map(Number);
+    const startDate = new Date(Date.UTC(year, month - 1, day - 1, 17, 0, 0));
+    const endDate = new Date(Date.UTC(year, month - 1, day, 16, 59, 59));
+
+    const transactions = await prisma.transaction.findMany({
+      where: {
+        deliveryDate: {
+          gte: startDate,
+          lte: endDate,
+        },
+        status: {
+          in: ['PENDING', 'COMPLETED', 'APPROVED', 'SHIPPED'],
+        }
+      },
+      include: {
+        user: true,
+        items: {
+          include: {
+            product: true
+          }
+        }
+      },
+      orderBy: { customerName: 'asc' }
+    });
+
+    const result: DriverDeliveryItem[] = transactions.map(tx => ({
+      id: tx.id,
+      invoiceNumber: tx.invoiceNumber,
+      customerName: tx.customerName || 'Tanpa Nama Toko',
+      customerPhone: tx.customerPhone,
+      shippingAddress: tx.shippingAddress,
+      totalAmount: Number(tx.totalAmount),
+      paymentStatus: tx.paymentStatus,
+      paidAmount: Number(tx.paidAmount),
+      status: tx.status,
+      deliveryStatus: tx.deliveryStatus || 'PENDING',
+      driverName: tx.driverName,
+      proofOfDeliveryUrl: tx.proofOfDeliveryUrl,
+      driverNotes: tx.driverNotes,
+      salesName: tx.user?.name || 'Sales',
+      items: tx.items.map(item => ({
+        id: item.id,
+        productId: item.productId,
+        code: item.product?.code || '',
+        name: item.product?.name || 'Produk',
+        quantity: item.quantity,
+        price: Number(item.price),
+        unit: item.unitNote || item.product?.purchaseUnit || 'KARTON'
+      }))
+    }));
+
+    return { success: true, data: result };
+  } catch (error: any) {
+    console.error('Error fetching driver delivery list:', error);
+    return { success: false, error: error.message || 'Gagal memuat daftar pengiriman supir.' };
+  }
+}
+
+export async function updateDeliveryStatusAction(payload: {
+  transactionId: string;
+  deliveryStatus: string;
+  proofOfDeliveryUrl?: string;
+  driverNotes?: string;
+  driverName?: string;
+}): Promise<{ success: boolean; error?: string }> {
+  try {
+    const session = await auth();
+    if (!session?.user) {
+      return { success: false, error: 'Unauthorized' };
+    }
+
+    await prisma.transaction.update({
+      where: { id: payload.transactionId },
+      data: {
+        deliveryStatus: payload.deliveryStatus,
+        ...(payload.proofOfDeliveryUrl !== undefined ? { proofOfDeliveryUrl: payload.proofOfDeliveryUrl } : {}),
+        ...(payload.driverNotes !== undefined ? { driverNotes: payload.driverNotes } : {}),
+        ...(payload.driverName !== undefined ? { driverName: payload.driverName } : {})
+      }
+    });
+
+    return { success: true };
+  } catch (error: any) {
+    console.error('Error updating delivery status:', error);
+    return { success: false, error: error.message || 'Gagal mengupdate status pengiriman.' };
+  }
+}

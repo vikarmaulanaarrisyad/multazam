@@ -10,6 +10,7 @@ export const productSchema = z.object({
   brand: z.string().max(50, 'Brand maksimal 50 karakter').optional().nullable(),
   description: z.string().max(500, 'Deskripsi maksimal 500 karakter').optional().nullable(),
   price: z.coerce.number().min(0, 'Harga jual tidak boleh negatif'),
+  minPrice: z.coerce.number().min(0, 'Harga terbawah tidak boleh negatif').optional().nullable(),
   purchasePrice: z.coerce.number().min(0, 'Harga beli tidak boleh negatif').optional().nullable(),
   retailPriceNote: z.string().max(100).optional().nullable(),
   stock: z.coerce.number().int().min(0, 'Stok tidak boleh negatif'),

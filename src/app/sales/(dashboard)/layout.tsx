@@ -4,12 +4,16 @@ import { auth } from '@/auth';
 import { LogoutButton } from './_components/logout-button';
 import { NotificationBell } from '@/components/layout/NotificationBell';
 import { BottomNav } from './_components/bottom-nav';
+import { OfflineSyncBar } from './_components/offline-sync-bar';
 
 export default async function SalesDashboardLayout({ children }: { children: React.ReactNode }) {
   const session = await auth();
 
   return (
     <div className="flex flex-col w-full h-screen bg-slate-50 relative overflow-hidden font-sans">
+      {/* Offline Network & Pending Sync Bar */}
+      <OfflineSyncBar />
+
       {/* Header / Greeting */}
       <header className="px-4 py-3 pt-safe bg-white flex flex-col shadow-sm z-10 relative border-b border-slate-200">
         <div className="flex justify-between items-center">

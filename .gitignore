@@ -22,8 +22,13 @@
 
 # misc
 .DS_Store
-*.pem
+# archives & build packages
 deploy.zip
+build.zip
+*.zip
+*.tar.gz
+*.rar
+push.js
 
 # debug
 npm-debug.log*

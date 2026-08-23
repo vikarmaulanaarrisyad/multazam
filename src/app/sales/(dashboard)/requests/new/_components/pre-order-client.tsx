@@ -2,10 +2,11 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Tag, UserCircle, Package, Send, CheckCircle2, ChevronLeft, Minus, Plus, Search, ChevronDown, Lock } from 'lucide-react';
+import { Tag, UserCircle, Package, Send, CheckCircle2, ChevronLeft, Minus, Plus, Search, ChevronDown, Lock, WifiOff } from 'lucide-react';
 import { createPreOrder } from '@/actions/sales-orders';
 import { Product } from '@/generated/prisma/client';
 import { cn } from '@/lib/utils';
+import { saveOfflineOrder } from '@/lib/offline-sync';
 
 interface PreOrderClientProps {
   stores: any[];
@@ -18,6 +19,7 @@ export function PreOrderClient({ stores }: PreOrderClientProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [isOfflineSaved, setIsOfflineSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
   const [selectedStoreId, setSelectedStoreId] = useState<string>('NEW');
@@ -202,57 +204,81 @@ export function PreOrderClient({ stores }: PreOrderClientProps) {
     let lat: number | undefined;
     let lng: number | undefined;
 
+    // 1. Try Geolocation if online/supported
     try {
       if ('geolocation' in navigator) {
         const position = await new Promise<GeolocationPosition>((resolve, reject) => {
-          navigator.geolocation.getCurrentPosition(resolve, reject, { enableHighAccuracy: true, timeout: 10000 });
+          navigator.geolocation.getCurrentPosition(resolve, reject, { enableHighAccuracy: true, timeout: 5000 });
         });
         lat = position.coords.latitude;
         lng = position.coords.longitude;
-      } else {
-        throw new Error("Geolocation tidak didukung browser ini");
       }
     } catch (err: any) {
-      setIsSubmitting(false);
-      setError("Izin lokasi diperlukan untuk mengirim pengajuan. Harap aktifkan GPS dan izinkan browser mengakses lokasi.");
-      return;
+      // If offline or GPS timeout, proceed without lat/lng fallback so offline orders aren't blocked
+      console.warn('Geolocation unavailable or timed out, proceeding without GPS tags');
     }
     
+    const preOrderPayload = {
+      customerName: formData.customerName,
+      ownerName: formData.ownerName,
+      customerPhone: formData.customerPhone,
+      shippingAddress: formData.shippingAddress,
+      shippingCost: formData.shippingCost ? Number(formData.shippingCost.replace(/\D/g, '')) : undefined,
+      dpAmount: formData.dpAmount ? Number(formData.dpAmount.replace(/\D/g, '')) : undefined,
+      paymentMethod: formData.paymentMethod,
+      dueDate: new Date(formData.dueDate),
+      deliveryDate: formData.deliveryDate ? new Date(formData.deliveryDate) : undefined,
+      notes: formData.notes,
+      latitude: lat,
+      longitude: lng,
+      clonedFromId: formData.clonedFromId,
+      items: cartItems.map(item => ({
+        productId: item.product.id,
+        quantity: item.quantity,
+        price: item.requestedPrice || Number(item.product.price),
+        originalPrice: Number(item.product.price),
+        unitNote: item.unitNote || (item.product as any).purchaseUnit || (item.product as any).unit?.name || 'Karton'
+      }))
+    };
+
+    // 2. Check offline mode
+    if (typeof window !== 'undefined' && !navigator.onLine) {
+      saveOfflineOrder(preOrderPayload);
+      setIsOfflineSaved(true);
+      setIsSuccess(true);
+      sessionStorage.removeItem('preOrderCart');
+      sessionStorage.removeItem('preOrderFormData');
+      setIsSubmitting(false);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+
+    // 3. Online submission with offline catch fallback
     try {
-      const result = await createPreOrder({
-        customerName: formData.customerName,
-        ownerName: formData.ownerName,
-        customerPhone: formData.customerPhone,
-        shippingAddress: formData.shippingAddress,
-        shippingCost: formData.shippingCost ? Number(formData.shippingCost.replace(/\D/g, '')) : undefined,
-        dpAmount: formData.dpAmount ? Number(formData.dpAmount.replace(/\D/g, '')) : undefined,
-        paymentMethod: formData.paymentMethod,
-        dueDate: new Date(formData.dueDate),
-        deliveryDate: formData.deliveryDate ? new Date(formData.deliveryDate) : undefined,
-        notes: formData.notes,
-        latitude: lat,
-        longitude: lng,
-        clonedFromId: formData.clonedFromId,
-        items: cartItems.map(item => ({
-          productId: item.product.id,
-          quantity: item.quantity,
-          price: item.requestedPrice || Number(item.product.price),
-          originalPrice: Number(item.product.price),
-          unitNote: item.unitNote || (item.product as any).purchaseUnit || (item.product as any).unit?.name || 'Karton'
-        }))
-      });
+      const result = await createPreOrder(preOrderPayload);
       
       if (result.success) {
+        setIsOfflineSaved(false);
         setIsSuccess(true);
         sessionStorage.removeItem('preOrderCart');
         sessionStorage.removeItem('preOrderFormData');
         router.refresh();
         window.scrollTo({ top: 0, behavior: 'smooth' });
       } else {
-        setError(result.error || 'Failed to create pre-order');
+        setError(result.error || 'Gagal mengirimkan pre-order');
       }
     } catch (err: any) {
-      setError(err.message || 'An error occurred');
+      // If network request failed (e.g. signal lost mid-submit)
+      if (err.message && (err.message.includes('fetch') || err.message.includes('network') || !navigator.onLine)) {
+        saveOfflineOrder(preOrderPayload);
+        setIsOfflineSaved(true);
+        setIsSuccess(true);
+        sessionStorage.removeItem('preOrderCart');
+        sessionStorage.removeItem('preOrderFormData');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } else {
+        setError(err.message || 'Terjadi kesalahan saat mengirim pengajuan');
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -326,12 +352,23 @@ export function PreOrderClient({ stores }: PreOrderClientProps) {
         
         {isSuccess ? (
           <div className="flex flex-col items-center justify-center py-12 px-4 text-center bg-white rounded-2xl shadow-sm border border-slate-100 animate-in fade-in zoom-in duration-300">
-            <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mb-4">
-              <CheckCircle2 className="text-emerald-600 w-8 h-8" />
+            <div className={cn(
+              "w-16 h-16 rounded-full flex items-center justify-center mb-4",
+              isOfflineSaved ? "bg-amber-100" : "bg-emerald-100"
+            )}>
+              {isOfflineSaved ? (
+                <WifiOff className="text-amber-600 w-8 h-8" />
+              ) : (
+                <CheckCircle2 className="text-emerald-600 w-8 h-8" />
+              )}
             </div>
-            <h2 className="text-2xl font-bold text-slate-900 mb-2">Pengajuan Berhasil!</h2>
+            <h2 className="text-2xl font-bold text-slate-900 mb-2">
+              {isOfflineSaved ? "Pesanan Tersimpan Offline!" : "Pengajuan Berhasil!"}
+            </h2>
             <p className="text-slate-500 text-sm mb-8">
-              Pengajuan pre-order Anda telah dikirim untuk persetujuan. Anda dapat melacak statusnya di menu Pengajuan.
+              {isOfflineSaved
+                ? "Koneksi internet terputus/offline. Pre-order Anda telah tersimpan aman di HP dan akan otomatis dikirim ke server saat internet kembali terhubung."
+                : "Pengajuan pre-order Anda telah dikirim untuk persetujuan. Anda dapat melacak statusnya di menu Pengajuan."}
             </p>
             <button 
               onClick={() => router.push('/sales/requests')}

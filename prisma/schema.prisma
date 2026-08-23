@@ -206,6 +206,12 @@ model Transaction {
   updatedAt        DateTime  @updatedAt
   hasBeenReordered Boolean   @default(false)
 
+  // Delivery & Proof of Delivery Fields
+  driverName         String?
+  deliveryStatus     String    @default("PENDING") // PENDING, IN_TRANSIT, DELIVERED, FAILED
+  proofOfDeliveryUrl String?
+  driverNotes        String?   @db.Text
+
   items            TransactionItem[]
   paymentHistories PaymentHistory[]
   returns          ReturnTransaction[]
