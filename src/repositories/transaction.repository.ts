@@ -61,6 +61,17 @@ export class TransactionRepository {
         if (!product) throw new Error(`Produk dengan ID ${item.productId} tidak ditemukan.`);
         
         const realOriginalPrice = Number(product.price);
+        const minPrice = product.minPrice ? Number(product.minPrice) : null;
+        
+        const expectedUnit = (product as any).purchaseUnit || 'Karton';
+        const orderUnit = item.unitNote || expectedUnit;
+        const isEceran = orderUnit.toUpperCase() !== expectedUnit.toUpperCase() && orderUnit.toUpperCase() !== 'DUS' && orderUnit.toUpperCase() !== 'KARTON';
+
+        // Backend enforcement: clamp item price to minPrice if sales proposed below floor price
+        if (!isEceran && minPrice !== null && minPrice > 0 && item.price < minPrice) {
+          item.price = minPrice;
+        }
+
         item.originalPrice = realOriginalPrice;
         
         totalAmount += (item.price * item.quantity);

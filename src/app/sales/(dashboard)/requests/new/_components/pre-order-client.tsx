@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Tag, UserCircle, Package, Send, CheckCircle2, ChevronLeft, Minus, Plus, Search, ChevronDown } from 'lucide-react';
+import { Tag, UserCircle, Package, Send, CheckCircle2, ChevronLeft, Minus, Plus, Search, ChevronDown, Lock } from 'lucide-react';
 import { createPreOrder } from '@/actions/sales-orders';
 import { Product } from '@/generated/prisma/client';
 import { cn } from '@/lib/utils';
@@ -166,9 +166,21 @@ export function PreOrderClient({ stores }: PreOrderClientProps) {
   const updateRequestedPrice = (index: number, newPrice: number, newUnitNote?: string) => {
     setCartItems(prev => {
       const newItems = [...prev];
+      const targetProduct = newItems[index].product;
+      const minP = getMinPrice(targetProduct);
+      
+      let effectivePrice = newPrice;
+      const effectiveUnitNote = newUnitNote || newItems[index].unitNote;
+      const isEceran = effectiveUnitNote && effectiveUnitNote !== 'Karton' && effectiveUnitNote !== (targetProduct as any).purchaseUnit;
+
+      // Clamping rule: If sales negotiates below minPrice, lock immediately to minPrice
+      if (!isEceran && minP !== null && effectivePrice > 0 && effectivePrice < minP) {
+        effectivePrice = minP;
+      }
+
       newItems[index] = { 
         ...newItems[index], 
-        requestedPrice: newPrice,
+        requestedPrice: effectivePrice,
         ...(newUnitNote ? { unitNote: newUnitNote } : {})
       };
       sessionStorage.setItem('preOrderCart', JSON.stringify(newItems));
@@ -252,6 +264,14 @@ export function PreOrderClient({ stores }: PreOrderClientProps) {
       currency: 'IDR',
       minimumFractionDigits: 0,
     }).format(amount);
+  };
+
+  const getMinPrice = (product: any): number | null => {
+    if (product && product.minPrice !== undefined && product.minPrice !== null) {
+      const num = Number(product.minPrice);
+      if (!isNaN(num) && num > 0) return num;
+    }
+    return null;
   };
 
   const getEceranPrice = (product: any): number | null => {
@@ -551,10 +571,35 @@ export function PreOrderClient({ stores }: PreOrderClientProps) {
                               const val = e.target.value.replace(/\D/g, '');
                               updateRequestedPrice(index, val ? parseInt(val, 10) : 0);
                             }}
+                            onBlur={() => {
+                              const minP = getMinPrice(item.product);
+                              if (minP !== null && (!item.requestedPrice || item.requestedPrice < minP)) {
+                                updateRequestedPrice(index, minP);
+                              }
+                            }}
                             className="w-full bg-transparent border-none outline-none font-bold text-sm text-right text-blue-700 p-0 m-0"
                           />
                         </div>
                       </div>
+
+                      {(() => {
+                        const minP = getMinPrice(item.product);
+                        if (minP === null) return null;
+                        const isLocked = item.requestedPrice === minP;
+                        return (
+                          <div className="mt-1 ml-2 flex items-center justify-between px-2.5 py-1.5 bg-amber-50 border border-amber-200 rounded-lg text-[11px]">
+                            <div className="flex items-center gap-1.5 text-amber-800 font-medium">
+                              <Lock className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                              <span>Harga Terbawah: <strong className="font-bold">{formatCurrency(minP)}</strong></span>
+                            </div>
+                            {isLocked && (
+                              <span className="text-[10px] font-bold uppercase tracking-wider bg-amber-200 text-amber-900 px-1.5 py-0.5 rounded shrink-0">
+                                Terkunci Min
+                              </span>
+                            )}
+                          </div>
+                        );
+                      })()}
                     </div>
                   ))}
                 </div>

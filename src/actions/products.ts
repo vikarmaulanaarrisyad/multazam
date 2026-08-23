@@ -16,6 +16,7 @@ export async function getProductsPaginated(page: number = 1, limit: number = 10,
     const serializedData = result.data.map((p: any) => ({
       ...p,
       price: p.price ? p.price.toString() : '0',
+      minPrice: p.minPrice ? p.minPrice.toString() : null,
       purchasePrice: isAdmin && p.purchasePrice ? p.purchasePrice.toString() : null
     }));
     return { ...result, data: serializedData };
@@ -34,6 +35,7 @@ export async function getAllProducts() {
     const serializedData = result.data.map((p: any) => ({
       ...p,
       price: p.price ? p.price.toString() : '0',
+      minPrice: p.minPrice ? p.minPrice.toString() : null,
       purchasePrice: isAdmin && p.purchasePrice ? p.purchasePrice.toString() : null
     }));
     return { ...result, data: serializedData };
@@ -47,6 +49,7 @@ export async function createProductAction(dataInput: {
   brand?: string | null;
   description?: string | null;
   price: number;
+  minPrice?: number | null;
   purchasePrice?: number | null;
   retailPriceNote?: string | null;
   stock: number;
@@ -91,6 +94,7 @@ export async function updateProductAction(id: string, dataInput: {
   brand?: string | null;
   description?: string | null;
   price: number;
+  minPrice?: number | null;
   purchasePrice?: number | null;
   retailPriceNote?: string | null;
   stock: number;

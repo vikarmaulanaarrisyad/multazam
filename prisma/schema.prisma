@@ -147,6 +147,7 @@ model Product {
   name            String
   description     String?
   price           Decimal  @db.Decimal(18, 2)
+  minPrice        Decimal? @db.Decimal(18, 2)
   purchasePrice   Decimal? @db.Decimal(18, 2)
   contents        String? // for 'ISI' e.g. 48btl
   retailPriceNote String? // for 'BTL,RTG,PCS,BAG'

@@ -253,6 +253,15 @@ export function ProductsClient() {
           }
         },
         {
+          accessorKey: 'minPrice',
+          header: 'Harga Terbawah',
+          cell: ({ row }) => {
+            if (!row.original.minPrice) return <span className="text-slate-400 text-xs">-</span>;
+            const amount = parseFloat(row.original.minPrice.toString());
+            return <span className="font-semibold text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200 text-xs">{new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(amount)}</span>;
+          }
+        },
+        {
           accessorKey: 'retailPriceNote',
           header: 'Ref Ecer',
           cell: ({ row }) => row.original.retailPriceNote || '-'

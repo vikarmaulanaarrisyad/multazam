@@ -6,6 +6,7 @@ export type ProductType = {
   name: string;
   description: string | null;
   price: Prisma.Decimal;
+  minPrice?: Prisma.Decimal | null;
   purchasePrice?: Prisma.Decimal | null;
   contents?: string | null;
   retailPriceNote?: string | null;
@@ -44,6 +45,7 @@ export type ProductInput = {
   name: string;
   description?: string | null;
   price: number;
+  minPrice?: number | null;
   purchasePrice?: number | null;
   contents?: string | null;
   retailPriceNote?: string | null;

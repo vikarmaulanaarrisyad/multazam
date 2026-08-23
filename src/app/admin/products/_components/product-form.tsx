@@ -44,6 +44,9 @@ export function ProductForm({ open, onOpenChange, onSuccess, initialData }: Prod
   const initialPrice = initialData?.price 
     ? formatRupiah(parseFloat(initialData.price).toString()) 
     : '';
+  const initialMinPrice = initialData?.minPrice 
+    ? formatRupiah(parseFloat(initialData.minPrice).toString()) 
+    : '';
   const initialPurchasePrice = initialData?.purchasePrice 
     ? formatRupiah(parseFloat(initialData.purchasePrice).toString()) 
     : '';
@@ -52,6 +55,7 @@ export function ProductForm({ open, onOpenChange, onSuccess, initialData }: Prod
   const [categories, setCategories] = useState<{id: string, name: string}[]>([]);
   const [units, setUnits] = useState<{id: string, name: string}[]>([]);
   const [price, setPrice] = useState(initialPrice);
+  const [minPrice, setMinPrice] = useState(initialMinPrice);
   const [purchasePrice, setPurchasePrice] = useState(initialPurchasePrice);
   
   const [selectedCategory, setSelectedCategory] = useState<{value: string, label: string} | null>(null);
@@ -83,6 +87,7 @@ export function ProductForm({ open, onOpenChange, onSuccess, initialData }: Prod
         }
       });
       setPrice(initialPrice);
+      setMinPrice(initialMinPrice);
       setPurchasePrice(initialPurchasePrice);
       setUnitConversions(initialData?.unitConversions || []);
       setAllowUnitSale(initialData?.allowUnitSale ?? true);
@@ -95,6 +100,7 @@ export function ProductForm({ open, onOpenChange, onSuccess, initialData }: Prod
       }
     } else {
       setPrice('');
+      setMinPrice('');
       setPurchasePrice('');
       setSelectedCategory(null);
       setSelectedUnit(null);
@@ -102,7 +108,7 @@ export function ProductForm({ open, onOpenChange, onSuccess, initialData }: Prod
       setAllowUnitSale(true);
       setRetailEndDate('');
     }
-  }, [open, initialPrice, initialPurchasePrice, initialData]);
+  }, [open, initialPrice, initialMinPrice, initialPurchasePrice, initialData]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -115,6 +121,7 @@ export function ProductForm({ open, onOpenChange, onSuccess, initialData }: Prod
       brand: formData.get('brand') as string || null,
       description: formData.get('description') as string || '',
       price: parseFloat((formData.get('price') as string).replace(/\./g, '').replace(',', '.')) || 0,
+      minPrice: formData.get('minPrice') ? parseFloat((formData.get('minPrice') as string).replace(/\./g, '').replace(',', '.')) : null,
       purchasePrice: formData.get('purchasePrice') ? parseFloat((formData.get('purchasePrice') as string).replace(/\./g, '').replace(',', '.')) : null,
       stock: parseInt(formData.get('stock') as string) || 0,
       categoryId: selectedCategory?.value || '',
@@ -215,12 +222,12 @@ export function ProductForm({ open, onOpenChange, onSuccess, initialData }: Prod
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-3 gap-3">
               <div className="space-y-2">
-                <Label htmlFor="price">Harga Jual per Satuan Jual (Rp) <span className="text-red-500">*</span></Label>
+                <Label htmlFor="price">Harga Jual (Rp) <span className="text-red-500">*</span></Label>
                 <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <span className="text-slate-500 sm:text-sm">Rp</span>
+                  <div className="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none">
+                    <span className="text-slate-500 text-xs">Rp</span>
                   </div>
                   <Input
                     id="price"
@@ -230,15 +237,32 @@ export function ProductForm({ open, onOpenChange, onSuccess, initialData }: Prod
                     onChange={(e) => setPrice(formatRupiah(e.target.value))}
                     placeholder="0"
                     required
-                    className="pl-10"
+                    className="pl-8 text-sm"
                   />
                 </div>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="purchasePrice">Harga Beli per Satuan Beli (Rp)</Label>
+                <Label htmlFor="minPrice" className="text-amber-700 font-semibold">Harga Terbawah (Rp)</Label>
                 <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <span className="text-slate-500 sm:text-sm">Rp</span>
+                  <div className="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none">
+                    <span className="text-amber-600 text-xs font-bold">Rp</span>
+                  </div>
+                  <Input
+                    id="minPrice"
+                    name="minPrice"
+                    type="text"
+                    value={minPrice}
+                    onChange={(e) => setMinPrice(formatRupiah(e.target.value))}
+                    placeholder="Min / Limit Nego"
+                    className="pl-8 text-sm border-amber-200 focus-visible:ring-amber-500 bg-amber-50/40"
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="purchasePrice">Harga Beli (Rp)</Label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none">
+                    <span className="text-slate-500 text-xs">Rp</span>
                   </div>
                   <Input
                     id="purchasePrice"
@@ -247,7 +271,7 @@ export function ProductForm({ open, onOpenChange, onSuccess, initialData }: Prod
                     value={purchasePrice}
                     onChange={(e) => setPurchasePrice(formatRupiah(e.target.value))}
                     placeholder="0"
-                    className="pl-10"
+                    className="pl-8 text-sm"
                   />
                 </div>
               </div>
