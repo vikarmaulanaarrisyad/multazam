@@ -42,7 +42,16 @@ export class DashboardRepository {
       prisma.transaction.findMany({
         take: 6,
         orderBy: { createdAt: 'desc' },
-        include: { user: { select: { name: true } } }
+        select: {
+          id: true,
+          invoiceNumber: true,
+          status: true,
+          totalAmount: true,
+          shippingCost: true,
+          paidAmount: true,
+          createdAt: true,
+          user: { select: { name: true } }
+        }
       }),
       // Pending Actions
       prisma.transaction.count({ where: { status: 'PENDING' } }), // Menunggu Pengiriman
