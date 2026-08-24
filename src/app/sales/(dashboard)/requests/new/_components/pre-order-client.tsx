@@ -2,8 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Tag, UserCircle, Package, Send, CheckCircle2, ChevronLeft, Minus, Plus, Search, ChevronDown, Lock, WifiOff } from 'lucide-react';
-import { createPreOrder } from '@/actions/sales-orders';
+import { Tag, UserCircle, Package, Send, CheckCircle2, ChevronLeft, Minus, Plus, Search, ChevronDown, Lock, WifiOff, History } from 'lucide-react';
+import { createPreOrder, getLastPurchasedPrices } from '@/actions/sales-orders';
 import { Product } from '@/generated/prisma/client';
 import { cn } from '@/lib/utils';
 import { saveOfflineOrder } from '@/lib/offline-sync';
@@ -17,6 +17,7 @@ export function PreOrderClient({ stores }: PreOrderClientProps) {
   const router = useRouter();
   
   const [cartItems, setCartItems] = useState<{product: Product, quantity: number, requestedPrice?: number, unitNote?: string}[]>([]);
+  const [lastPurchasedPrices, setLastPurchasedPrices] = useState<Record<string, { price: number; date: string; unitNote?: string }>>({});
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
@@ -68,6 +69,18 @@ export function PreOrderClient({ stores }: PreOrderClientProps) {
       sessionStorage.setItem('preOrderFormData', JSON.stringify(formData));
     }
   }, [formData, isFormLoaded]);
+
+  useEffect(() => {
+    if (formData.customerName && formData.customerName.trim().length > 0) {
+      getLastPurchasedPrices(formData.customerName).then(res => {
+        if (res && res.success && res.data) {
+          setLastPurchasedPrices(res.data);
+        }
+      }).catch(err => console.error('Failed to load last purchased prices', err));
+    } else {
+      setLastPurchasedPrices({});
+    }
+  }, [formData.customerName]);
 
   useEffect(() => {
     // Load cart from session storage
@@ -680,6 +693,38 @@ export function PreOrderClient({ stores }: PreOrderClientProps) {
                                 Ketik Selesai...
                               </span>
                             )}
+                          </div>
+                        );
+                      })()}
+
+                      {(() => {
+                        const lastPurchased = lastPurchasedPrices[item.product.id];
+                        if (!lastPurchased) return null;
+                        
+                        const formattedDate = new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'short' }).format(new Date(lastPurchased.date));
+                        const isSamePrice = item.requestedPrice === lastPurchased.price;
+                        
+                        return (
+                          <div className="mt-1 ml-2 flex items-center justify-between px-2.5 py-1.5 bg-blue-50/70 border border-blue-100 rounded-lg text-[11px]">
+                            <div className="flex items-center gap-1.5 text-blue-900 font-medium truncate pr-1">
+                              <History className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                              <span className="truncate">
+                                Toko ini terakhir beli @ <strong className="font-bold">{formatCurrency(lastPurchased.price)}</strong>
+                                <span className="text-[10px] text-blue-600 ml-1">({formattedDate})</span>
+                              </span>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => updateRequestedPrice(index, lastPurchased.price, lastPurchased.unitNote, false)}
+                              className={cn(
+                                "text-[10px] font-extrabold px-2 py-0.5 rounded border transition-all shrink-0 active:scale-95 shadow-2xs",
+                                isSamePrice 
+                                  ? "bg-blue-600 text-white border-blue-600 cursor-default" 
+                                  : "bg-white text-blue-700 border-blue-200 hover:bg-blue-100"
+                              )}
+                            >
+                              {isSamePrice ? 'Dipakai' : 'Gunakan'}
+                            </button>
                           </div>
                         );
                       })()}
