@@ -417,9 +417,18 @@ export default function RequestsClient({ requests }: { requests: RequestItem[] }
                         <div className="text-xs text-slate-500">{item.quantity} x {item.price.toLocaleString('id-ID')}</div>
                         <div className="text-sm font-bold text-slate-800">Rp {(item.quantity * item.price).toLocaleString('id-ID')}</div>
                       </div>
-                      {item.price !== item.originalPrice && (
-                        <div className="text-[10px] text-amber-600 font-semibold mt-1">
-                          Harga asli: Rp {item.originalPrice.toLocaleString('id-ID')} (Telah dinego)
+                      {item.price !== item.originalPrice && item.originalPrice > 0 && (
+                        <div className="text-[10px] text-amber-700 font-semibold mt-1 flex items-center gap-1.5">
+                          <span>Harga asli: Rp {item.originalPrice.toLocaleString('id-ID')} (Telah dinego)</span>
+                          {(() => {
+                            const diff = ((item.price - item.originalPrice) / item.originalPrice) * 100;
+                            const formattedDiff = (diff > 0 ? '+' : '') + diff.toFixed(1).replace('.0', '') + '%';
+                            return (
+                              <span className="px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 text-[10px] font-extrabold border border-amber-200">
+                                {formattedDiff}
+                              </span>
+                            );
+                          })()}
                         </div>
                       )}
                     </div>

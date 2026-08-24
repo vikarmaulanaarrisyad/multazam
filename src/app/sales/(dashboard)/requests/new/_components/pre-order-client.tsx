@@ -7,6 +7,7 @@ import { createPreOrder } from '@/actions/sales-orders';
 import { Product } from '@/generated/prisma/client';
 import { cn } from '@/lib/utils';
 import { saveOfflineOrder } from '@/lib/offline-sync';
+import { toast } from 'sonner';
 
 interface PreOrderClientProps {
   stores: any[];
@@ -165,7 +166,7 @@ export function PreOrderClient({ stores }: PreOrderClientProps) {
     });
   };
 
-  const updateRequestedPrice = (index: number, newPrice: number, newUnitNote?: string) => {
+  const updateRequestedPrice = (index: number, newPrice: number, newUnitNote?: string, shouldClamp: boolean = false) => {
     setCartItems(prev => {
       const newItems = [...prev];
       const targetProduct = newItems[index].product;
@@ -175,8 +176,8 @@ export function PreOrderClient({ stores }: PreOrderClientProps) {
       const effectiveUnitNote = newUnitNote || newItems[index].unitNote;
       const isEceran = effectiveUnitNote && effectiveUnitNote !== 'Karton' && effectiveUnitNote !== (targetProduct as any).purchaseUnit;
 
-      // Clamping rule: If sales negotiates below minPrice, lock immediately to minPrice
-      if (!isEceran && minP !== null && effectivePrice > 0 && effectivePrice < minP) {
+      // Clamping rule: Only clamp if explicitly requested (e.g. onBlur or submit), NOT on active typing keystroke
+      if (shouldClamp && !isEceran && minP !== null && effectivePrice > 0 && effectivePrice < minP) {
         effectivePrice = minP;
       }
 
@@ -232,13 +233,22 @@ export function PreOrderClient({ stores }: PreOrderClientProps) {
       latitude: lat,
       longitude: lng,
       clonedFromId: formData.clonedFromId,
-      items: cartItems.map(item => ({
-        productId: item.product.id,
-        quantity: item.quantity,
-        price: item.requestedPrice || Number(item.product.price),
-        originalPrice: Number(item.product.price),
-        unitNote: item.unitNote || (item.product as any).purchaseUnit || (item.product as any).unit?.name || 'Karton'
-      }))
+      items: cartItems.map(item => {
+        const minP = getMinPrice(item.product);
+        const effectiveUnitNote = item.unitNote || (item.product as any).purchaseUnit || (item.product as any).unit?.name || 'Karton';
+        const isEceran = effectiveUnitNote !== 'Karton' && effectiveUnitNote !== (item.product as any).purchaseUnit;
+        let finalPrice = item.requestedPrice || Number(item.product.price);
+        if (!isEceran && minP !== null && finalPrice > 0 && finalPrice < minP) {
+          finalPrice = minP;
+        }
+        return {
+          productId: item.product.id,
+          quantity: item.quantity,
+          price: finalPrice,
+          originalPrice: Number(item.product.price),
+          unitNote: effectiveUnitNote
+        };
+      })
     };
 
     // 2. Check offline mode
@@ -597,8 +607,30 @@ export function PreOrderClient({ stores }: PreOrderClientProps) {
                       </div>
 
                       <div className="mt-1 bg-white border border-slate-200 rounded-lg p-2 flex items-center justify-between gap-3 transition-colors focus-within:ring-1 focus-within:ring-blue-300 shadow-sm ml-2">
-                        <label className="text-[11px] font-bold text-slate-600 pl-1 whitespace-nowrap">Harga Pengajuan</label>
-                        <div className="flex items-center gap-1.5 w-32">
+                        <div className="flex items-center gap-1.5 min-w-0">
+                          <label className="text-[11px] font-bold text-slate-600 pl-1 whitespace-nowrap">Harga Pengajuan</label>
+                          {(() => {
+                            const kartonP = Number(item.product.price);
+                            const reqP = item.requestedPrice || kartonP;
+                            if (reqP !== kartonP && kartonP > 0) {
+                              const diffPercent = ((reqP - kartonP) / kartonP) * 100;
+                              const formattedDiff = (diffPercent > 0 ? '+' : '') + diffPercent.toFixed(1).replace('.0', '') + '%';
+                              return (
+                                <span 
+                                  title={`Selisih harga pengajuan (${formatCurrency(reqP)}) dibanding harga asli (${formatCurrency(kartonP)})`}
+                                  className={cn(
+                                    "text-[10px] font-extrabold px-1.5 py-0.5 rounded tracking-tight transition-all shrink-0",
+                                    diffPercent < 0 ? "bg-amber-100 text-amber-800 border border-amber-200" : "bg-emerald-100 text-emerald-800 border border-emerald-200"
+                                  )}
+                                >
+                                  {formattedDiff}
+                                </span>
+                              );
+                            }
+                            return null;
+                          })()}
+                        </div>
+                        <div className="flex items-center gap-1.5 w-32 shrink-0">
                           <span className="text-xs font-bold text-slate-400">Rp</span>
                           <input 
                             type="text" 
@@ -606,12 +638,20 @@ export function PreOrderClient({ stores }: PreOrderClientProps) {
                             value={item.requestedPrice ? item.requestedPrice.toLocaleString('id-ID') : ''}
                             onChange={e => {
                               const val = e.target.value.replace(/\D/g, '');
-                              updateRequestedPrice(index, val ? parseInt(val, 10) : 0);
+                              updateRequestedPrice(index, val ? parseInt(val, 10) : 0, undefined, false);
                             }}
                             onBlur={() => {
                               const minP = getMinPrice(item.product);
-                              if (minP !== null && (!item.requestedPrice || item.requestedPrice < minP)) {
-                                updateRequestedPrice(index, minP);
+                              const effectiveUnitNote = item.unitNote || (item.product as any).purchaseUnit || (item.product as any).unit?.name || 'Karton';
+                              const isEceran = effectiveUnitNote !== 'Karton' && effectiveUnitNote !== (item.product as any).purchaseUnit;
+                              if (!isEceran && minP !== null) {
+                                if (!item.requestedPrice || item.requestedPrice < minP) {
+                                  updateRequestedPrice(index, minP, undefined, true);
+                                  toast.warning(`Harga ${item.product.name} otomatis disesuaikan ke batas minimal ${formatCurrency(minP)}`, {
+                                    description: 'Nominal nego berada di bawah batas harga terbawah.',
+                                    duration: 4000
+                                  });
+                                }
                               }
                             }}
                             className="w-full bg-transparent border-none outline-none font-bold text-sm text-right text-blue-700 p-0 m-0"
@@ -623,6 +663,7 @@ export function PreOrderClient({ stores }: PreOrderClientProps) {
                         const minP = getMinPrice(item.product);
                         if (minP === null) return null;
                         const isLocked = item.requestedPrice === minP;
+                        const isBelowMin = item.requestedPrice !== undefined && item.requestedPrice > 0 && item.requestedPrice < minP;
                         return (
                           <div className="mt-1 ml-2 flex items-center justify-between px-2.5 py-1.5 bg-amber-50 border border-amber-200 rounded-lg text-[11px]">
                             <div className="flex items-center gap-1.5 text-amber-800 font-medium">
@@ -632,6 +673,11 @@ export function PreOrderClient({ stores }: PreOrderClientProps) {
                             {isLocked && (
                               <span className="text-[10px] font-bold uppercase tracking-wider bg-amber-200 text-amber-900 px-1.5 py-0.5 rounded shrink-0">
                                 Terkunci Min
+                              </span>
+                            )}
+                            {isBelowMin && (
+                              <span className="text-[10px] font-bold uppercase tracking-wider bg-amber-200/70 text-amber-900 px-1.5 py-0.5 rounded shrink-0">
+                                Ketik Selesai...
                               </span>
                             )}
                           </div>
