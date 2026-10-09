@@ -13,15 +13,12 @@ export default async function SalesDashboardPage() {
   
   const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const endOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
-  const startOfYear = new Date(now.getFullYear(), 0, 1);
 
   // Jalankan semua kueri secara paralel untuk performa yang lebih baik (Mencegah N+1 Sequential)
   const [
     salesTarget,
     monthlySalesResult,
     dailySalesResult,
-    yearlySalesResult,
-    accumulatedSalesResult,
     totalOrders,
     pendingApprovals,
     recentTransactions,
@@ -53,25 +50,6 @@ export default async function SalesDashboardPage() {
         userId: session.user.id,
         status: { not: 'CANCELLED' },
         createdAt: { gte: startOfToday, lte: endOfToday }
-      },
-      _sum: { totalAmount: true, shippingCost: true }
-    }),
-
-    // 2.2 Yearly Sales Result
-    prisma.transaction.aggregate({
-      where: {
-        userId: session.user.id,
-        status: { not: 'CANCELLED' },
-        createdAt: { gte: startOfYear }
-      },
-      _sum: { totalAmount: true, shippingCost: true }
-    }),
-
-    // 2.3 Accumulated Sales Result
-    prisma.transaction.aggregate({
-      where: {
-        userId: session.user.id,
-        status: { not: 'CANCELLED' }
       },
       _sum: { totalAmount: true, shippingCost: true }
     }),
@@ -121,8 +99,6 @@ export default async function SalesDashboardPage() {
   
   const dailySales = Number(dailySalesResult._sum.totalAmount || 0) + Number(dailySalesResult._sum.shippingCost || 0);
   const monthlySales = Number(monthlySalesResult._sum.totalAmount || 0) + Number(monthlySalesResult._sum.shippingCost || 0);
-  const yearlySales = Number(yearlySalesResult._sum.totalAmount || 0) + Number(yearlySalesResult._sum.shippingCost || 0);
-  const accumulatedSales = Number(accumulatedSalesResult._sum.totalAmount || 0) + Number(accumulatedSalesResult._sum.shippingCost || 0);
   
   const totalSales = monthlySales; // Keep totalSales for progress target computation
   const progressPercent = targetSales > 0 ? Math.min(Math.round((totalSales / targetSales) * 100), 100) : 0;
@@ -175,14 +151,6 @@ export default async function SalesDashboardPage() {
           <div className="bg-white rounded-xl p-3 border border-slate-200 shadow-sm flex flex-col gap-1">
             <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Bulanan</span>
             <span className="text-sm font-bold text-slate-900">Rp {(monthlySales / 1000000).toFixed(1)}Jt</span>
-          </div>
-          <div className="bg-white rounded-xl p-3 border border-slate-200 shadow-sm flex flex-col gap-1">
-            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Tahunan</span>
-            <span className="text-sm font-bold text-slate-900">Rp {(yearlySales / 1000000).toFixed(1)}Jt</span>
-          </div>
-          <div className="bg-white rounded-xl p-3 border border-slate-200 shadow-sm flex flex-col gap-1 bg-primary/5 border-primary/20">
-            <span className="text-[10px] font-bold text-primary uppercase tracking-wider">Total Keseluruhan</span>
-            <span className="text-sm font-bold text-primary">Rp {(accumulatedSales / 1000000).toFixed(1)}Jt</span>
           </div>
         </div>
       </section>
