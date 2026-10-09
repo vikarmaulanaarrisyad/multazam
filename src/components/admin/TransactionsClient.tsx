@@ -1,10 +1,10 @@
 'use client';
 
 import React, { useState, useMemo, useEffect } from 'react';
-import { Search, ChevronLeft, ChevronRight, CheckCircle, XCircle, Truck, Package, X, Plus, Printer, FileDown, AlertCircle } from 'lucide-react';
+import { Search, ChevronLeft, ChevronRight, CheckCircle, XCircle, Truck, Package, X, Plus, Printer, FileDown, AlertCircle, Pencil, Check } from 'lucide-react';
 import { ColumnDef, flexRender, getCoreRowModel, useReactTable, getPaginationRowModel } from '@tanstack/react-table';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
-import { updateTransactionStatus, cancelTransaction, addPayment, removeItemFromTransaction, updateTransactionDeliveryDate } from '@/actions/transaction-actions';
+import { updateTransactionStatus, cancelTransaction, addPayment, removeItemFromTransaction, updateTransactionDeliveryDate, updateTransactionItemQuantity } from '@/actions/transaction-actions';
 import { approvePriceRequest, rejectPriceRequest } from '@/actions/approval-actions';
 import { getTransactionsForExport } from '@/actions/transaction-export-action';
 import { toast } from 'sonner';
@@ -103,6 +103,11 @@ export function TransactionsClient({
   // Approval state
   const [editedPrices, setEditedPrices] = useState<Record<string, number>>({});
   
+  // Qty edit state
+  const [editingQtyItemId, setEditingQtyItemId] = useState<string | null>(null);
+  const [editQtyValue, setEditQtyValue] = useState<string>('');
+  const [isUpdatingQty, setIsUpdatingQty] = useState(false);
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [adminNotes, setAdminNotes] = useState('');
@@ -131,6 +136,8 @@ export function TransactionsClient({
     setShowPaymentForm(false);
     setPaymentAmount('');
     setIsEditingDeliveryDate(false);
+    setEditingQtyItemId(null);
+    setEditQtyValue('');
     
     if (tx.deliveryDate) {
       const d = new Date(tx.deliveryDate);
@@ -142,10 +149,7 @@ export function TransactionsClient({
     if (tx.status === 'PENDING_APPROVAL') {
       const initialPrices: Record<string, number> = {};
       tx.items.forEach(item => {
-        initialPrices[item.id] = item.price; // Original requested price is saved in item.price for PENDING_APPROVAL? Wait, we need to check how it's mapped.
-        // Actually, item.price is the requested price in this context, because during creation we save requested price to price. 
-        // Or wait! In ApprovalTransaction it was mapped as requestedPrice.
-        // Let's just use item.price as the default editable value.
+        initialPrices[item.id] = item.price;
       });
       setEditedPrices(initialPrices);
     }
@@ -236,6 +240,56 @@ export function TransactionsClient({
     }
   };
 
+  const handleSaveQty = async (itemId: string) => {
+    if (!selectedTx) return;
+    const parsedQty = parseInt(editQtyValue, 10);
+    if (isNaN(parsedQty) || parsedQty <= 0) {
+      toast.error('Jumlah barang harus berupa angka bulat minimal 1');
+      return;
+    }
+
+    const currentItem = selectedTx.items.find(i => i.id === itemId);
+    if (!currentItem) return;
+
+    if (currentItem.quantity === parsedQty) {
+      setEditingQtyItemId(null);
+      return;
+    }
+
+    setIsUpdatingQty(true);
+    try {
+      const result = await updateTransactionItemQuantity({
+        transactionId: selectedTx.id,
+        itemId,
+        newQuantity: parsedQty,
+      });
+
+      if (result.success && result.data) {
+        toast.success('Jumlah barang berhasil diperbarui');
+        setSelectedTx(prev => {
+          if (!prev) return null;
+          const updatedItems = prev.items.map(it => 
+            it.id === itemId ? { ...it, quantity: parsedQty } : it
+          );
+          return {
+            ...prev,
+            items: updatedItems,
+            totalAmount: result.data.newTotalAmount,
+            paymentStatus: result.data.paymentStatus,
+          };
+        });
+        setEditingQtyItemId(null);
+        router.refresh();
+      } else {
+        toast.error(result.error || 'Gagal mengubah jumlah barang');
+      }
+    } catch (err: any) {
+      toast.error(err.message || 'Terjadi kesalahan saat mengubah jumlah barang');
+    } finally {
+      setIsUpdatingQty(false);
+    }
+  };
+
   const handleRemoveItem = async (txId: string, itemId: string) => {
     if (!confirm('Apakah Anda yakin ingin menghapus item ini dari pesanan? Stok akan dikembalikan ke sistem.')) return;
     
@@ -245,7 +299,17 @@ export function TransactionsClient({
       const result = await removeItemFromTransaction({ transactionId: txId, itemId });
       if (result.success) {
         toast.success('Item berhasil dihapus dari pesanan');
-        setSelectedTx(null); // Tutup modal, admin harus membukanya lagi
+        setSelectedTx(prev => {
+          if (!prev) return null;
+          const remainingItems = prev.items.filter(i => i.id !== itemId);
+          const newTotal = remainingItems.reduce((sum, i) => sum + (i.price * i.quantity), 0) + (prev.shippingCost || 0);
+          return {
+            ...prev,
+            items: remainingItems,
+            totalAmount: newTotal,
+          };
+        });
+        router.refresh();
       } else {
         setError(result.error || 'Gagal menghapus item');
       }
@@ -932,85 +996,164 @@ export function TransactionsClient({
               </div>
 
               {/* Items Section */}
-              <div className="mt-6 border border-slate-200 rounded-xl overflow-hidden">
-                <table className="w-full text-left">
-                  <thead className="bg-slate-50 border-b border-slate-200">
-                    <tr>
-                      <th className="p-3 text-xs font-bold text-slate-500 w-12 text-center">No</th>
-                      <th className="p-3 text-xs font-bold text-slate-500">Produk</th>
-                      <th className="p-3 text-xs font-bold text-slate-500 text-right">Qty</th>
-                      <th className="p-3 text-xs font-bold text-slate-500 text-right">Harga Satuan</th>
-                      <th className="p-3 text-xs font-bold text-slate-500 text-right">Subtotal</th>
-                      {(selectedTx.status === 'PENDING' || selectedTx.status === 'PENDING_APPROVAL') && (
-                        <th className="p-3 text-xs font-bold text-slate-500 text-center w-12"></th>
-                      )}
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100">
-                    {selectedTx.items.map((item, index) => (
-                      <tr key={item.id} className="bg-white">
-                        <td className="p-3 text-sm text-slate-600 text-center">{index + 1}</td>
-                        <td className="p-3 text-sm font-medium text-slate-900">{item.productName}</td>
-                        <td className="p-3 text-sm text-slate-600 text-right">
-                          {item.quantity} <span className="text-[10px] text-slate-400 font-semibold ml-1">{item.unitNote || 'Karton'}</span>
-                        </td>
-                        <td className="p-3 text-sm text-slate-600 text-right">
-                          {selectedTx.status === 'PENDING_APPROVAL' ? (
-                            <div className="flex flex-col items-end gap-1">
-                              <span className="text-[10px] text-slate-400 line-through">
-                                Rp {item.originalPrice?.toLocaleString('id-ID') || 0}
-                              </span>
-                              <input 
-                                type="text"
-                                value={editedPrices[item.id] ? editedPrices[item.id].toLocaleString('id-ID') : ''}
-                                onChange={(e) => handlePriceChange(item.id, e.target.value)}
-                                className="w-28 h-8 px-2 text-right rounded bg-amber-50 border border-amber-200 text-amber-900 font-bold focus:outline-none focus:ring-2 focus:ring-amber-500"
-                              />
-                            </div>
-                          ) : (
-                            formatCurrency(item.price)
+              {(() => {
+                const canModifyItems = selectedTx.status === 'PENDING' || selectedTx.status === 'PENDING_APPROVAL' || selectedTx.status === 'APPROVED';
+                return (
+                  <div className="mt-6 border border-slate-200 rounded-xl overflow-hidden">
+                    <table className="w-full text-left">
+                      <thead className="bg-slate-50 border-b border-slate-200">
+                        <tr>
+                          <th className="p-3 text-xs font-bold text-slate-500 w-12 text-center">No</th>
+                          <th className="p-3 text-xs font-bold text-slate-500">Produk</th>
+                          <th className="p-3 text-xs font-bold text-slate-500 text-right">Qty</th>
+                          <th className="p-3 text-xs font-bold text-slate-500 text-right">Harga Satuan</th>
+                          <th className="p-3 text-xs font-bold text-slate-500 text-right">Subtotal</th>
+                          {canModifyItems && (
+                            <th className="p-3 text-xs font-bold text-slate-500 text-center w-12"></th>
                           )}
-                        </td>
-                        <td className="p-3 text-sm font-bold text-slate-900 text-right">
-                          {selectedTx.status === 'PENDING_APPROVAL' 
-                            ? formatCurrency((editedPrices[item.id] || 0) * item.quantity)
-                            : formatCurrency(item.price * item.quantity)}
-                        </td>
-                        {(selectedTx.status === 'PENDING' || selectedTx.status === 'PENDING_APPROVAL') && (
-                          <td className="p-3 text-center">
-                            <button
-                              onClick={() => handleRemoveItem(selectedTx.id, item.id)}
-                              disabled={isRemovingItem === item.id || selectedTx.items.length <= 1}
-                              className="text-red-500 hover:text-red-700 hover:bg-red-50 p-1.5 rounded transition-colors disabled:opacity-30 disabled:hover:bg-transparent"
-                              title={selectedTx.items.length <= 1 ? "Tidak bisa menghapus item terakhir (batalkan saja pesanannya)" : "Hapus Item karena Stok Fisik Kosong"}
-                            >
-                              <X className="w-4 h-4" />
-                            </button>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100">
+                        {selectedTx.items.map((item, index) => (
+                          <tr key={item.id} className="bg-white hover:bg-slate-50/50 transition-colors">
+                            <td className="p-3 text-sm text-slate-600 text-center">{index + 1}</td>
+                            <td className="p-3 text-sm font-medium text-slate-900">{item.productName}</td>
+                            <td className="p-3 text-sm text-slate-600 text-right">
+                              {canModifyItems ? (
+                                editingQtyItemId === item.id ? (
+                                  <div className="flex items-center justify-end gap-1.5">
+                                    <input 
+                                      type="number"
+                                      min="1"
+                                      step="1"
+                                      value={editQtyValue}
+                                      onChange={(e) => setEditQtyValue(e.target.value)}
+                                      onKeyDown={(e) => {
+                                        if (e.key === 'Enter') {
+                                          e.preventDefault();
+                                          handleSaveQty(item.id);
+                                        } else if (e.key === 'Escape') {
+                                          setEditingQtyItemId(null);
+                                        }
+                                      }}
+                                      autoFocus
+                                      disabled={isUpdatingQty}
+                                      className="w-16 h-8 px-2 text-right text-sm font-bold rounded bg-blue-50 border border-blue-400 text-blue-950 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    />
+                                    <span className="text-[10px] text-slate-500 font-semibold">{item.unitNote || 'Karton'}</span>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleSaveQty(item.id)}
+                                      disabled={isUpdatingQty}
+                                      className="p-1.5 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 rounded-lg transition-colors border border-emerald-200 disabled:opacity-50"
+                                      title="Simpan Jumlah"
+                                    >
+                                      {isUpdatingQty ? (
+                                        <span className="w-3.5 h-3.5 border-2 border-emerald-600/30 border-t-emerald-600 rounded-full animate-spin inline-block" />
+                                      ) : (
+                                        <Check className="w-3.5 h-3.5" />
+                                      )}
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => setEditingQtyItemId(null)}
+                                      disabled={isUpdatingQty}
+                                      className="p-1.5 bg-slate-50 text-slate-400 hover:bg-slate-100 hover:text-slate-600 rounded-lg transition-colors border border-slate-200 disabled:opacity-50"
+                                      title="Batal"
+                                    >
+                                      <X className="w-3.5 h-3.5" />
+                                    </button>
+                                  </div>
+                                ) : (
+                                  <div className="flex items-center justify-end gap-1.5 group">
+                                    <span 
+                                      onClick={() => {
+                                        setEditingQtyItemId(item.id);
+                                        setEditQtyValue(item.quantity.toString());
+                                      }}
+                                      className="cursor-pointer hover:text-blue-600 hover:font-bold transition-all py-0.5 px-1 rounded hover:bg-blue-50/50"
+                                      title="Klik untuk mengubah Qty"
+                                    >
+                                      {item.quantity} <span className="text-[10px] text-slate-400 font-semibold ml-0.5">{item.unitNote || 'Karton'}</span>
+                                    </span>
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        setEditingQtyItemId(item.id);
+                                        setEditQtyValue(item.quantity.toString());
+                                      }}
+                                      className="p-1 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-all opacity-40 group-hover:opacity-100"
+                                      title="Ubah Jumlah"
+                                    >
+                                      <Pencil className="w-3.5 h-3.5" />
+                                    </button>
+                                  </div>
+                                )
+                              ) : (
+                                <>
+                                  {item.quantity} <span className="text-[10px] text-slate-400 font-semibold ml-1">{item.unitNote || 'Karton'}</span>
+                                </>
+                              )}
+                            </td>
+                            <td className="p-3 text-sm text-slate-600 text-right">
+                              {selectedTx.status === 'PENDING_APPROVAL' ? (
+                                <div className="flex flex-col items-end gap-1">
+                                  <span className="text-[10px] text-slate-400 line-through">
+                                    Rp {item.originalPrice?.toLocaleString('id-ID') || 0}
+                                  </span>
+                                  <input 
+                                    type="text"
+                                    value={editedPrices[item.id] !== undefined ? editedPrices[item.id].toLocaleString('id-ID') : ''}
+                                    onChange={(e) => handlePriceChange(item.id, e.target.value)}
+                                    className="w-28 h-8 px-2 text-right rounded bg-amber-50 border border-amber-200 text-amber-900 font-bold focus:outline-none focus:ring-2 focus:ring-amber-500"
+                                  />
+                                </div>
+                              ) : (
+                                formatCurrency(item.price)
+                              )}
+                            </td>
+                            <td className="p-3 text-sm font-bold text-slate-900 text-right">
+                              {selectedTx.status === 'PENDING_APPROVAL' 
+                                ? formatCurrency(((editedPrices[item.id] !== undefined ? editedPrices[item.id] : item.price)) * item.quantity)
+                                : formatCurrency(item.price * item.quantity)}
+                            </td>
+                            {canModifyItems && (
+                              <td className="p-3 text-center">
+                                <button
+                                  onClick={() => handleRemoveItem(selectedTx.id, item.id)}
+                                  disabled={isRemovingItem === item.id || selectedTx.items.length <= 1}
+                                  className="text-red-500 hover:text-red-700 hover:bg-red-50 p-1.5 rounded transition-colors disabled:opacity-30 disabled:hover:bg-transparent"
+                                  title={selectedTx.items.length <= 1 ? "Tidak bisa menghapus item terakhir (batalkan saja pesanannya)" : "Hapus Item karena Stok Fisik Kosong"}
+                                >
+                                  <X className="w-4 h-4" />
+                                </button>
+                              </td>
+                            )}
+                          </tr>
+                        ))}
+                        {selectedTx.shippingCost ? (
+                          <tr className="bg-slate-50/50">
+                            <td colSpan={4} className="p-3 text-sm font-bold text-slate-500 text-right">Ongkos Kirim</td>
+                            <td className="p-3 text-sm font-bold text-slate-700 text-right">{formatCurrency(selectedTx.shippingCost)}</td>
+                            {canModifyItems && <td></td>}
+                          </tr>
+                        ) : null}
+                        <tr className="bg-slate-50">
+                          <td colSpan={4} className="p-3 text-sm font-bold text-slate-900 text-right">TOTAL KESELURUHAN</td>
+                          <td className="p-3 text-base font-bold text-blue-700 text-right">
+                            {selectedTx.status === 'PENDING_APPROVAL'
+                              ? formatCurrency(
+                                  selectedTx.items.reduce((sum, item) => sum + (((editedPrices[item.id] !== undefined ? editedPrices[item.id] : item.price)) * item.quantity), 0) + (selectedTx.shippingCost || 0)
+                                )
+                              : formatCurrency(selectedTx.totalAmount)}
                           </td>
-                        )}
-                      </tr>
-                    ))}
-                    {selectedTx.shippingCost ? (
-                      <tr className="bg-slate-50/50">
-                        <td colSpan={3} className="p-3 text-sm font-bold text-slate-500 text-right">Ongkos Kirim</td>
-                        <td className="p-3 text-sm font-bold text-slate-700 text-right">{formatCurrency(selectedTx.shippingCost)}</td>
-                        {(selectedTx.status === 'PENDING' || selectedTx.status === 'PENDING_APPROVAL') && <td></td>}
-                      </tr>
-                    ) : null}
-                    <tr className="bg-slate-50">
-                      <td colSpan={3} className="p-3 text-sm font-bold text-slate-900 text-right">TOTAL KESELURUHAN</td>
-                      <td className="p-3 text-base font-bold text-blue-700 text-right">
-                        {selectedTx.status === 'PENDING_APPROVAL'
-                          ? formatCurrency(
-                              selectedTx.items.reduce((sum, item) => sum + ((editedPrices[item.id] || 0) * item.quantity), 0) + (selectedTx.shippingCost || 0)
-                            )
-                          : formatCurrency(selectedTx.totalAmount)}
-                      </td>
-                      {(selectedTx.status === 'PENDING' || selectedTx.status === 'PENDING_APPROVAL') && <td></td>}
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
+                          {canModifyItems && <td></td>}
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                );
+              })()}
 
               {/* Payment Summary */}
               <div className="mt-4 p-4 bg-slate-50 border border-slate-200 rounded-xl">

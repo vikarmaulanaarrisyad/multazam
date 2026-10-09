@@ -330,13 +330,163 @@ export class TransactionRepository {
       }
 
       const newTotalAmount = Number(transaction.totalAmount) - (Number(itemToRemove.price) * itemToRemove.quantity);
+      const paidAmount = Number(transaction.paidAmount);
+      let paymentStatus = transaction.paymentStatus;
+      if (paidAmount >= newTotalAmount && newTotalAmount > 0) {
+        paymentStatus = 'PAID';
+      } else if (paidAmount > 0) {
+        paymentStatus = 'PARTIAL';
+      } else {
+        paymentStatus = 'UNPAID';
+      }
+
       await tx.transaction.update({
         where: { id: transactionId },
         data: {
-          totalAmount: newTotalAmount
+          totalAmount: newTotalAmount,
+          paymentStatus: paymentStatus
         }
       });
       return true;
+    }, { maxWait: 10000, timeout: 20000 });
+  }
+
+  static async updateItemQuantity(
+    transactionId: string,
+    itemId: string,
+    newQuantity: number,
+    userId: string
+  ) {
+    return prisma.$transaction(async (tx) => {
+      const transaction = await tx.transaction.findUnique({
+        where: { id: transactionId },
+        include: { items: true }
+      });
+
+      if (!transaction) throw new Error('Pesanan tidak ditemukan.');
+
+      if (!['PENDING', 'PENDING_APPROVAL', 'APPROVED'].includes(transaction.status)) {
+        throw new Error('Pesanan dengan status ini tidak dapat diubah jumlahnya.');
+      }
+
+      if (!Number.isInteger(newQuantity) || newQuantity <= 0) {
+        throw new Error('Jumlah barang harus berupa bilangan bulat minimal 1.');
+      }
+
+      const itemToUpdate = transaction.items.find(item => item.id === itemId);
+      if (!itemToUpdate) throw new Error('Item tidak ditemukan di pesanan ini.');
+
+      if (itemToUpdate.quantity === newQuantity) {
+        return {
+          transactionId,
+          itemId,
+          newQuantity,
+          newTotalAmount: Number(transaction.totalAmount),
+          paymentStatus: transaction.paymentStatus,
+        };
+      }
+
+      const product = await tx.product.findUnique({
+        where: { id: itemToUpdate.productId },
+        include: { unitConversions: true }
+      });
+
+      if (!product) throw new Error('Produk tidak ditemukan di database.');
+
+      const oldBaseQty = calculateBaseQuantity(itemToUpdate.quantity, itemToUpdate.unitNote, product);
+      const newBaseQty = calculateBaseQuantity(newQuantity, itemToUpdate.unitNote, product);
+      const baseQtyDiff = newBaseQty - oldBaseQty;
+
+      if (baseQtyDiff > 0) {
+        // Qty bertambah: kurangi stok gudang
+        const updated = await tx.product.updateMany({
+          where: { id: itemToUpdate.productId, stock: { gte: baseQtyDiff } },
+          data: { stock: { decrement: baseQtyDiff } }
+        });
+
+        if (updated.count === 0) {
+          throw new Error(`Stok tidak mencukupi untuk menambah ${product.name} (Sisa stok: ${product.stock}).`);
+        }
+
+        const updatedProduct = await tx.product.findUnique({ where: { id: itemToUpdate.productId } });
+
+        await tx.stockMovement.create({
+          data: {
+            productId: itemToUpdate.productId,
+            type: 'OUT',
+            quantity: baseQtyDiff,
+            balanceBefore: (updatedProduct?.stock ?? 0) + baseQtyDiff,
+            balanceAfter: updatedProduct?.stock ?? 0,
+            reference: transaction.invoiceNumber,
+            notes: `Penyesuaian stok pesanan (Qty bertambah dari ${itemToUpdate.quantity} ke ${newQuantity} ${itemToUpdate.unitNote || 'PCS'})`,
+            userId: userId
+          }
+        });
+      } else if (baseQtyDiff < 0) {
+        // Qty berkurang: kembalikan stok ke gudang
+        const qtyToReturn = Math.abs(baseQtyDiff);
+        const updatedProduct = await tx.product.update({
+          where: { id: itemToUpdate.productId },
+          data: { stock: { increment: qtyToReturn } }
+        });
+
+        await tx.stockMovement.create({
+          data: {
+            productId: itemToUpdate.productId,
+            type: 'IN',
+            quantity: qtyToReturn,
+            balanceBefore: updatedProduct.stock - qtyToReturn,
+            balanceAfter: updatedProduct.stock,
+            reference: transaction.invoiceNumber,
+            notes: `Pengembalian stok pesanan (Qty berkurang dari ${itemToUpdate.quantity} ke ${newQuantity} ${itemToUpdate.unitNote || 'PCS'})`,
+            userId: userId
+          }
+        });
+      }
+
+      // Update kuantitas item pesanan
+      await tx.transactionItem.update({
+        where: { id: itemId },
+        data: { quantity: newQuantity }
+      });
+
+      // Hitung ulang total transaksi
+      const allItems = await tx.transactionItem.findMany({
+        where: { transactionId }
+      });
+
+      const itemsTotal = allItems.reduce((sum, it) => {
+        const qty = it.id === itemId ? newQuantity : it.quantity;
+        return sum + (Number(it.price) * qty);
+      }, 0);
+
+      const newTotalAmount = itemsTotal + Number(transaction.shippingCost || 0);
+
+      const paidAmount = Number(transaction.paidAmount);
+      let newPaymentStatus = transaction.paymentStatus;
+      if (paidAmount >= newTotalAmount && newTotalAmount > 0) {
+        newPaymentStatus = 'PAID';
+      } else if (paidAmount > 0) {
+        newPaymentStatus = 'PARTIAL';
+      } else {
+        newPaymentStatus = 'UNPAID';
+      }
+
+      await tx.transaction.update({
+        where: { id: transactionId },
+        data: {
+          totalAmount: newTotalAmount,
+          paymentStatus: newPaymentStatus
+        }
+      });
+
+      return {
+        transactionId,
+        itemId,
+        newQuantity,
+        newTotalAmount,
+        paymentStatus: newPaymentStatus,
+      };
     }, { maxWait: 10000, timeout: 20000 });
   }
 
@@ -381,7 +531,12 @@ export class TransactionRepository {
 
   static async approvePriceRequest(transactionId: string, adminNotes: string | undefined, items: { id: string; approvedPrice: number }[]) {
     return prisma.$transaction(async (tx) => {
-      let newTotalAmount = 0;
+      const transaction = await tx.transaction.findUnique({
+        where: { id: transactionId }
+      });
+      if (!transaction) throw new Error('Transaction not found');
+
+      let newTotalAmount = Number(transaction.shippingCost || 0);
       for (const item of items) {
         const updatedItem = await tx.transactionItem.update({
           where: { id: item.id },

@@ -81,6 +81,44 @@ export async function removeItemFromTransaction(data: {
   }
 }
 
+export async function updateTransactionItemQuantity(data: {
+  transactionId: string;
+  itemId: string;
+  newQuantity: number;
+}) {
+  try {
+    const session = await auth();
+    if (!session?.user?.id || !session?.user?.role) {
+      return { success: false, error: 'Unauthorized' };
+    }
+
+    const result = await TransactionService.updateItemQuantity(
+      data.transactionId,
+      data.itemId,
+      data.newQuantity,
+      session.user.id,
+      session.user.role
+    );
+
+    await logAudit(
+      'UPDATE',
+      'TRANSACTION_ITEM',
+      data.transactionId,
+      `Mengubah jumlah item ${data.itemId} menjadi ${data.newQuantity}`
+    );
+
+    revalidatePath('/admin/transactions');
+    revalidatePath('/super-admin/transactions');
+    revalidatePath('/sales/requests');
+    revalidatePath('/sales/orders');
+
+    return { success: true, data: result };
+  } catch (error: any) {
+    console.error('Failed to update item quantity:', error);
+    return { success: false, error: error.message || 'Gagal mengubah jumlah item' };
+  }
+}
+
 export async function addPayment(data: {
   transactionId: string;
   amount: number;
